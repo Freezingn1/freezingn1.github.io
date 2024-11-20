@@ -811,7 +811,7 @@
               }
 
               element.stream = component.proxyStream(url, 'lumex');
-              element.qualitys = false;
+              element.qualitys = true;
               call(element);
             });
           } else error();
@@ -15886,8 +15886,8 @@
         name: 'lumex',
         title: 'Lumex',
         source: new lumex(this, object),
-        search: false,
-        kp: false,
+        search: true,
+        kp: true,
         imdb: true,
         
       }, {
