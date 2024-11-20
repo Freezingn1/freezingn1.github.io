@@ -15889,7 +15889,7 @@
         search: false,
         kp: false,
         imdb: true,
-        disabled: disable_dbg && !androidHeaders
+        
       }, {
         name: 'rezka',
         title: 'Voidboost',
