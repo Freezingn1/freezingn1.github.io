@@ -811,7 +811,7 @@
               }
 
               element.stream = component.proxyStream(url, 'lumex');
-              element.qualitys = true;
+              element.qualitys = false;
               call(element);
             });
           } else error();
