@@ -15886,9 +15886,9 @@
         name: 'lumex',
         title: 'Lumex',
         source: new lumex(this, object),
-        search: true,
-        kp: true,
-        imdb: true,
+        search: false,
+        kp: false,
+        imdb: true
         
       }, {
         name: 'rezka',
@@ -15941,8 +15941,8 @@
         source: new zetflix(this, object),
         search: false,
         kp: true,
-        imdb: false,
-        disabled: disable_dbg
+        imdb: false
+     
       }, {
         name: 'fancdn',
         title: 'FanCDN',
