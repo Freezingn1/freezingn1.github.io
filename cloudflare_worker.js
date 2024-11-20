@@ -175,6 +175,7 @@ export default {
         request.headers.set("Sec-Fetch-Dest", "empty");
         request.headers.set("Sec-Fetch-Mode", "cors");
         request.headers.set("Sec-Fetch-Site", "same-site");
+        request.headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36");
       }
       if (apiUrl.hostname.endsWith("cdnmovies-stream.online") || apiUrl.hostname.endsWith("cdnmovies-hls-stream.online") || apiUrl.hostname.endsWith(".sarnage.cc")) {
         request.headers.set("Origin", "https://cdnmovies.net");
