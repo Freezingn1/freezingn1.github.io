@@ -8,12 +8,12 @@
       var loaded = {};
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"full-start-new__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
         html.find('.new-interface-info__head,.new-interface-info__details').text('---');
-        
+        html.find('.full-start-new__title').text(data.title);
         html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
         Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
         this.load(data);
