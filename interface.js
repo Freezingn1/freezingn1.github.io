@@ -8,7 +8,7 @@
       var loaded = {};
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"full-start-new__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n       <div class="full-start-new__title"> </div> <div class="full-start-new__title"> </div>         <div class=\"full-start-new__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
       };
 	    
       this.update = function (data) {
