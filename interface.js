@@ -329,7 +329,7 @@ function() {
         }
     }
     )))
-}();
+};
 	
     function startPlugin() {
       window.plugin_interface_ready = true;
