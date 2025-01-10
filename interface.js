@@ -296,7 +296,25 @@
     }
 
 
-window.logoplugin || (window.logoplugin = !0,
+function() {
+    "use strict";
+    Lampa.SettingsApi.addParam({
+        component: "interface",
+        param: {
+            name: "logo_glav1",
+            type: "select",
+            values: {
+                1: "Скрыть",
+                0: "Отображать"
+            },
+            default: "0"
+        },
+        field: {
+            name: "Логотипы вместо названий",
+            description: "Отображает логотипы фильмов вместо текста"
+        }
+    }),
+    window.logoplugin || (window.logoplugin = !0,
     Lampa.Listener.follow("full", (function(a) {
         if ("complite" == a.type && "1" != Lampa.Storage.get("logo_glav1")) {
             var e = a.data.movie;
@@ -311,7 +329,7 @@ window.logoplugin || (window.logoplugin = !0,
         }
     }
     )))
-
+}();
 	
     function startPlugin() {
       window.plugin_interface_ready = true;
