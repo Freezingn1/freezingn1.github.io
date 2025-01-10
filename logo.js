@@ -1,7 +1,7 @@
 !function() {
     "use strict";
     Lampa.SettingsApi.addParam({
-        component: "main",
+        component: "interface",
         param: {
             name: "logo_glav1",
             type: "select",
@@ -24,7 +24,7 @@
             $.get(o, (function(a) {
                 if (a.logos && a.logos[0]) {
                     var e = a.logos[0].file_path;
-                    "" != e && $(".items-line__title").html('<img style="margin-top: 5px;max-height: 125px;" src="' + Lampa.TMDB.image("/t/p/w300" + e.replace(".svg", ".png")) + '" />')
+                    "" != e && $(".items-line__title")('<img style="margin-top: 5px;max-height: 125px;" src="' + Lampa.TMDB.image("/t/p/w300" + e.replace(".svg", ".png")) + '" />')
                 }
             }
             ))
