@@ -18,7 +18,7 @@
     }),
     window.logoplugin || (window.logoplugin = !0,
     Lampa.Listener.follow("full", (function(a) {
-        if ("complite" == a.type && "0" != Lampa.Storage.get("logo_glav1")) {
+        if ("complite" == a.type && "1" != Lampa.Storage.get("logo_glav1")) {
             var e = a.data.movie;
             var o = Lampa.TMDB.api((e.name ? "tv" : "movie") + "/" + e.id + "/images?api_key=" + Lampa.TMDB.key() + "&language=" + Lampa.Storage.get("language"));
             $.get(o, (function(a) {
