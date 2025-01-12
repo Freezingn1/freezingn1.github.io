@@ -10167,6 +10167,7 @@
         search: false,
         kp: true,
         imdb: true
+          disabled: true
       }, {
         name: 'collaps-dash',
         title: 'Collaps (DASH)',
@@ -10174,6 +10175,7 @@
         search: false,
         kp: true,
         imdb: true
+    disabled: true
       }, {
         name: 'cdnmovies',
         title: 'CDNMovies',
@@ -10189,6 +10191,7 @@
         search: true,
         kp: false,
         imdb: false
+    disabled: true
       }, {
         name: 'zetflix',
         title: 'Zetflix',
@@ -10220,6 +10223,7 @@
         search: true,
         kp: false,
         imdb: true
+    disabled: true
       }, {
         name: 'cdnvideohub',
         title: 'CDNVideoHub',
@@ -10227,6 +10231,7 @@
         search: false,
         kp: true,
         imdb: false
+    disabled: true
       }, {
         name: 'anilibria',
         title: 'AniLibria',
@@ -10234,6 +10239,7 @@
         search: true,
         kp: false,
         imdb: false
+    disabled: true
       }, {
         name: 'anilibria2',
         title: 'AniLibria.top',
@@ -10241,6 +10247,7 @@
         search: true,
         kp: false,
         imdb: false
+    disabled: true
       }, {
         name: 'animelib',
         title: 'AnimeLib',
@@ -10255,6 +10262,7 @@
         search: true,
         kp: true,
         imdb: true
+    disabled: true
       }, {
         name: 'alloha',
         title: 'Alloha',
