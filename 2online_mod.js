@@ -10136,7 +10136,7 @@
         search: false,
         kp: false,
         imdb: true,
-        disabled: disable_dbg && !androidHeaders
+        
       }, {
         name: 'rezka',
         title: 'Voidboost',
@@ -10167,6 +10167,7 @@
         search: false,
         kp: true,
         imdb: true
+          disabled: disable_dbg
       }, {
         name: 'collaps-dash',
         title: 'Collaps (DASH)',
@@ -10174,6 +10175,7 @@
         search: false,
         kp: true,
         imdb: true
+    disabled: disable_dbg
       }, {
         name: 'cdnmovies',
         title: 'CDNMovies',
@@ -10189,6 +10191,7 @@
         search: true,
         kp: false,
         imdb: false
+    disabled: disable_dbg
       }, {
         name: 'zetflix',
         title: 'Zetflix',
@@ -10204,7 +10207,7 @@
         search: true,
         kp: false,
         imdb: false,
-        disabled: disable_dbg && !isAndroid
+        disabled: disable_dbg 
       }, {
         name: 'fanserials',
         title: 'FanSerials',
@@ -10212,7 +10215,7 @@
         search: false,
         kp: true,
         imdb: false,
-        disabled: disable_dbg && !isAndroid
+        disabled: disable_dbg 
       }, {
         name: 'redheadsound',
         title: 'RedHeadSound',
@@ -10220,6 +10223,7 @@
         search: true,
         kp: false,
         imdb: true
+    disabled: disable_dbg
       }, {
         name: 'cdnvideohub',
         title: 'CDNVideoHub',
@@ -10227,6 +10231,7 @@
         search: false,
         kp: true,
         imdb: false
+    disabled: disable_dbg
       }, {
         name: 'anilibria',
         title: 'AniLibria',
@@ -10234,6 +10239,7 @@
         search: true,
         kp: false,
         imdb: false
+    disabled: disable_dbg
       }, {
         name: 'anilibria2',
         title: 'AniLibria.top',
@@ -10241,6 +10247,7 @@
         search: true,
         kp: false,
         imdb: false
+    disabled: disable_dbg
       }, {
         name: 'animelib',
         title: 'AnimeLib',
@@ -10255,6 +10262,7 @@
         search: true,
         kp: true,
         imdb: true
+    disabled: disable_dbg
       }, {
         name: 'alloha',
         title: 'Alloha',
