@@ -3,8 +3,6 @@
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19223/index.m3u8
 #EXTINF:-1,RUTV HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19247/index.m3u8
-#EXTINF:-1,MTV Live HD
-http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/9009/index.m3u8
 #EXTINF:-1,Nickelodeon HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/9015/index.m3u8
 #EXTINF:-1,NickToons HD
