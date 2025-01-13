@@ -7,12 +7,6 @@ http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19247/index.m3u8
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/9015/index.m3u8
 #EXTINF:-1,NickToons HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/849/index.m3u8
-#EXTINF:-1,Liberty Disney FHD
-http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15093/index.m3u8
-#EXTINF:-1,Liberty Pixar HD
-http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15092/index.m3u8
-#EXTINF:-1,MM Walt Disney HD
-http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/13064/index.m3u8
 #EXTINF:-1,Liberty Симпсоны HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15111/index.m3u8
 #EXTINF:-1,MS Animated HD
@@ -21,6 +15,12 @@ http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/17024/index.m3u8
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15101/index.m3u8
 #EXTINF:-1,MS Toons HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15138/index.m3u8
+#EXTINF:-1,Liberty Disney FHD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15093/index.m3u8
+#EXTINF:-1,Liberty Pixar HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15092/index.m3u8
+#EXTINF:-1,MM Walt Disney HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/13064/index.m3u8
 #EXTINF:-1,Liberty Аниме HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/17029/index.m3u8
 #EXTINF:-1,BOX Anime HD
