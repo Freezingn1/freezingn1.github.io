@@ -1,0 +1,6 @@
+#EXTINF:-1,MM Walt Disney HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/13064/index.m3u8
+#EXTINF:-1,CineMan Симпсоны
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15101/index.m3u8
+#EXTINF:-1,Liberty Симпсоны HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15111/index.m3u8
