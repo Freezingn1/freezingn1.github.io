@@ -3,14 +3,24 @@
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19223/index.m3u8
 #EXTINF:-1,RUTV HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19247/index.m3u8
+#EXTINF:-1,Жара TV HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/2129/index.m3u8
+#EXTINF:-1,HD Music Television
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/9001/index.m3u8
 #EXTINF:-1,ТВ3 HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/5033/index.m3u8
 #EXTINF:-1,Домашний HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15116/index.m3u8
+#EXTINF:-1,MM Live Planet HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/13095/index.m3u8
+#EXTINF:-1,Liberty Планктон HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/20140/index.m3u8
 #EXTINF:-1,Nickelodeon HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/9015/index.m3u8
 #EXTINF:-1,NickToons HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/849/index.m3u8
+#EXTINF:-1,MM Lesson HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/13042/index.m3u8
 #EXTINF:-1,Liberty Disney FHD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15093/index.m3u8
 #EXTINF:-1,Liberty Pixar HD
