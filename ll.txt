@@ -3,8 +3,6 @@
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19223/index.m3u8
 #EXTINF:-1,RUTV HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19247/index.m3u8
-#EXTINF:-1,Жара TV HD
-http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/2129/index.m3u8
 #EXTINF:-1,ТВ3 HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/5033/index.m3u8
 #EXTINF:-1,Домашний HD
