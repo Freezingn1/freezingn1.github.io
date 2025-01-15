@@ -32,6 +32,6 @@ http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/13064/index.m3u8
 #EXTINF:-1,Liberty Аниме HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/17029/index.m3u8
 #EXTINF:-1,Sky High Anime HD
-http://ams01.ruip.tv/7925/video.m3u8?token=0264a02f2851d1470277aff72cce4a4b
+http://ams01.ruip.tv/7925/video.m3u8?token=76177c580a9b83d888e2d206f15b2909
 #EXTINF:-1,Дождь HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/20083/index.m3u8
