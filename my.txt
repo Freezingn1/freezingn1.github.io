@@ -3,6 +3,8 @@
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19223/index.m3u8
 #EXTINF:-1,RU TV HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/19247/index.m3u8
+#EXTINF:-1,Europa Plus TV HD
+http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/20029/index.m3u8
 #EXTINF:-1,1HD Music Television
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/9001/index.m3u8
 #EXTINF:-1,MM Live Planet HD
@@ -29,5 +31,7 @@ http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/15092/index.m3u8
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/13064/index.m3u8
 #EXTINF:-1,Liberty Аниме HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/17029/index.m3u8
+#EXTINF:-1,Sky High Anime HD
+http://ams01.ruip.tv/7925/video.m3u8?token=0264a02f2851d1470277aff72cce4a4b
 #EXTINF:-1,Дождь HD
 http://22019879.rostelekom.xyz/iptv/49TZLZ3GSHKCTW5H4YW7ZG77/20083/index.m3u8
