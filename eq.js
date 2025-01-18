@@ -1006,7 +1006,7 @@
       extract.season_num = [];
       extract.media = [];
       var select_title = '';
-      var prefer_http = Lampa.Storage.field('online_mod_prefer_https') === true;
+      var prefer_http = Lampa.Storage.field('online_mod_prefer_http') === true;
       var embed = atob('aHR0cHM6Ly9hcGkubGFtcGEuc3RyZWFtL2x1bWV4Lw==');
       var filter_items = {};
       var choice = {
