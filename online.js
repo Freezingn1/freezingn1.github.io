@@ -1007,7 +1007,7 @@
       extract.media = [];
       var select_title = '';
       var prefer_http = Lampa.Storage.field('online_mod_prefer_http') === true;
-      var embed = atob('aHR0cHM6Ly9hcGkubHVtZXguc3BhY2Uv');
+      var embed = atob('aHR0cHM6Ly9hcGkubHVtZXguc3BhY2Uv==');
       var filter_items = {};
       var choice = {
         season: 0,
