@@ -1,6 +1,13 @@
 (function () {
     'use strict';
 
+
+Lampa.Platform.tv();
+         function _0x1bfc(){var _0x1846e5=['pause','<span\x20class=\x22full-start__pg\x22\x20style=\x22font-size:\x200.9em;\x22>','back','render','field','visible','card_views_type','static','down','Lang','cub','Отменено','ganr','genres','Онгоинг','388077OJarCg','insertAfter','&language=','.svg','nomore','Показывать\x20статус\x20фильма/сериала','error','get','cardClass','addClass','interface','.new-interface-info__description','Выпущенный','plugin_interface_ready','new_interface_style','rat','4MXbJID','&append_to_response=content_ratings,release_dates&language=','.new-interface-info__title','</div><div>TMDB</div></div>','477063ZNkUNw','background','start','Стильный\x20интерфейс','replace','info','onFocus','{}.constructor(\x22return\x20this\x22)(\x20)','clear','\x22\x20/>','change_source_on_cub','bind','add','<div\x20class=\x22empty__footer\x22><div\x20class=\x22simple-button\x20selector\x22>','Arrays','Utils','map','InteractionMain','loader','follow','remove','main','year_ogr','wide_post','log','constructor','Api','min','show','Platform','url','language','app_digital','warn','onWheel','onload','runtime','draw','SettingsApi','Layer','onToggle','overview','next','logo_card_style','src','</span>','canmove','Empty','1732668zuwqei','seas','toFixed','w1280','origin','.new-interface-info__head,.new-interface-info__details','style_interface','innerWidth','create','logos','parseCountries','<img\x20style=\x22margin-top:\x200.3em;\x20margin-bottom:\x200.1em;\x20max-height:\x202.8em;\x22\x20src=\x22','left','returning\x20series','TMDB','onUp','status','vote_average','Settings','append','prototype','onMore','listener','w200','/images?api_key=','build','Background','__proto__','search','post\x20production','.full-start__background','table','parsePG','silent','tmdb','number_of_episodes','content','mobile','find','Показывать\x20время\x20фильма','slice','removeClass','\x20|\x20','name','head','1190835ytflpy','InteractionLine','636325chCSaM','eps','minus','secondsToTime','<span>','timeout','(((.+)+)+)+$','?api_key=','1757546nWuzVk','next_wait','own','Закончен','Показывать\x20возрастное\x20ограничение','Ошибка\x20доступа','http://212.113.103.137:9118/proxyimg/','.settings-param\x20>\x20div:contains(\x22Стильный\x20интерфейс\x22)','hover:enter','html','navigation_type','Показывать\x20описание','apply','Manifest','<span\x20class=\x22new-interface-info__split\x22>&#9679;</span>','full_notext','4ef0d7355d9ffb5151e987764708ce96','destroy','hide','activity','Reguest','[data-component=\x22style_interface\x22]','</div>
+
+
+
+    
     function create() {
       var html;
       var timer;
