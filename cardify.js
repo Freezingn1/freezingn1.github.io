@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-Lampa.Platform.tv();
+
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -998,7 +998,7 @@ Lampa.Platform.tv();
   };
 
   function startPlugin() {
-    if (!Lampa.Platform.screen('tv')) return console.log('Cardify', 'no tv');
+    if (!Lampa.Platform.tv()) return console.log('Cardify', 'no tv');
     Lampa.Lang.add({
       cardify_enable_sound: {
         ru: 'Включить звук',
