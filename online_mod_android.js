@@ -5026,6 +5026,11 @@
         'Referer': ref,
         'User-Agent': user_agent
       } : {};
+        var headers2 = Lampa.Platform.is('android') ? {
+        'Origin': host,
+        'Referer': ref,
+        'User-Agent': user_agent
+      } : {};
       var prox_enc = '';
 
       if (prox) {
