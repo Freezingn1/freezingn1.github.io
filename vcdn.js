@@ -100,7 +100,7 @@ var randomUrl = vybor[randomIndex];
       season: [],
       voice: []
     };
-    var balansers_with_search = ['eneyida', 'seasonvar', 'lostfilmhd', 'kinotochka', 'kinopub', 'kinoprofi', 'kinokrad', 'kinobase', 'filmix', 'filmixtv', 'redheadsound', 'animevost', 'animego', 'animedia', 'animebesst', 'anilibria', 'rezka', 'rhsprem', 'kodik', 'remux', 'animelib', 'kinoukr'];
+    var balansers_with_search = [];
 	
     function account(url) {
       url = url + '';
