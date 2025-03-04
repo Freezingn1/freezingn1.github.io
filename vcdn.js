@@ -1439,7 +1439,7 @@ var randomUrl = vybor[randomIndex];
     var manifst = {
       type: 'video',
       version: '',
-      name: 'VideoCDN, Zetflix и IRemux',
+      name: 'VideoCDN и Zetflix',
       description: 'Плагин для просмотра онлайн сериалов и фильмов',
       component: 'lampac',
       onContextMenu: function onContextMenu(object) {
