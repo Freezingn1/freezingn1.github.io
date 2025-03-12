@@ -3,7 +3,7 @@
 
   var Defined = {
     api: 'lampac',
-    localhost: 'https://liqcavfb.deploy.cx/',
+    localhost: 'http://lampa.mx/',
     apn: ''
   };
 
@@ -16,7 +16,7 @@
   if (!window.rch) {
     Lampa.Utils.putScript(["http://freezingn1.github.io/invc-rch.js"], function() {}, false, function() {
       if (!window.rch.startTypeInvoke)
-        window.rch.typeInvoke('https://liqcavfb.deploy.cx/', function() {});
+        window.rch.typeInvoke('http://lampa.mx',', function() {});
     }, true);
   }
 
