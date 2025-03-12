@@ -3,7 +3,7 @@
 
   var Defined = {
     api: 'lampac',
-    localhost: 'http://vcdn3.skaz.tv/',
+    localhost: 'https://liqcavfb.deploy.cx/',
     apn: ''
   };
 
@@ -14,9 +14,9 @@
   }
   
   if (!window.rch) {
-    Lampa.Utils.putScript(["http://vcdn3.skaz.tv/invc-rch.js"], function() {}, false, function() {
+    Lampa.Utils.putScript(["http://freezingn1.github.io/invc-rch.js"], function() {}, false, function() {
       if (!window.rch.startTypeInvoke)
-        window.rch.typeInvoke('http://vcdn3.skaz.tv', function() {});
+        window.rch.typeInvoke('https://liqcavfb.deploy.cx/', function() {});
     }, true);
   }
 
@@ -239,7 +239,7 @@
 		}
       };
       if (typeof signalR == 'undefined') {
-        Lampa.Utils.putScript(["http://vcdn3.skaz.tv/signalr-6.0.25_es5.js"], function() {}, false, function() {
+        Lampa.Utils.putScript(["https://freezingn1.github.io/signalr-6.0.25_es5.js"], function() {}, false, function() {
           load();
         }, true);
       } else load();
