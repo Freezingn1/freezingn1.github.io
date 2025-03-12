@@ -3,7 +3,7 @@
 
   var Defined = {
     api: 'lampac',
-    localhost: 'http://lampa.mx/',
+    localhost: 'http://vcdn2.skaz.tv/',
     apn: ''
   };
 
@@ -16,7 +16,7 @@
   if (!window.rch) {
     Lampa.Utils.putScript(["http://freezingn1.github.io/invc-rch.js"], function() {}, false, function() {
       if (!window.rch.startTypeInvoke)
-        window.rch.typeInvoke('http://lampa.mx',', function() {});
+        window.rch.typeInvoke('http://vcdn2.skaz.tv',', function() {});
     }, true);
   }
 
