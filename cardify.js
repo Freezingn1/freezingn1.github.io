@@ -120,6 +120,11 @@
       this.dispath(this.state);
     };
 
+ this.background = function (elem) {
+        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1920');
+ }
+
+    
     this.dispath = function (action_name) {
       var action = object.transitions[action_name];
 
