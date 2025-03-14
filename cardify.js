@@ -1043,19 +1043,10 @@
       }
     });
 
-function cardImgBackground(card_data) {
-    if (Storage.field('background')) {
-      if (Storage.field('background_type') == 'poster' && window.innerWidth > 790) {
-        return card_data.backdrop_path ? Api.img(card_data.backdrop_path, 'original') : card_data.background_image ? card_data.background_image : '';
-      }
-	  }
-	  }
+this.loadBackground = function (data) {
+      var background = data.movie.backdrop_path ? Api.img(data.movie.backdrop_path, 'w1920') : data.movie.background_image ? data.movie.background_image : '';
 
-
-	this.loadBackground = function (data) {
-      var background = data.movie.backdrop_path ? Api.img(data.movie.backdrop_path, 'original') : data.movie.background_image ? data.movie.background_image : '';
-
-      if (window.innerWidth > 790 && background && !Storage.field('light_version')) {
+      if (window.innerWidth > 1920 && background && !Storage.field('light_version')) {
         background_image = html.find('.full-start__background')[0] || {};
 
         background_image.onload = function (e) {
@@ -1064,7 +1055,7 @@ function cardImgBackground(card_data) {
 
         background_image.src = background;
       } else html.find('.full-start__background').remove();
-    };  
+    };
 
 
 	  
