@@ -1,7 +1,6 @@
 (function () {
   'use strict';
 
-  
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -121,7 +120,6 @@
       this.dispath(this.state);
     };
 
-    
     this.dispath = function (action_name) {
       var action = object.transitions[action_name];
 
@@ -1043,23 +1041,6 @@
       }
     });
 
-this.loadBackground = function (data) {
-      var background = data.movie.backdrop_path ? Api.img(data.movie.backdrop_path, 'w1920') : data.movie.background_image ? data.movie.background_image : '';
-
-      if (window.innerWidth > 1920 && background && !Storage.field('light_version')) {
-        background_image = html.find('.full-start__background')[0] || {};
-
-        background_image.onload = function (e) {
-          html.find('.full-start__background').addClass('loaded');
-        };
-
-        background_image.src = background;
-      } else html.find('.full-start__background').remove();
-    };
-
-
-	  
-	  
     function video(data) {
       if (data.videos && data.videos.results.length) {
         var items = [];
