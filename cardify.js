@@ -120,9 +120,28 @@
       this.dispath(this.state);
     };
 
- this.background = function (elem) {
+this.background = function (elem) {
         var new_background = Lampa.Api.img(elem.backdrop_path, 'w1920');
- }
+        clearTimeout(background_timer);
+        if (new_background == background_last) return;
+        background_timer = setTimeout(function () {
+          background_img.removeClass('loaded');
+
+          background_img[0].onload = function () {
+            background_img.addClass('loaded');
+          };
+
+          background_img[0].onerror = function () {
+            background_img.removeClass('loaded');
+          };
+
+          background_last = new_background;
+          setTimeout(function () {
+            background_img[0].src = background_last;
+          }, 300);
+        }, 1000);
+      };
+
 
     
     this.dispath = function (action_name) {
