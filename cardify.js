@@ -1,6 +1,15 @@
 (function () {
   'use strict';
 
+
+function cardImgBackground(card_data) {
+    if (Storage.field('background')) {
+      if (Storage.field('background_type') == 'poster' && window.innerWidth > 790) {
+        return card_data.backdrop_path ? Api.img(card_data.backdrop_path, 'w1280') : card_data.background_image ? card_data.background_image : '';
+      }
+	  }
+	  }
+  
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -119,29 +128,6 @@
     this.start = function () {
       this.dispath(this.state);
     };
-
-this.background = function (elem) {
-        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1920');
-        clearTimeout(background_timer);
-        if (new_background == background_last) return;
-        background_timer = setTimeout(function () {
-          background_img.removeClass('loaded');
-
-          background_img[0].onload = function () {
-            background_img.addClass('loaded');
-          };
-
-          background_img[0].onerror = function () {
-            background_img.removeClass('loaded');
-          };
-
-          background_last = new_background;
-          setTimeout(function () {
-            background_img[0].src = background_last;
-          }, 300);
-        }, 1000);
-      };
-
 
     
     this.dispath = function (action_name) {
