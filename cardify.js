@@ -1,14 +1,6 @@
 (function () {
   'use strict';
 
-
-function cardImgBackground(card_data) {
-    if (Storage.field('background')) {
-      if (Storage.field('background_type') == 'poster' && window.innerWidth > 790) {
-        return card_data.backdrop_path ? Api.img(card_data.backdrop_path, 'original') : card_data.background_image ? card_data.background_image : '';
-      }
-	  }
-	  }
   
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -1051,6 +1043,15 @@ function cardImgBackground(card_data) {
       }
     });
 
+function cardImgBackground(card_data) {
+    if (Storage.field('background')) {
+      if (Storage.field('background_type') == 'poster' && window.innerWidth > 790) {
+        return card_data.backdrop_path ? Api.img(card_data.backdrop_path, 'original') : card_data.background_image ? card_data.background_image : '';
+      }
+	  }
+	  }
+
+	  
     function video(data) {
       if (data.videos && data.videos.results.length) {
         var items = [];
