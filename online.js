@@ -1401,7 +1401,7 @@
   }
 
   function startPlugin() {
-    window.lampac_plugin = true;
+    window.lampac2_plugin = true;
     var manifst = {
       type: 'video',
       version: '1.4.4',
@@ -1597,6 +1597,6 @@
       Lampa.Storage.sync('online_watched_last', 'object_object');
     }
   }
-  if (!window.lampac_plugin) startPlugin();
+  if (!window.lampac2_plugin) startPlugin();
 
 })();
