@@ -1473,10 +1473,10 @@
         zh: '按住“确定”键调出上下文菜单'
       },
       title_online: { //
-        ru: 'Онлайн',
-        uk: 'Онлайн',
-        en: 'Online',
-        zh: '在线的'
+        ru: 'Онлайн vcdn2',
+        uk: 'Онлайн vcdn2',
+        en: 'Online vcdn2',
+        zh: '在线的 vcdn2'
       },
       lampac_voice_subscribe: { //
         ru: 'Подписаться на перевод',
