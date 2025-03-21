@@ -1405,7 +1405,7 @@
     var manifst = {
       type: 'video',
       version: '1.4.4',
-      name: 'Lampac',
+      name: 'Maxvol',
       description: 'Плагин для просмотра онлайн сериалов и фильмов',
       component: 'lampac',
       onContextMenu: function onContextMenu(object) {
@@ -1473,9 +1473,9 @@
         zh: '按住“确定”键调出上下文菜单'
       },
       title_online: { //
-        ru: 'Онлайн maxvol',
-        uk: 'Онлайн maxvol',
-        en: 'Online maxvol',
+        ru: 'Онлайн',
+        uk: 'Онлайн',
+        en: 'Online',
         zh: '在线的 maxvol'
       },
       lampac_voice_subscribe: { //
