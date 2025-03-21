@@ -1404,8 +1404,8 @@
     window.lampac2_plugin = true;
     var manifst = {
       type: 'video',
-      version: ' ',
-      name: 'VideoCDN 3',
+      version: '3',
+      name: 'VideoCDN',
       description: 'Плагин для просмотра онлайн сериалов и фильмов',
       component: 'lampac',
       onContextMenu: function onContextMenu(object) {
