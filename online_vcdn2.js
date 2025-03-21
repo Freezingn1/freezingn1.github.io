@@ -1405,7 +1405,7 @@
     var manifst = {
       type: 'video',
       version: '1.4.4',
-      name: 'Lampac',
+      name: 'VideoCDN2',
       description: 'Плагин для просмотра онлайн сериалов и фильмов',
       component: 'lampac',
       onContextMenu: function onContextMenu(object) {
@@ -1473,10 +1473,10 @@
         zh: '按住“确定”键调出上下文菜单'
       },
       title_online: { //
-        ru: 'Онлайн vcdn2',
-        uk: 'Онлайн vcdn2',
-        en: 'Online vcdn2',
-        zh: '在线的 vcdn2'
+        ru: 'Онлайн',
+        uk: 'Онлайн',
+        en: 'Online',
+        zh: '在线的'
       },
       lampac_voice_subscribe: { //
         ru: 'Подписаться на перевод',
