@@ -1404,7 +1404,7 @@
     window.maxvol_plugin = true;
     var manifst = {
       type: 'video',
-      version: '',
+      version: '1',
       name: 'Maxvol',
       description: 'Плагин для просмотра онлайн сериалов и фильмов',
       component: 'lampac',
