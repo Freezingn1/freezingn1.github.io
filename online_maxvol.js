@@ -1473,10 +1473,10 @@
         zh: '按住“确定”键调出上下文菜单'
       },
       title_online: { //
-        ru: 'Онлайн',
-        uk: 'Онлайн',
-        en: 'Online',
-        zh: '在线的'
+        ru: 'Онлайн maxvol',
+        uk: 'Онлайн maxvol',
+        en: 'Online maxvol',
+        zh: '在线的 maxvol'
       },
       lampac_voice_subscribe: { //
         ru: 'Подписаться на перевод',
