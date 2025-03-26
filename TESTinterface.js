@@ -11,7 +11,6 @@
         html = $("<div class=\"new-interface-info\">\n     <style>.new-interface-info__title {font-family: impact;}</style>       <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
       };
 	  
-<style>
 
 
       this.update = function (data) {
