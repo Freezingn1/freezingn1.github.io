@@ -12,14 +12,7 @@
       };
 	  
 	  this.create = function () {
-        html = $("<style>@font-face {
-	font-family: 'Impact';
-	src: url('https://lampac666.ucoz.net/fonts/impact.eot'); 
-	src: url('https://lampac666.ucoz.net/fonts/impact.eot?#iefix') format('embedded-opentype'),
-		url('https://lampac666.ucoz.net/fonts/impact.woff2') format('woff2'),
-		url('https://lampac666.ucoz.net/fonts/impact.woff') format('woff'),
-		url('https://lampac666.ucoz.net/fonts/impact.ttf') format('truetype'),
-		url('https://lampac666.ucoz.net/fonts/impact.svg#impact') format('svg');} .new-interface-info__title {font-family: impact;}</style>");
+        html = $("<style>.new-interface-info__title {font-family: impact;} @font-face {font-family: 'Impact';src: url('https://lampac666.ucoz.net/fonts/impact.eot'); src: url('https://lampac666.ucoz.net/fonts/impact.eot?#iefix') format('embedded-opentype'),url('https://lampac666.ucoz.net/fonts/impact.woff2') format('woff2'),url('https://lampac666.ucoz.net/fonts/impact.woff') format('woff'),url('https://lampac666.ucoz.net/fonts/impact.ttf') format('truetype'),url('https://lampac666.ucoz.net/fonts/impact.svg#impact') format('svg');}</style>");
       };
 
       this.update = function (data) {
