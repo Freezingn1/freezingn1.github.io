@@ -8,7 +8,7 @@
       var loaded = {};
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n     <style>.new-interface-info__title {font-family: impact;}</style>       <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
+        html = $("<head><link href="https://db.onlinewebfonts.com/c/988d4c9843303bc94792a4ad537f1cfb?family=Druk+Bold+Regular" rel="stylesheet"></head><div class=\"new-interface-info\">\n     <style>.new-interface-info__title {font-family: impact;}</style>       <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
       };
 
       this.update = function (data) {
