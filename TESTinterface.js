@@ -8,7 +8,7 @@
       var loaded = {};
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n     <style>element.style {@import url(https://db.onlinewebfonts.com/c/988d4c9843303bc94792a4ad537f1cfb?family=Druk+Bold+Regular);} .new-interface-info__title {font-family: Druk Bold Regular;}</style>       <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n     <style>.new-interface-info__title { @font-face {font-family: "Druk Bold Regular";src: url("https://db.onlinewebfonts.com/t/988d4c9843303bc94792a4ad537f1cfb.eot");src: url("https://db.onlinewebfonts.com/t/988d4c9843303bc94792a4ad537f1cfb.eot?#iefix")format("embedded-opentype"),url("https://db.onlinewebfonts.com/t/988d4c9843303bc94792a4ad537f1cfb.woff2")format("woff2"),url("https://db.onlinewebfonts.com/t/988d4c9843303bc94792a4ad537f1cfb.woff")format("woff"),url("https://db.onlinewebfonts.com/t/988d4c9843303bc94792a4ad537f1cfb.ttf")format("truetype"),url("https://db.onlinewebfonts.com/t/988d4c9843303bc94792a4ad537f1cfb.svg#Druk Bold Regular")format("svg");}}.new-interface-info__title {font-family: Druk Bold Regular;}</style>       <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
       };
 
       this.update = function (data) {
