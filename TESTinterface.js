@@ -8,12 +8,9 @@
       var loaded = {};
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n          <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
+        html = $("<style>.new-interface-info__title {font-family: impact;} @font-face {font-family: 'Impact';src: url('https://lampac666.ucoz.net/fonts/impact.eot'); src: url('https://lampac666.ucoz.net/fonts/impact.eot?#iefix') format('embedded-opentype'),url('https://lampac666.ucoz.net/fonts/impact.woff2') format('woff2'),url('https://lampac666.ucoz.net/fonts/impact.woff') format('woff'),url('https://lampac666.ucoz.net/fonts/impact.ttf') format('truetype'),url('https://lampac666.ucoz.net/fonts/impact.svg#impact') format('svg');}</style><div class=\"new-interface-info\">\n          <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                            </div>\n        </div>");
       };
 	  
-	  this.create = function () {
-        html = $("<style>.new-interface-info__title {font-family: impact;} @font-face {font-family: 'Impact';src: url('https://lampac666.ucoz.net/fonts/impact.eot'); src: url('https://lampac666.ucoz.net/fonts/impact.eot?#iefix') format('embedded-opentype'),url('https://lampac666.ucoz.net/fonts/impact.woff2') format('woff2'),url('https://lampac666.ucoz.net/fonts/impact.woff') format('woff'),url('https://lampac666.ucoz.net/fonts/impact.ttf') format('truetype'),url('https://lampac666.ucoz.net/fonts/impact.svg#impact') format('svg');}</style>");
-      };
 
       this.update = function (data) {
         html.find('.new-interface-info__head,.new-interface-info__details').text('---');
