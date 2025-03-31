@@ -15663,12 +15663,12 @@
 
     Utils.setMyIp('');
 
-    if (Lampa.Storage.field('reyohoho_mod_proxy_find_ip') === true) {
+    if (Lampa.Storage.field('reyohoho_mod_proxy_find_ip') === false) {
       if (online_loading) return;
       online_loading = true;
       network.clear();
       network.timeout(10000);
-      network.silent('http://api.ipify.org/?format=json', function (json) {
+      network.silent('https://api.ipify.org/?format=json', function (json) {
         if (json.ip) Utils.setMyIp(json.ip);
         onComplite();
       }, function (a, c) {
