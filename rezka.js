@@ -15342,14 +15342,14 @@
       zh: '没有结果'
     },
     reyohoho_mod_title: {
-      ru: 'ReYohoho Онлайн (thx nb557)',
+      ru: 'HDRezka Онлайн',
       uk: 'ReYohoho Онлайн (thx nb557)',
       be: 'ReYohoho Анлайн (thx nb557)',
       en: 'ReYohoho Online (thx nb557)',
       zh: 'ReYohoho 在线的 (thx nb557)'
     },
     reyohoho_mod_title_full: {
-      ru: 'ReYohoho Онлайн',
+      ru: 'HDRezka Онлайн',
       uk: 'ReYohoho Онлайн',
       be: 'ReYohoho Анлайн',
       en: 'ReYohoho Online',
