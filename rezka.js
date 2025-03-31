@@ -15668,7 +15668,7 @@
       online_loading = true;
       network.clear();
       network.timeout(10000);
-      network.silent('https://api.ipify.org/?format=json', function (json) {
+      network.silent('http://api.ipify.org/?format=json', function (json) {
         if (json.ip) Utils.setMyIp(json.ip);
         onComplite();
       }, function (a, c) {
