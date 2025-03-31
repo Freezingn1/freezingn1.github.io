@@ -13950,7 +13950,7 @@
 
     this.proxyStream = function (url, name) {
 //      if (url && use_stream_proxy) {
-        if (name === 'rezka2') return url.replace('//stream.voidboost.cc/', '//femeretes.org/').replace('//stream.voidboost.top/', '//femeretes.org/');
+        if (name === 'rezka2') return url.replace('//stream.voidboost.cc/').replace('//stream.voidboost.top/');
         if (name === 'kodik') return url;
         return (prefer_http ? 'http://apn.cfhttp.top/' : 'https://apn.watch/') + url;
 //      }
