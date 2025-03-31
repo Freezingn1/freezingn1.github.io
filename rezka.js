@@ -15663,7 +15663,7 @@
 
     Utils.setMyIp('');
 
-    if (Lampa.Storage.field('reyohoho_mod_proxy_find_ip') === false) {
+    if (Lampa.Storage.field('reyohoho_mod_proxy_find_ip') === true) {
       if (online_loading) return;
       online_loading = true;
       network.clear();
