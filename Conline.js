@@ -1616,7 +1616,6 @@
                     render: e.object.activity.render().find('.view--torrent'),
                     movie: e.data.movie
                 });
-         }
       }
     });
     try {
