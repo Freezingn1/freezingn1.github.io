@@ -16,7 +16,7 @@
             var active = Lampa.Activity.active();
             var componentName = active.component.toLowerCase();
 
-            if (componentName !== 'reyohoho_mod' && componentName !== 'cinema_online' && componentName.indexOf('cinema_online') !== 0) {
+            if (componentName !== 'lampac' && componentName !== 'cinema_online' && componentName.indexOf('cinema_online') !== 0) {
                 return;
             }
 
