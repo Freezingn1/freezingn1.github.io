@@ -41,7 +41,7 @@
 
     var parsersInfo = [{
       base: 'redapi',
-      name: 'redapi Jacred',
+      name: 'Redapi Jacred',
       settings: {
         url: 'redapi.cfhttp.top',
         key: '',
@@ -49,7 +49,7 @@
       }
     }, {
       base: 'maxvol',
-      name: 'MaxVol Jackett',
+      name: 'Maxvol Jackett',
       settings: {
         url: 'jac.maxvol.pro',
         key: '1',
