@@ -40,7 +40,7 @@
     };
 
     var parsersInfo = [{
-      base: 'lampa_app',
+      base: 'redapi',
       name: 'redapi Jacred',
       settings: {
         url: 'redapi.cfhttp.top',
@@ -48,7 +48,7 @@
         parser_torrent_type: 'jackett'
       }
     }, {
-      base: 'jacred_viewbox_dev',
+      base: 'maxvol',
       name: 'MaxVol Jackett',
       settings: {
         url: 'jac.maxvol.pro',
