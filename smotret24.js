@@ -1709,7 +1709,7 @@ else if (element.url) {
 		  clarification: all[id] ? true : false
         });
       });
-      e.render.before(btn);
+      e.render.after(btn);
     }
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
