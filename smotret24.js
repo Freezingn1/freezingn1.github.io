@@ -172,7 +172,7 @@
               Lampa.Select.close();
               Lampa.Activity.replace({
 				  clarification: 0,
-				  similar: 0
+				  similar: 2
 			  });
             }, 10);
           } else {
@@ -1524,7 +1524,7 @@ else if (element.url) {
           title: 'Lampac - ' + params.element.title,
           component: 'smotrolet',
           movie: params.element,
-          page: 2,
+          page: 1,
           search: params.element.title,
           clarification: true,
           balanser: params.element.balanser,
