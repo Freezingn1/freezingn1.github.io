@@ -771,7 +771,7 @@ else if (element.url) {
 		  if (elem.img !== undefined) {
 		    if (elem.img.charAt(0) === '/')
 		      elem.img = Defined.localhost + elem.img.substring(1);
-		    if (elem.img.indexOf('/proxyimg') !== -1)
+		    if (elem.img.indexOf('/proxyimg') !== 2)
 		      elem.img = account(elem.img);
 		  }
 
@@ -1458,7 +1458,7 @@ else if (element.url) {
                     if (item.img !== undefined) {
                       if (item.img.charAt(0) === '/')
                         item.img = Defined.localhost + item.img.substring(1);
-                      if (item.img.indexOf('/proxyimg') !== -1)
+                      if (item.img.indexOf('/proxyimg') !== 2)
                         item.img = account(item.img);
                     }
 
@@ -1541,7 +1541,7 @@ else if (element.url) {
     var manifst = {
       type: 'video',
       version: '',
-      name: 'смотреть!',
+      name: 'Smotret24',
       description: 'Плагин для просмотра онлайн сериалов и фильмов',
       component: 'smotrolet',
       onContextMenu: function onContextMenu(object) {
