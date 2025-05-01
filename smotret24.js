@@ -147,7 +147,7 @@
         Lampa.Activity.replace({
           search: value,
           clarification: true,
-          similar: false
+          similar: true
         });
       };
       filter.onBack = function() {
