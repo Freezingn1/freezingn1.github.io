@@ -1747,25 +1747,7 @@ else if (element.url) {
     }
   }
 
-  Lampa.Storage.listener.follow('change', function (event) {
-              if (event.name == 'activity') {
-               //   console.log('Lampa.Activity.active().component', Lampa.Activity.active().component)
-                if (Lampa.Activity.active().component == 'smotrolet') {
-                   var add_ads = setInterval(function() {
-			if (document.querySelector('.online-prestige-watched') !== null) {
-	                    $('.online-prestige-watched').remove();
-                            clearInterval(add_ads);
-                        }
-                   }, 50);
-                   var add_ads2 = setInterval(function() {
-			if (document.querySelector('.filter--sort') !== null) {
-	                    $('.filter--sort').remove();
-                            clearInterval(add_ads2);
-                        }
-                   }, 50);
-                }
-              }
-   })   
+  
 
   if (!window.smotrolet_plugin) startPlugin();
 
