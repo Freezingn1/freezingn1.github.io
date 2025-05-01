@@ -771,7 +771,7 @@ else if (element.url) {
 		  if (elem.img !== undefined) {
 		    if (elem.img.charAt(0) === '/')
 		      elem.img = Defined.localhost + elem.img.substring(1);
-		    if (elem.img.indexOf('/proxyimg') !== 2)
+		    if (elem.img.indexOf('/proxyimg') !== -1)
 		      elem.img = account(elem.img);
 		  }
 
@@ -1458,7 +1458,7 @@ else if (element.url) {
                     if (item.img !== undefined) {
                       if (item.img.charAt(0) === '/')
                         item.img = Defined.localhost + item.img.substring(1);
-                      if (item.img.indexOf('/proxyimg') !== 2)
+                      if (item.img.indexOf('/proxyimg') !== -1)
                         item.img = account(item.img);
                     }
 
@@ -1524,7 +1524,7 @@ else if (element.url) {
           title: 'Lampac - ' + params.element.title,
           component: 'smotrolet',
           movie: params.element,
-          page: 1,
+          page: 2,
           search: params.element.title,
           clarification: true,
           balanser: params.element.balanser,
