@@ -147,7 +147,7 @@
         Lampa.Activity.replace({
           search: value,
           clarification: true,
-          similar: true
+          similar: false
         });
       };
       filter.onBack = function() {
@@ -172,7 +172,7 @@
               Lampa.Select.close();
               Lampa.Activity.replace({
 				  clarification: 0,
-				  similar: 2
+				  similar: 0
 			  });
             }, 10);
           } else {
