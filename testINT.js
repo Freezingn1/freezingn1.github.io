@@ -69,7 +69,7 @@
     if (data.number_of_episodes && data.number_of_episodes > 0) {
     var episodesWord = data.number_of_episodes === 1 ? 'эпизод' : 
                       data.number_of_episodes < 5 ? 'эпизода' : 'эпизодов';
-    details.push(data.number_of_episodes + ' ' + episodesWord);
+    details.push('<span class="full-start__pg">' + data.number_of_episodes + ' ' + episodesWord + '</span>');
 }
         
         // Check if genres should be shown
