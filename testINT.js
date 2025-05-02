@@ -67,16 +67,8 @@
 		
 		// Добавляем количество эпизодов для сериалов
     if (data.number_of_episodes && data.number_of_episodes > 0) {
-    var episodesWord;
-    if (data.number_of_episodes % 10 === 1 && data.number_of_episodes % 100 !== 11) {
-        episodesWord = 'Эпизод';
-    } else if ([2, 3, 4].includes(data.number_of_episodes % 10) && ![12, 13, 14].includes(data.number_of_episodes % 100)) {
-        episodesWord = 'Эпизода';
-    } else {
-        episodesWord = 'Эпизодов';
+        details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
     }
-    details.push('<span class="full-start__pg">' + episodesWord + ' ' + data.number_of_episodes + '</span>');
-}
         
         // Check if genres should be shown
         if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres && data.genres.length > 0) {
