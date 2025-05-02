@@ -55,28 +55,41 @@
       };
 
       this.draw = function (data) {
-        var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-        var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
-        var head = [];
-        var details = [];
-        var countries = Lampa.Api.sources.tmdb.parseCountries(data);
-        var pg = Lampa.Api.sources.tmdb.parsePG(data);
-        if (create !== '0000') head.push('<span>' + create + '</span>');
-        if (countries.length > 0) head.push(countries.join(', '));
-        if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-        
-        // Check if genres should be shown
-        if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres && data.genres.length > 0) {
-            details.push(data.genres.map(function (item) {
-              return Lampa.Utils.capitalizeFirstLetter(item.name);
-            }).join(' | '));
-        }
-        
-        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-        html.find('.new-interface-info__head').empty().append(head.join(', '));
-        html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-      };
+    var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+    var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+    var head = [];
+    var details = [];
+    var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+    var pg = Lampa.Api.sources.tmdb.parsePG(data);
+    
+    if (create !== '0000') head.push('<span>' + create + '</span>');
+    if (countries.length > 0) head.push(countries.join(', '));
+    
+    // Добавляем оценку TMDB
+    if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+    
+    // Добавляем количество эпизодов для сериалов
+    if (data.number_of_episodes && data.number_of_episodes > 0) {
+        details.push(data.number_of_episodes + ' ' + Lampa.Utils.declOfNum(data.number_of_episodes, [
+            Lampa.Lang.translate('season_episodes_1'),
+            Lampa.Lang.translate('season_episodes_2'),
+            Lampa.Lang.translate('season_episodes_5')
+        ]));
+    }
+    
+    // Проверяем нужно ли показывать жанры
+    if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres && data.genres.length > 0) {
+        details.push(data.genres.map(function (item) {
+            return Lampa.Utils.capitalizeFirstLetter(item.name);
+        }).join(' | '));
+    }
+    
+    if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+    if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+    
+    html.find('.new-interface-info__head').empty().append(head.join(', '));
+    html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+};
 
       this.load = function (data) {
         var _this = this;
