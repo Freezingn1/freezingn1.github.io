@@ -68,7 +68,9 @@
 		// Добавляем количество эпизодов для сериалов
     if (data.number_of_episodes && data.number_of_episodes > 0) {
         details.push(data.number_of_episodes + ' ' + Lampa.Utils.declOfNum(data.number_of_episodes, [
-            Lampa.Lang.translate('number_of_episodes'),
+            Lampa.Lang.translate('season_episode_1'),
+            Lampa.Lang.translate('season_episode_2'),
+            Lampa.Lang.translate('season_episode_5')
         ]));
     }
         
