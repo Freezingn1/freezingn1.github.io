@@ -25,7 +25,7 @@
                     const logoPath = images.logos[0].file_path;
                     if (logoPath) {
                         const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
-                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
+                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="' + imageUrl + '" />');
                     } else {
                          // Fallback to text title if no logo path
                          html.find('.new-interface-info__title').text(data.title);
