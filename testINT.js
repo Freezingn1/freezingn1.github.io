@@ -150,7 +150,7 @@
             }, function() {
                 _this.draw(data);
             });
-        }, );
+        }, 1);
       };
 
       this.render = function () {
