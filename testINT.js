@@ -19,40 +19,70 @@
             const type = data.name ? 'tv' : 'movie';
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language'));
 
-            // Fetch logos and display the first one if available
-            network.silent(url, function(images) {
-                if (images.logos && images.logos.length > 0) {
-                    const logoPath = images.logos[0].file_path;
-                    if (logoPath) {
-                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
-                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="' + imageUrl + '" />');
-                    } else {
-                         // Fallback to text title if no logo path
-                         html.find('.new-interface-info__title').text(data.title);
-                    }
-                } else {
-                    // Fallback to text title if no logos found
-                    html.find('.new-interface-info__title').text(data.title);
+            this.update = function (data) {
+    html.find('.new-interface-info__head,.new-interface-info__details').text('---');
+
+    // Функция для загрузки логотипа с повторами
+    const loadLogo = (url, attempts = 3) => {
+        network.silent(url, function(images) {
+            if (images.logos && images.logos.length > 0) {
+                const logoPath = images.logos[0].file_path;
+                if (logoPath) {
+                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        html.find('.new-interface-info__title').html(
+                            `<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="${imageUrl}" />`
+                        );
+                    };
+                    
+                    img.onerror = () => {
+                        if (attempts > 1) {
+                            setTimeout(() => loadLogo(url, attempts - 1), 500);
+                        } else {
+                            fallbackToTitle();
+                        }
+                    };
+                    
+                    img.src = imageUrl;
+                    return;
                 }
-            }, function() {
-                 // Fallback to text title on error
-                 html.find('.new-interface-info__title').text(data.title);
-            });
-        } else {
-             // Display text title if logo display is disabled
-             html.find('.new-interface-info__title').text(data.title);
-        }
+            }
+            fallbackToTitle();
+        }, function() {
+            if (attempts > 1) {
+                setTimeout(() => loadLogo(url, attempts - 1), 500);
+            } else {
+                fallbackToTitle();
+            }
+        });
+    };
 
-        // Check if description should be shown
-        if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
-            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
-        } else {
-            html.find('.new-interface-info__description').hide();
-        }
+    const fallbackToTitle = () => {
+        html.find('.new-interface-info__title').text(data.title);
+    };
 
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.load(data);
-      };
+    if (Lampa.Storage.get('new_interface_logo') === true) {
+        const type = data.name ? 'tv' : 'movie';
+        const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
+        
+        // Начинаем загрузку с 3 попытками
+        loadLogo(url, 3);
+    } else {
+        fallbackToTitle();
+    }
+
+    // Остальной код update...
+    if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
+        html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
+    } else {
+        html.find('.new-interface-info__description').hide();
+    }
+
+    Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+    this.load(data);
+};
 
       this.draw = function (data) {
         var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
