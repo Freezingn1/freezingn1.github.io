@@ -1,32 +1,34 @@
 (function() {
-    if (!window.plugin_api) {
-        console.error("Плагины не поддерживаются в этой версии Lampa!");
-        return;
+    console.log("[Lampa DarkBG] Скрипт запущен");
+
+    function applyDarkStyles() {
+        const elements = document.querySelectorAll(`
+            .selectbox__content, 
+            .layer--height,
+            .selector__body,
+            .modal-layer
+        `);
+
+        if (elements.length === 0) {
+            console.log("[Lampa DarkBG] Элементы не найдены, ждём...");
+            return;
+        }
+
+        elements.forEach(el => {
+            el.style.cssText = 'background-color: #121212 !important;';
+        });
+        console.log(`[Lampa DarkBG] Обработано ${elements.length} элементов`);
     }
 
-    window.plugin_api.add({
-        name: "Dark SelectBox Background",
-        version: "1.0",
-        description: "Меняет фон selectbox__content и layer--height на #121212",
-        author: "Your Name",
-        
-        // Запуск плагина
-        run: function() {
-            console.log("[DarkBG] Плагин запущен");
-            
-            const applyStyles = () => {
-                document.querySelectorAll('.selectbox__content, .layer--height').forEach(el => {
-                    el.style.backgroundColor = '#121212';
-                });
-            };
+    // Первый запуск
+    applyDarkStyles();
 
-            applyStyles();
-            setInterval(applyStyles, 1000); // Проверка каждую секунду
-        },
-        
-        // Остановка
-        destroy: function() {
-            console.log("[DarkBG] Плагин остановлен");
-        }
-    });
+    // Повторный проверяем каждую секунду
+    const interval = setInterval(applyDarkStyles, 1000);
+
+    // Остановка (если нужно)
+    window.stopDarkBG = () => {
+        clearInterval(interval);
+        console.log("[Lampa DarkBG] Остановлено");
+    };
 })();
