@@ -480,8 +480,10 @@
                 margin: 20px 0;
                 max-width: 80%;
                 max-height: 120px;
+                min-height: 60px;
                 display: flex;
                 justify-content: flex-start;
+                align-items: center;
             }
             
             .full-start-new__logo {
@@ -502,6 +504,7 @@
                 .full-start-new__logo-container {
                     max-height: 80px;
                     margin: 10px 0;
+                    min-height: 40px;
                 }
             }
             
@@ -565,11 +568,19 @@
             }
         }
 
-        function loadLogo(data, element) {
+        function loadMovieLogo(element, data) {
+            const logoContainer = element.find('.full-start-new__logo-container');
+            const titleElement = element.find('.full-start-new__title');
+            
+            // Сначала скрываем текстовый заголовок
+            titleElement.hide();
+
+            // Проверяем наличие логотипов в данных
             if (data.images && data.images.logos && data.images.logos.length > 0) {
                 const lang = Lampa.Storage.field('tmdb_lang') || 'en';
                 const logos = [...data.images.logos];
                 
+                // Сортируем логотипы по релевантности
                 logos.sort((a, b) => {
                     if (a.iso_639_1 === lang) return -1;
                     if (b.iso_639_1 === lang) return 1;
@@ -577,17 +588,27 @@
                     if (b.iso_639_1 === 'en') return 1;
                     return 0;
                 });
-                
+
+                // Берем первый подходящий логотип
                 const logo = logos[0];
                 const logoUrl = `https://image.tmdb.org/t/p/original${logo.file_path}`;
                 
-                Lampa.Utils.imgLoad(element.find('.full-start-new__logo'), logoUrl, () => {
-                    element.find('.full-start-new__logo').addClass('loaded');
-                }, () => {
-                    element.find('.full-start-new__title').show();
+                // Создаем элемент для логотипа
+                const logoImg = $('<img class="full-start-new__logo" />');
+                logoContainer.empty().append(logoImg);
+                
+                // Пробуем загрузить логотип
+                Lampa.Utils.imgLoad(logoImg, logoUrl, function() {
+                    logoImg.addClass('loaded');
+                }, function() {
+                    // Если логотип не загрузился, показываем текстовый заголовок
+                    titleElement.show();
+                    logoContainer.remove();
                 });
             } else {
-                element.find('.full-start-new__title').show();
+                // Если логотипов нет, показываем текстовый заголовок
+                titleElement.show();
+                logoContainer.remove();
             }
         }
 
@@ -596,7 +617,8 @@
                 const element = e.object.activity.render();
                 element.find('.full-start__background').addClass('cardify__background');
                 
-                loadLogo(e.data, element);
+                // Загружаем логотип
+                loadMovieLogo(element, e.data);
                 
                 if (!Lampa.Storage.field('cardify_run_trailers')) return;
                 const trailer = video(e.data);
