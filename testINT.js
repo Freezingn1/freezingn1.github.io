@@ -38,8 +38,8 @@
                         let logoToUse = null;
                         
                         if (images.logos?.length) {
-                            logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en') || 
-                                        images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                            logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                                        images.logos.find(logo => logo.iso_639_1 === 'en') || 
                                         images.logos[0];
                         }
                         
@@ -55,7 +55,7 @@
                                 if (!currentData || currentData.timestamp !== currentTimestamp) return;
                                 
                                 const logoHtml = `
-                                    <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;">
+                                    <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
                                         <img style="max-width:100%; max-height:100%; object-fit:contain;" src="${imageUrl}" />
                                     </div>
                                 `;
