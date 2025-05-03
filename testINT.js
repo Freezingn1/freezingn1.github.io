@@ -29,7 +29,8 @@
             if (logoCache[cacheKey]) {
                 html.find('.new-interface-info__title').html(logoCache[cacheKey]);
             } else {
-                const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
+                // Сначала попробуем получить логотипы с текущим языком
+                const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=${Lampa.Storage.get('language')},en,null`);
 
                 const loadLogo = (attempt = 1) => {
                     network.silent(url, (images) => {
@@ -38,51 +39,80 @@
                         let logoToUse = null;
                         
                         if (images.logos?.length) {
-                            logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                            // Сначала ищем логотип на текущем языке
+                            logoToUse = images.logos.find(logo => logo.iso_639_1 === Lampa.Storage.get('language')) || 
+                                        // Затем на английском
                                         images.logos.find(logo => logo.iso_639_1 === 'en') || 
+                                        // Затем без языка
+                                        images.logos.find(logo => !logo.iso_639_1) || 
+                                        // Или просто первый доступный
                                         images.logos[0];
+                            
+                            // Если не нашли подходящий логотип, попробуем запросить все доступные логотипы
+                            if (!logoToUse && attempt === 1) {
+                                const allLogosUrl = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}`);
+                                network.silent(allLogosUrl, (allImages) => {
+                                    if (allImages.logos?.length) {
+                                        logoToUse = allImages.logos.find(logo => logo.iso_639_1 === Lampa.Storage.get('language')) || 
+                                                    allImages.logos.find(logo => logo.iso_639_1 === 'en') || 
+                                                    allImages.logos.find(logo => !logo.iso_639_1) || 
+                                                    allImages.logos[0];
+                                        
+                                        if (logoToUse) {
+                                            displayLogo(logoToUse);
+                                        } else {
+                                            showTitleFallback();
+                                        }
+                                    } else {
+                                        showTitleFallback();
+                                    }
+                                }, () => {
+                                    showTitleFallback();
+                                });
+                                return;
+                            }
                         }
                         
                         if (logoToUse?.file_path) {
-                            const isSvg = logoToUse.file_path.endsWith('.svg');
-                            const imageUrl = isSvg 
-                                ? Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`)
-                                : Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
-                                
-                            const img = new Image();
-                            
-                            img.onload = () => {
-                                if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                
-                                const logoHtml = `
-                                    <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;">
-                                        <img style="max-width:100%; max-height:100%; object-fit:contain;" src="${imageUrl}" />
-                                    </div>
-                                `;
-                                logoCache[cacheKey] = logoHtml;
-                                html.find('.new-interface-info__title').html(logoHtml);
-                            };
-                            
-                            img.onerror = () => {
-                                if (attempt < 3) {
-                                    setTimeout(() => loadLogo(attempt + 1), 300);
-                                } else {
-                                    showTitleFallback();
-                                }
-                            };
-                            
-                            img.src = imageUrl;
+                            displayLogo(logoToUse);
                         } else {
                             showTitleFallback();
                         }
                     }, () => {
-                        if (attempt < 3) {
+                        if (attempt < 2) {
                             setTimeout(() => loadLogo(attempt + 1), 300);
                         } else {
                             showTitleFallback();
                         }
                     });
                 };
+
+                function displayLogo(logo) {
+                    const isSvg = logo.file_path.endsWith('.svg');
+                    const imageUrl = isSvg 
+                        ? Lampa.TMDB.image(`/t/p/original${logo.file_path}`)
+                        : Lampa.TMDB.image(`/t/p/w500${logo.file_path}`);
+                        
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                        
+                        const logoHtml = `
+                            <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;">
+                                <img style="max-width:100%; max-height:100%; object-fit:contain;" src="${imageUrl}" />
+                            </div>
+                        `;
+                        logoCache[cacheKey] = logoHtml;
+                        html.find('.new-interface-info__title').html(logoHtml);
+                    };
+                    
+                    img.onerror = () => {
+                        showTitleFallback();
+                    };
+                    
+                    img.src = imageUrl;
+                }
 
                 function showTitleFallback() {
                     if (!currentData || currentData.timestamp !== currentTimestamp) return;
@@ -105,6 +135,7 @@
         this.load(data);
       };
 
+      // Остальной код остается без изменений
       this.draw = function (data) {
         if (!data && currentData && currentData.data) data = currentData.data;
         if (!data) return;
@@ -126,7 +157,7 @@
         }
         
         if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
-            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
+            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | ');
         }
         
         if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
@@ -172,6 +203,7 @@
       };
     }
 
+    // Остальная часть кода остается без изменений
     function component(object) {
       var network = new Lampa.Reguest();
       var scroll = new Lampa.Scroll({
