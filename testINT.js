@@ -31,46 +31,70 @@
             } else {
                 const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
 
-                const loadLogo = (attempt = 1) => {
-                    network.silent(url, (images) => {
-                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                        
-                        let logoToUse = null;
-                        
-                        // Ищем русский логотип
-                        if (images.logos?.length) {
-                            logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
-                            
-                            // Если русский не найден, ищем английский
-                            if (!logoToUse) {
-                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
-                            }
-                            
-                            // Если ни русский, ни английский не найдены, берем первый доступный
-                            if (!logoToUse && images.logos.length > 0) {
-                                logoToUse = images.logos[0];
-                            }
-                        }
-                        
-                        if (logoToUse?.file_path) {
-                            const isSvg = logoToUse.file_path.endsWith('.svg');
-                            const imageUrl = isSvg 
-                                ? Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`)
-                                : Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
-                                
-                            const img = new Image();
-                            
-                            img.onload = () => {
-                                if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                
-                                const logoHtml = `
-                                    <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
-                                        <img style="max-width:100%; max-height:100%; object-fit:contain;" src="${imageUrl}" />
-                                    </div>
-                                `;
-                                logoCache[cacheKey] = logoHtml;
-                                html.find('.new-interface-info__title').html(logoHtml);
-                            };
+                // В функции update():
+const loadLogo = (attempt = 1) => {
+    network.silent(url, (images) => {
+        if (!currentData || currentData.timestamp !== currentTimestamp) return;
+        
+        let logoToUse = null;
+        
+        // 1. Попытка найти русский логотип
+        logoToUse = images.logos?.find(logo => logo.iso_639_1 === 'ru');
+        
+        // 2. Если нет русского, ищем английский
+        if (!logoToUse) {
+            logoToUse = images.logos?.find(logo => logo.iso_639_1 === 'en');
+        }
+        
+        // 3. Если нет языковых логотипов, берем любой доступный
+        if (!logoToUse && images.logos?.length > 0) {
+            // Сортируем по размеру, выбираем самый большой
+            logoToUse = [...images.logos].sort((a, b) => 
+                (b.width * b.height) - (a.width * a.height)
+            )[0];
+        }
+        
+        // 4. Если вообще нет логотипов, используем заголовок
+        if (!logoToUse?.file_path) {
+            showTitleFallback();
+            return;
+        }
+        
+        const imageUrl = Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`);
+        const img = new Image();
+        
+        img.onload = () => {
+            if (!currentData || currentData.timestamp !== currentTimestamp) return;
+            
+            const logoHtml = `
+                <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
+                    <img style="max-width:100%; max-height:100%; object-fit:contain;" 
+                         src="${imageUrl}" 
+                         alt="${data.title || data.name}" 
+                         onerror="this.parentElement.innerHTML='${data.title || data.name}'">
+                </div>
+            `;
+            logoCache[cacheKey] = logoHtml;
+            html.find('.new-interface-info__title').html(logoHtml);
+        };
+        
+        img.onerror = () => {
+            if (attempt < 3) {
+                setTimeout(() => loadLogo(attempt + 1), 300);
+            } else {
+                showTitleFallback();
+            }
+        };
+        
+        img.src = imageUrl;
+    }, () => {
+        if (attempt < 3) {
+            setTimeout(() => loadLogo(attempt + 1), 300);
+        } else {
+            showTitleFallback();
+        }
+    });
+};
                             
                             img.onerror = () => {
                                 if (attempt < 3) {
