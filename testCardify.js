@@ -354,53 +354,7 @@
     }();
 
     function startPlugin() {
-        function startPlugin() {
         if (!Lampa.Platform.screen('tv')) return console.log('Cardify', 'no tv');
-
-        // Добавляем функцию для загрузки логотипа
-        function loadMovieLogo(element, data) {
-            const logoContainer = element.find('.full-start-new__logo-container');
-            const titleElement = element.find('.full-start-new__title');
-            
-            // Сначала скрываем текстовый заголовок
-            titleElement.hide();
-
-            // Проверяем наличие логотипов в данных
-            if (data.images && data.images.logos && data.images.logos.length > 0) {
-                const lang = Lampa.Storage.field('tmdb_lang') || 'en';
-                const logos = [...data.images.logos];
-                
-                // Сортируем логотипы по релевантности
-                logos.sort((a, b) => {
-                    if (a.iso_639_1 === lang) return -1;
-                    if (b.iso_639_1 === lang) return 1;
-                    if (a.iso_639_1 === 'en') return -1;
-                    if (b.iso_639_1 === 'en') return 1;
-                    return 0;
-                });
-
-                // Берем первый подходящий логотип
-                const logo = logos[0];
-                const logoUrl = `https://image.tmdb.org/t/p/original${logo.file_path}`;
-                
-                // Создаем элемент для логотипа
-                const logoImg = $('<img class="full-start-new__logo" />');
-                logoContainer.empty().append(logoImg);
-                
-                // Пробуем загрузить логотип
-                Lampa.Utils.imgLoad(logoImg, logoUrl, function() {
-                    logoImg.addClass('loaded');
-                }, function() {
-                    // Если логотип не загрузился, показываем текстовый заголовок
-                    titleElement.show();
-                    logoContainer.remove();
-                });
-            } else {
-                // Если логотипов нет, показываем текстовый заголовок
-                titleElement.show();
-                logoContainer.remove();
-            }
-        }
 
         Lampa.Lang.add({
             cardify_enable_sound: {
@@ -435,8 +389,7 @@
                 <div class="full-start-new__right">
                     <div class="cardify__left">
                         <div class="full-start-new__head"></div>
-                        <div class="full-start-new__logo-container"></div>
-                        <div class="full-start-new__title">{title}</div>
+                        <div class="full-start-new__logo-container">
                             <img class="full-start-new__logo" />
                         </div>
                         <div class="full-start-new__title" style="display:none">{title}</div>
@@ -515,7 +468,6 @@
                     <span>#{full_trailers}</span>
                 </div>
             </div>
-			</div>
         </div>
         `);
 
@@ -525,20 +477,18 @@
             
             /* Стили для логотипа */
             .full-start-new__logo-container {
-                margin: 15px 0;
+                margin: 20px 0;
                 max-width: 80%;
                 max-height: 120px;
-                min-height: 60px;
                 display: flex;
                 justify-content: flex-start;
-                align-items: center;
             }
             
             .full-start-new__logo {
                 max-height: 100%;
                 max-width: 100%;
                 object-fit: contain;
-                filter: drop-shadow(0 0 8px rgba(0,0,0,0.7));
+                filter: drop-shadow(0 0 10px rgba(0,0,0,0.7));
                 opacity: 0;
                 transition: opacity 0.3s ease;
             }
@@ -547,11 +497,11 @@
                 opacity: 1;
             }
             
+            /* Адаптация для мобильных устройств */
             @media (max-width: 768px) {
                 .full-start-new__logo-container {
                     max-height: 80px;
                     margin: 10px 0;
-                    min-height: 40px;
                 }
             }
             
