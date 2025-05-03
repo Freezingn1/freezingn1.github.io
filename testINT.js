@@ -9,8 +9,7 @@
         var logoCache = {};
         var currentData = null;
         var currentRequest = null;
-        var MAX_CACHE_SIZE = 300;
-        var pendingLogos = {};
+        var MAX_CACHE_SIZE = 200;
 
         this.create = function () {
             html = $(`
@@ -30,15 +29,11 @@
             if (keys.length > MAX_CACHE_SIZE) {
                 for (var i = 0; i < keys.length - MAX_CACHE_SIZE; i++) {
                     delete logoCache[keys[i]];
-                    delete pendingLogos[keys[i]];
                 }
             }
         }
 
         this.update = function (data) {
-            if (!data) return;
-
-            // Отменяем предыдущий запрос
             if (currentRequest) {
                 network.clear(currentRequest);
                 currentRequest = null;
@@ -49,66 +44,47 @@
                 timestamp: Date.now()
             };
 
-            // Сначала рисуем базовую информацию
             this.draw(data);
 
-            // Всегда показываем название сразу
-            var titleElement = html.find('.new-interface-info__title');
-            var safeTitle = (data.title || data.name).replace(/['"]/g, '');
-            titleElement.text(safeTitle);
-
-            // Загружаем логотип если включена опция
             if (Lampa.Storage.get('new_interface_logo') === true) {
-                this.loadLogo(data, safeTitle);
+                this.loadLogo(data);
+            } else {
+                html.find('.new-interface-info__title').text(data.title || data.name);
             }
 
-            // Описание
             if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
-                html.find('.new-interface-info__description')
-                    .text(data.overview || Lampa.Lang.translate('full_notext'))
-                    .show();
+                html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
             } else {
                 html.find('.new-interface-info__description').hide();
             }
 
-            // Фоновое изображение
-            if (data.backdrop_path) {
-                Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            }
-
-            // Дополнительные данные
+            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
             this.load(data);
         };
 
-        this.loadLogo = function(data, safeTitle) {
+        this.loadLogo = function(data) {
             var type = data.name ? 'tv' : 'movie';
             var cacheKey = type + '_' + data.id;
             var currentTimestamp = currentData.timestamp;
-            var titleElement = html.find('.new-interface-info__title');
 
-            // Если есть в кэше - используем
+            html.find('.new-interface-info__title').empty();
+
             if (logoCache[cacheKey]) {
-                titleElement.html(logoCache[cacheKey]);
+                html.find('.new-interface-info__title').html(logoCache[cacheKey]);
                 return;
             }
-
-            // Если уже загружается - пропускаем
-            if (pendingLogos[cacheKey]) return;
-            pendingLogos[cacheKey] = true;
 
             var url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + 
                     Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language') + 
                     '&include_image_language=ru,en,null');
 
-            currentRequest = network.timeout(3000).silent(url, (function(images) {
+            currentRequest = network.timeout(3000).silent(url, function(images) {
                 currentRequest = null;
-                delete pendingLogos[cacheKey];
-                
                 if (!currentData || currentData.timestamp !== currentTimestamp) return;
 
                 var logoToUse = null;
-                
-                // Выбираем лучший логотип
+                var safeTitle = (data.title || data.name).replace(/['"]/g, '');
+
                 if (images.logos && images.logos.length) {
                     logoToUse = images.logos.find(function(logo) {
                         return logo.iso_639_1 === 'ru';
@@ -124,41 +100,35 @@
                     img.onload = function() {
                         if (!currentData || currentData.timestamp !== currentTimestamp) return;
                         
-                        var logoHtml = `
-                            <div style="margin-top:0.3em; margin-bottom:0.3em; max-width:8em; max-height:4em;">
-                                <img style="max-width:8em; max-height:2.8em; object-fit:contain;" 
-                                     src="${imageUrl}" 
-                                     alt="${safeTitle}"
-                                     onerror="this.parentElement.innerHTML='${safeTitle}'">
-                            </div>`;
+                        var logoHtml = '<div style="margin-top:0.3em; margin-bottom:0.3em; max-width:8em; max-height:4em;">' +
+                            '<img style="max-width:8em; max-height:2.8em; object-fit:contain;" ' +
+                            'src="' + imageUrl + '" alt="' + safeTitle + '" ' +
+                            'onerror="this.parentElement.innerHTML=\'' + safeTitle + '\'">' +
+                            '</div>';
                         
                         logoCache[cacheKey] = logoHtml;
                         cleanCache();
-                        titleElement.html(logoHtml);
+                        html.find('.new-interface-info__title').html(logoHtml);
                     };
                     
                     img.onerror = function() {
-                        var fallbackHtml = `<div>${safeTitle}</div>`;
-                        logoCache[cacheKey] = fallbackHtml;
+                        logoCache[cacheKey] = '<div>' + safeTitle + '</div>';
                         cleanCache();
-                        titleElement.html(fallbackHtml);
+                        html.find('.new-interface-info__title').text(data.title || data.name);
                     };
                     
                     img.src = imageUrl;
                 } else {
-                    var fallbackHtml = `<div>${safeTitle}</div>`;
-                    logoCache[cacheKey] = fallbackHtml;
+                    logoCache[cacheKey] = '<div>' + safeTitle + '</div>';
                     cleanCache();
-                    titleElement.html(fallbackHtml);
+                    html.find('.new-interface-info__title').text(data.title || data.name);
                 }
-            }).bind(this), (function() {
+            }, function() {
                 currentRequest = null;
-                delete pendingLogos[cacheKey];
-                var fallbackHtml = `<div>${safeTitle}</div>`;
-                logoCache[cacheKey] = fallbackHtml;
+                logoCache[cacheKey] = '<div>' + (data.title || data.name) + '</div>';
                 cleanCache();
-                titleElement.html(fallbackHtml);
-            }).bind(this));
+                html.find('.new-interface-info__title').text(data.title || data.name);
+            });
         };
 
         this.draw = function(data) {
@@ -171,45 +141,29 @@
             var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
             var head = [];
             var details = [];
-            var countries = [];
-            var pg = '';
+            var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+            var pg = Lampa.Api.sources.tmdb.parsePG(data);
             
-            try {
-                countries = Lampa.Api.sources.tmdb.parseCountries(data) || [];
-                pg = Lampa.Api.sources.tmdb.parsePG(data) || '';
-            } catch (e) {
-                console.error('Error parsing details:', e);
-            }
-            
-            // Год
             if (createYear !== '0000') head.push('<span>' + createYear + '</span>');
             
-            // Страны
             if (countries.length > 0) head.push(countries.join(', '));
             
-            // Рейтинг
             if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
             
-            // Количество эпизодов
             if (data.number_of_episodes > 0) {
                 details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
             }
             
-            // Жанры
-            if (Lampa.Storage.get('new_interface_show_genres', true) !== false && 
-                data.genres && data.genres.length > 0) {
+            if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres && data.genres.length > 0) {
                 details.push(data.genres.map(function(item) {
-                    return item && item.name ? Lampa.Utils.capitalizeFirstLetter(item.name) : '';
-                }).filter(Boolean).join(' | '));
+                    return Lampa.Utils.capitalizeFirstLetter(item.name);
+                }).join(' | '));
             }
             
-            // Время
             if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
             
-            // Возрастной рейтинг
             if (pg) details.push('<span class="full-start__pg" style="font-size:0.9em;">' + pg + '</span>');
             
-            // Обновляем DOM
             html.find('.new-interface-info__head').empty().append(head.join(', '));
             html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
         };
@@ -217,8 +171,6 @@
         this.load = function(data) {
             var _this = this;
             clearTimeout(timer);
-            
-            if (!data || !data.id) return;
             
             var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + 
                     '?api_key=' + Lampa.TMDB.key() + 
@@ -255,7 +207,6 @@
             if (html) html.remove();
             loaded = {};
             logoCache = {};
-            pendingLogos = {};
             html = null;
         };
     }
@@ -344,8 +295,6 @@
         };
 
         this.background = function (elem) {
-            if (!elem || !elem.backdrop_path) return;
-            
             var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
             clearTimeout(background_timer);
             if (new_background == background_last) return;
