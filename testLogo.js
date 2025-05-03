@@ -1,6 +1,6 @@
 !function() {
     "use strict";
-    
+
     Lampa.SettingsApi.addParam({
         component: "interface",
         param: {
@@ -11,48 +11,47 @@
         },
         field: {
             name: "Логотипы вместо названий",
-            description: "Отображает логотипы фильмов вместо текста"
+            description: "Приоритетно использует русские логотипы"
         }
     });
 
-    window.logoplugin || (window.logoplugin = !0, Lampa.Listener.follow("full", function(a) {
-        if ("complite" === a.type && "1" !== Lampa.Storage.get("logo_glav")) {
-            var e = a.data.movie;
-            
-            // Для аниме пробуем сначала Shikimori/AniList, если TMDB не дал лого
-            var title = e.title || e.name;
-            var isAnime = e.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
-                          || /аниме|anime/i.test(title);
+    if (!window.logoplugin) {
+        window.logoplugin = true;
 
-            // 1. Запрос логотипа из TMDB
-            var tmdbUrl = Lampa.TMDB.api(e.name ? "tv" : "movie") + "/" + e.id + "/images?api_key=" + Lampa.TMDB.key();
-            
-            $.get(tmdbUrl, function(tmdbData) {
-                if (tmdbData.logos?.[0]?.file_path) {
-                    // Логотип найден в TMDB
-                    var logoPath = tmdbData.logos[0].file_path;
-                    var imageUrl = Lampa.TMDB.image("/t/p/w300" + logoPath);
-                    
-                    a.object.activity.render()
+        Lampa.Listener.follow("full", function(event) {
+            if (event.type !== "complite" || Lampa.Storage.get("logo_glav") === "1") return;
+
+            const movie = event.data.movie;
+            const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
+                            || /аниме|anime/i.test(movie.title || movie.name);
+
+            // 1️⃣ Запрос логотипов с приоритетом на русские (ru)
+            const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}&include_image_language=ru,null`;
+
+            $.get(tmdbUrl, function(data) {
+                const logos = data.logos || [];
+                
+                // Ищем русский логотип (language = "ru")
+                let logo = logos.find(l => l.iso_639_1 === "ru") || logos[0];
+                
+                if (logo?.file_path) {
+                    const imageUrl = Lampa.TMDB.image("/t/p/w300" + logo.file_path);
+                    event.object.activity.render()
                         .find(".full-start-new__title")
                         .html(`<img style="margin-top: 5px; max-height: 125px;" src="${imageUrl}" />`);
                 } 
                 else if (isAnime) {
-                    // Для аниме: пробуем Shikimori или AniList
-                    var searchTitle = encodeURIComponent(title.replace(/\(.*?\)/g, "").trim());
-                    var shikimoriUrl = `https://shikimori.one/animes?search=${searchTitle}`;
+                    // 2️⃣ Для аниме: пробуем Shikimori (если нет русского лого в TMDB)
+                    const title = encodeURIComponent((movie.title || movie.name).replace(/\(.*?\)/g, "").trim());
+                    const shikimoriUrl = `https://shikimori.one/animes?search=${title}`;
                     
-                    // Альтернатива: AniList API (нужен парсинг)
-                    // var anilistUrl = `https://anilist.co/search/anime?search=${searchTitle}`;
-                    
-                    // Временное решение: подставляем заголовок с аниме-стилем
-                    a.object.activity.render()
+                    // Здесь можно добавить парсинг Shikimori (нужен CORS-прокси)
+                    // Пока просто стилизуем заголовок под аниме
+                    event.object.activity.render()
                         .find(".full-start-new__title")
-                        .html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${title}</span>`);
+                        .html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${movie.title || movie.name}</span>`);
                 }
-            }).fail(function() {
-                console.log("TMDB request failed");
-            });
-        }
-    }));
+            }).fail(() => console.error("Ошибка загрузки логотипов из TMDB"));
+        });
+    }
 }();
