@@ -7,19 +7,20 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var logoCache = {};
-      var currentData = null;
+      var currentData = null; // Добавляем хранение текущих данных
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
+        // Сохраняем текущие данные
         currentData = data;
         
-        // Мгновенное отображение базовой информации
-        this.drawBasicInfo(data);
+        // Сначала рисуем основные данные
+        this.draw(data);
 
-        // Загрузка логотипов (если включены)
+        // Затем загружаем логотипы (если включены)
         if (Lampa.Storage.get('new_interface_logo') === true) {
             const type = data.name ? 'tv' : 'movie';
             const cacheKey = `${type}_${data.id}`;
@@ -45,17 +46,24 @@
                                 
                                 img.onerror = () => {
                                     if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                                    else html.find('.new-interface-info__title').text(data.title);
                                 };
                                 
                                 img.src = imageUrl;
+                                return;
                             }
                         }
+                        html.find('.new-interface-info__title').text(data.title);
                     }, () => {
                         if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                        else html.find('.new-interface-info__title').text(data.title);
                     });
                 };
+
                 loadLogo();
             }
+        } else {
+            html.find('.new-interface-info__title').text(data.title);
         }
 
         // Описание
@@ -66,26 +74,27 @@
         }
 
         Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.loadAdditionalData(data);
+        this.load(data);
       };
 
-      this.drawBasicInfo = function(data) {
+      this.draw = function (data) {
+        // Если данные не пришли, используем сохраненные
+        if (!data && currentData) data = currentData;
         if (!data) return;
-        
+
         var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-        var vote = data.vote_average ? parseFloat(data.vote_average).toFixed(1) : null;
+        var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
         var head = [];
         var details = [];
-        var countries = data.production_countries || [];
+        var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+        var pg = Lampa.Api.sources.tmdb.parsePG(data);
         
         if (create !== '0000') head.push('<span>' + create + '</span>');
-        if (countries.length > 0) {
-            head.push(countries.map(c => c.iso_3166_1 ? Lampa.Utils.countryName(c.iso_3166_1) : '').filter(Boolean).join(', '));
-        }
+        if (countries.length > 0) head.push(countries.join(', '));
         
         if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
         
-        if (data.number_of_episodes > 0) {
+        if (data.number_of_episodes && data.number_of_episodes > 0) {
             details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
         }
         
@@ -94,55 +103,35 @@
         }
         
         if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
         
+        // Обновляем информацию без сброса
         html.find('.new-interface-info__head').empty().append(head.join(', '));
         html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-        html.find('.new-interface-info__title').text(data.title || data.name);
       };
 
-      this.loadAdditionalData = function(data) {
+      this.load = function (data) {
         var _this = this;
         clearTimeout(timer);
         
         var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
         
         if (loaded[url]) {
-            this.drawAdditionalInfo(loaded[url]);
+            this.draw(loaded[url]);
             return;
         }
         
-        timer = setTimeout(function() {
+        timer = setTimeout(function () {
             network.clear();
             network.timeout(5000);
-            network.silent(url, function(movie) {
+            network.silent(url, function (movie) {
                 loaded[url] = movie;
-                _this.drawAdditionalInfo(movie);
+                _this.draw(movie);
+            }, function() {
+                // При ошибке используем текущие данные
+                _this.draw(data);
             });
-        }, 100);
-      };
-
-      this.drawAdditionalInfo = function(data) {
-        var details = [];
-        var pg = Lampa.Api.sources.tmdb.parsePG(data);
-        
-        if (data.vote_average > 0) {
-            var vote = parseFloat(data.vote_average).toFixed(1);
-            details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-        }
-        
-        if (data.number_of_episodes > 0) {
-            details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
-        }
-        
-        if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
-            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
-        }
-        
-        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-        
-        // Обновляем только details
-        var currentDetails = html.find('.new-interface-info__details').html();
-        html.find('.new-interface-info__details').html(currentDetails + details.join('<span class="new-interface-info__split">&#9679;</span>'));
+        }, 300);
       };
 
       this.render = function () {
