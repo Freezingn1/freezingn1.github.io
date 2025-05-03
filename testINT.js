@@ -7,7 +7,8 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var logoCache = {};
-      var currentData = null; // Добавляем хранение текущих данных
+      var currentData = null;
+      this.logoTimer = null;
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
@@ -19,49 +20,65 @@
         
         // Сначала рисуем основные данные
         this.draw(data);
-
-        // Затем загружаем логотипы (если включены)
+        
+        // Очищаем предыдущий логотип перед загрузкой нового
+        html.find('.new-interface-info__title').text(data.title);
+        
+        // Затем загружаем логотипы (если включены) с задержкой
         if (Lampa.Storage.get('new_interface_logo') === true) {
-            const type = data.name ? 'tv' : 'movie';
-            const cacheKey = `${type}_${data.id}`;
+            // Отменяем предыдущий таймер, если он есть
+            if (this.logoTimer) clearTimeout(this.logoTimer);
             
-            if (logoCache[cacheKey]) {
-                html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-            } else {
-                const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
+            // Устанавливаем новый таймер с задержкой 300мс
+            this.logoTimer = setTimeout(() => {
+                const type = data.name ? 'tv' : 'movie';
+                const cacheKey = `${type}_${data.id}`;
+                
+                if (logoCache[cacheKey]) {
+                    html.find('.new-interface-info__title').html(logoCache[cacheKey]);
+                } else {
+                    const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
 
-                const loadLogo = (attempt = 1) => {
-                    network.silent(url, (images) => {
-                        if (images.logos?.length > 0) {
-                            const logoPath = images.logos[0].file_path;
-                            if (logoPath) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
-                                const img = new Image();
-                                
-                                img.onload = () => {
-                                    const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
-                                    logoCache[cacheKey] = logoHtml;
-                                    html.find('.new-interface-info__title').html(logoHtml);
-                                };
-                                
-                                img.onerror = () => {
-                                    if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
-                                    else html.find('.new-interface-info__title').text(data.title);
-                                };
-                                
-                                img.src = imageUrl;
-                                return;
+                    const loadLogo = (attempt = 1) => {
+                        // Проверяем, что данные еще актуальны
+                        if (currentData.id !== data.id) return;
+                        
+                        network.silent(url, (images) => {
+                            // Еще раз проверяем актуальность данных
+                            if (currentData.id !== data.id) return;
+                            
+                            if (images.logos?.length > 0) {
+                                const logoPath = images.logos[0].file_path;
+                                if (logoPath) {
+                                    const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
+                                    const img = new Image();
+                                    
+                                    img.onload = () => {
+                                        if (currentData.id !== data.id) return;
+                                        const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
+                                        logoCache[cacheKey] = logoHtml;
+                                        html.find('.new-interface-info__title').html(logoHtml);
+                                    };
+                                    
+                                    img.onerror = () => {
+                                        if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                                        else html.find('.new-interface-info__title').text(data.title);
+                                    };
+                                    
+                                    img.src = imageUrl;
+                                    return;
+                                }
                             }
-                        }
-                        html.find('.new-interface-info__title').text(data.title);
-                    }, () => {
-                        if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
-                        else html.find('.new-interface-info__title').text(data.title);
-                    });
-                };
+                            html.find('.new-interface-info__title').text(data.title);
+                        }, () => {
+                            if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                            else html.find('.new-interface-info__title').text(data.title);
+                        });
+                    };
 
-                loadLogo();
-            }
+                    loadLogo();
+                }
+            }, 300); // Задержка перед загрузкой логотипа
         } else {
             html.find('.new-interface-info__title').text(data.title);
         }
@@ -141,6 +158,7 @@
       this.empty = function () {};
 
       this.destroy = function () {
+        if (this.logoTimer) clearTimeout(this.logoTimer);
         html.remove();
         loaded = {};
         html = null;
@@ -208,7 +226,7 @@
         var _this2 = this;
 
         lezydata = data;
-        info = new create(object); // Use the modified create function
+        info = new create(object);
         info.create();
         scroll.minus(info.render());
         data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
@@ -231,23 +249,23 @@
       };
 
       this.background = function (elem) {
-    var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-    clearTimeout(background_timer);
-    if (new_background == background_last) return;
-    
-    background_last = new_background;
-    background_img.removeClass('loaded');
-    
-    background_img[0].onload = function () {
-        background_img.addClass('loaded');
-    };
-    
-    background_img[0].onerror = function () {
+        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+        clearTimeout(background_timer);
+        if (new_background == background_last) return;
+        
+        background_last = new_background;
         background_img.removeClass('loaded');
-    };
-    
-    background_img[0].src = background_last;
-	};
+        
+        background_img[0].onload = function () {
+            background_img.addClass('loaded');
+        };
+        
+        background_img[0].onerror = function () {
+            background_img.removeClass('loaded');
+        };
+        
+        background_img[0].src = background_last;
+      };
 
       this.append = function (element) {
         var _this3 = this;
@@ -275,12 +293,12 @@
         if (this.onMore) item.onMore = this.onMore.bind(this);
 
         item.onFocus = function (elem) {
-          info.update(elem); // This will now call the modified update
+          info.update(elem);
           _this3.background(elem);
         };
 
         item.onHover = function (elem) {
-          info.update(elem); // This will now call the modified update
+          info.update(elem);
           _this3.background(elem);
         };
 
@@ -378,10 +396,9 @@
 
         if (window.innerWidth < 767) use = old_interface;
         if (Lampa.Manifest.app_digital < 153) use = old_interface;
-        if (object.title === 'Избранное') { // Keep the check for Избранное
+        if (object.title === 'Избранное') {
             use = old_interface;
         }
-
 
         return new use(object);
       };
@@ -400,10 +417,140 @@
           }
       });
 
-      Lampa.Template.add('new_interface_style', "\n        <style>\n        .new-interface .card--small.card--wide {\n            width: 18.3em;\n        }\n        \n        .new-interface-info {\n            position: relative;\n            padding: 1.5em;\n            height: 26em;\n        }\n        \n        .new-interface-info__body {\n            width: 80%;\n            padding-top: 1.1em;\n        }\n        \n        .new-interface-info__head {\n            color: rgba(255, 255, 255, 0.6);\n            margin-bottom: 0em;\n            font-size: 1.3em;\n            min-height: 1em;\n        }\n        \n        .new-interface-info__head span {\n            color: #fff;\n        }\n        \n        .new-interface-info__title {\n            font-size: 4em;\n     margin-top: 0.1em;\n          font-weight: 800;\n            margin-bottom: 0.1em;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n            display: -webkit-box;\n            -webkit-line-clamp: 3;\n            line-clamp: 3;\n            -webkit-box-orient: vertical;\n            margin-left: -0.03em;\n            line-height: 1;\n    text-shadow: 2px 3px 1px #00000040;\n    max-width: 9em;\n    text-transform: uppercase;\n   letter-spacing: -2px;\n   word-spacing: 5px;\n  }\n  .full-start__pg, .full-start__status {font-size: 0.9em;\n }      \n        .new-interface-info__details {\n            margin-bottom: 1.6em;\n            display: -webkit-box;\n            display: -webkit-flex;\n            display: -moz-box;\n            display: -ms-flexbox;\n            display: flex;\n            -webkit-box-align: center;\n            -webkit-align-items: center;\n            -moz-box-align: center;\n            -ms-flex-align: center;\n            align-items: center;\n            -webkit-flex-wrap: wrap;\n            -ms-flex-wrap: wrap;\n            flex-wrap: wrap;\n            min-height: 1.9em;\n            font-size: 1.3em;\n        }\n        \n        .new-interface-info__split {\n            margin: 0 1em;\n            font-size: 0.7em;\n        }\n        \n        .new-interface-info__description {\n            font-size: 1.2em;\n            font-weight: 300;\n            line-height: 1.5;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n            display: -webkit-box;\n            -webkit-line-clamp: 4;\n            line-clamp: 4;\n            -webkit-box-orient: vertical;\n            width: 70%;\n        }\n        \n        .new-interface .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .full-start__background {\n            height: 108%;\n     left: 30px;\n       top: -4.8em;\n        }\n        \n        .new-interface .full-start__rate {\n            font-size: 1.3em;\n            margin-right: 0;\n        }\n        \n        .new-interface .card__promo {\n            display: none;\n        }\n        \n        .new-interface .card.card--wide+.card-more .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .card.card--wide .card-watched {\n            display: none !important;\n        }\n        \n        body.light--version .new-interface-info__body {\n            width: 69%;\n            padding-top: 1.5em;\n        }\n        \n        body.light--version .new-interface-info {\n            height: 25.3em;\n        }\n\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{\n            animation: animation-card-focus 0.2s\n        }\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{\n            animation: animation-trigger-enter 0.2s forwards\n        }\n        </style>\n    ");
+      Lampa.Template.add('new_interface_style', `
+        <style>
+        .new-interface .card--small.card--wide {
+            width: 18.3em;
+        }
+        
+        .new-interface-info {
+            position: relative;
+            padding: 1.5em;
+            height: 26em;
+        }
+        
+        .new-interface-info__body {
+            width: 80%;
+            padding-top: 1.1em;
+        }
+        
+        .new-interface-info__head {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0em;
+            font-size: 1.3em;
+            min-height: 1em;
+        }
+        
+        .new-interface-info__head span {
+            color: #fff;
+        }
+        
+        .new-interface-info__title {
+            font-size: 4em;
+            margin-top: 0.1em;
+            font-weight: 800;
+            margin-bottom: 0.1em;
+            overflow: hidden;
+            -o-text-overflow: ".";
+            text-overflow: ".";
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            margin-left: -0.03em;
+            line-height: 1;
+            text-shadow: 2px 3px 1px #00000040;
+            max-width: 9em;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            word-spacing: 5px;
+        }
+        .full-start__pg, .full-start__status {font-size: 0.9em;}
+        
+        .new-interface-info__details {
+            margin-bottom: 1.6em;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -moz-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            min-height: 1.9em;
+            font-size: 1.3em;
+        }
+        
+        .new-interface-info__split {
+            margin: 0 1em;
+            font-size: 0.7em;
+        }
+        
+        .new-interface-info__description {
+            font-size: 1.2em;
+            font-weight: 300;
+            line-height: 1.5;
+            overflow: hidden;
+            -o-text-overflow: ".";
+            text-overflow: ".";
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
+            -webkit-box-orient: vertical;
+            width: 70%;
+        }
+        
+        .new-interface .card-more__box {
+            padding-bottom: 95%;
+        }
+        
+        .new-interface .full-start__background {
+            height: 108%;
+            left: 30px;
+            top: -4.8em;
+        }
+        
+        .new-interface .full-start__rate {
+            font-size: 1.3em;
+            margin-right: 0;
+        }
+        
+        .new-interface .card__promo {
+            display: none;
+        }
+        
+        .new-interface .card.card--wide+.card-more .card-more__box {
+            padding-bottom: 95%;
+        }
+        
+        .new-interface .card.card--wide .card-watched {
+            display: none !important;
+        }
+        
+        body.light--version .new-interface-info__body {
+            width: 69%;
+            padding-top: 1.5em;
+        }
+        
+        body.light--version .new-interface-info {
+            height: 25.3em;
+        }
+
+        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
+            animation: animation-card-focus 0.2s
+        }
+        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
+            animation: animation-trigger-enter 0.2s forwards
+        }
+        </style>
+      `);
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
     if (!window.plugin_interface_ready) startPlugin();
-
 })();
