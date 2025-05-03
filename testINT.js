@@ -7,113 +7,78 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var logoCache = {};
-      var currentData = null;
+      var currentData = null; // Добавляем хранение текущих данных
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
-    // Сохраняем текущие данные
-    currentData = data;
-    
-    // Отменяем предыдущие запросы
-    network.clear();
-    
-    // Обновляем основную информацию
-    this.draw(data);
-
-    // Всегда сначала устанавливаем текстовое название
-    html.find('.new-interface-info__title')
-        .text(data.title || data.name)
-        .css({opacity: 1});
-
-    // Если логотипы отключены - на этом заканчиваем
-    if (Lampa.Storage.get('new_interface_logo') !== true) {
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.load(data);
-        return;
-    }
-
-    // Определяем тип контента (фильм или сериал)
-    const type = data.name ? 'tv' : 'movie';
-    const cacheKey = `${type}_${data.id}`;
-
-    // Если уже знаем что лого нет - выходим
-    if (logoCache[cacheKey] === null) {
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.load(data);
-        return;
-    }
-
-    // Если лого есть в кеше - используем его
-    if (logoCache[cacheKey]) {
-        html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.load(data);
-        return;
-    }
-
-    // Функция для обработки логотипов
-    const processLogo = (logos) => {
-        // Проверяем актуальность данных
-        if (!currentData || currentData.id !== data.id) return false;
+        // Сохраняем текущие данные
+        currentData = data;
         
-        if (!logos || logos.length === 0) {
-            logoCache[cacheKey] = null; // Запоминаем что лого нет
-            return false;
-        }
+        // Сначала рисуем основные данные
+        this.draw(data);
 
-        const logoPath = logos[0].file_path;
-        if (!logoPath) {
-            logoCache[cacheKey] = null;
-            return false;
-        }
-
-        const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
-        const img = new Image();
-
-        img.onload = function() {
-            if (!currentData || currentData.id !== data.id) return;
+        // Затем загружаем логотипы (если включены)
+        if (Lampa.Storage.get('new_interface_logo') === true) {
+            const type = data.name ? 'tv' : 'movie';
+            const cacheKey = `${type}_${data.id}`;
             
-            const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
-            logoCache[cacheKey] = logoHtml;
-            html.find('.new-interface-info__title').html(logoHtml);
-        };
+            if (logoCache[cacheKey]) {
+                html.find('.new-interface-info__title').html(logoCache[cacheKey]);
+            } else {
+                const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
 
-        img.onerror = function() {
-            logoCache[cacheKey] = null;
-        };
+                const loadLogo = (attempt = 1) => {
+                    network.silent(url, (images) => {
+                        if (images.logos?.length > 0) {
+                            const logoPath = images.logos[0].file_path;
+                            if (logoPath) {
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
+                                const img = new Image();
+                                
+                                img.onload = () => {
+                                    const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
+                                    logoCache[cacheKey] = logoHtml;
+                                    html.find('.new-interface-info__title').html(logoHtml);
+                                };
+                                
+                                img.onerror = () => {
+                                    if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                                    else html.find('.new-interface-info__title').text(data.title);
+                                };
+                                
+                                img.src = imageUrl;
+                                return;
+                            }
+                        }
+                        html.find('.new-interface-info__title').text(data.title);
+                    }, () => {
+                        if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                        else html.find('.new-interface-info__title').text(data.title);
+                    });
+                };
 
-        img.src = imageUrl;
-        return true;
-    };
-
-    // Проверяем локальный кеш TMDB
-    const cached = Lampa.TMDB.getCache(`${type}/${data.id}/images`);
-    if (cached && cached.logos) {
-        if (processLogo(cached.logos)) {
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
-            return;
+                loadLogo();
+            }
+        } else {
+            html.find('.new-interface-info__title').text(data.title);
         }
-    }
 
-    // Делаем запрос к API
-    const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
+        // Описание
+        if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
+            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
+        } else {
+            html.find('.new-interface-info__description').hide();
+        }
 
-    network.timeout(3000);
-    network.silent(url, function(images) {
-        processLogo(images.logos);
-    }, function() {
-        logoCache[cacheKey] = null;
-    });
-
-    Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-    this.load(data);
-};
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.load(data);
+      };
 
       this.draw = function (data) {
+        // Если данные не пришли, используем сохраненные
         if (!data && currentData) data = currentData;
         if (!data) return;
 
@@ -133,9 +98,14 @@
             details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
         }
         
+        if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
+            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
+        }
+        
         if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
         if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
         
+        // Обновляем информацию без сброса
         html.find('.new-interface-info__head').empty().append(head.join(', '));
         html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
       };
@@ -158,6 +128,7 @@
                 loaded[url] = movie;
                 _this.draw(movie);
             }, function() {
+                // При ошибке используем текущие данные
                 _this.draw(data);
             });
         }, 300);
