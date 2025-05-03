@@ -158,18 +158,6 @@
       };
     }
 
-    // [Остальная часть кода остается без изменений]
-    function component(object) {
-      // ... (прежний код component)
-    }
-
-    function startPlugin() {
-      // ... (прежний код startPlugin)
-    }
-
-    if (!window.plugin_interface_ready) startPlugin();
-})();
-
     function component(object) {
       var network = new Lampa.Reguest();
       var scroll = new Lampa.Scroll({
