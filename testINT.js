@@ -45,7 +45,7 @@
                 // Очищаем предыдущий заголовок перед загрузкой нового
                 html.find('.new-interface-info__title').empty();
 
-const MAX_CACHE_SIZE = 50;
+const MAX_CACHE_SIZE = 10;
 if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
     const oldestKey = Object.keys(logoCache)[0];
     delete logoCache[oldestKey];
@@ -207,9 +207,7 @@ if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
             return html;
         };
 
-setInterval(() => {
-    logoCache = {};
-}, 60_000); // Каждую минуту
+
 
         this.empty = function () {};
 		
