@@ -9,7 +9,6 @@
         var logoCache = {};
         var currentData = null;
         var currentRequest = null;
-        var logoLoadAttempts = {};
 
         this.create = function () {
             html = $(`
@@ -25,6 +24,7 @@
         };
 
         this.update = function (data) {
+            // Отменяем предыдущий запрос, если он есть
             if (currentRequest) {
                 network.clear(currentRequest);
                 currentRequest = null;
@@ -42,32 +42,37 @@
                 const cacheKey = `${type}_${data.id}`;
                 const currentTimestamp = currentData.timestamp;
 
-                // Сначала показываем текст
-                html.find('.new-interface-info__title').text(data.title || data.name);
+                // Очищаем предыдущий заголовок перед загрузкой нового
+                html.find('.new-interface-info__title').empty();
 
                 if (logoCache[cacheKey]) {
                     html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-                } else if (!logoLoadAttempts[cacheKey]) {
-                    logoLoadAttempts[cacheKey] = true;
-                    
+                } else {
                     const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
 
                     const loadLogo = (attempt = 1) => {
-                        currentRequest = network.timeout(3000).silent(url, (images) => {
+                        currentRequest = network.silent(url, (images) => {
                             currentRequest = null;
-                            if (!currentData || currentData.timestamp !== currentTimestamp) {
-                                delete logoLoadAttempts[cacheKey];
-                                return;
-                            }
+                            if (!currentData || currentData.timestamp !== currentTimestamp) return;
                             
                             let logoToUse = null;
-                            const safeTitle = (data.title || data.name).replace(/['"<>]/g, "");
+                            const safeTitle = (data.title || data.name).replace(/'/g, "\\'");
                             
                             if (images.logos?.length) {
-                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
-                                            images.logos.find(logo => logo.iso_639_1 === 'en') || 
-                                            images.logos[0];
+                                // 1. Приоритет русскому логотипу
+                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
                                 
+                                // 2. Английский как запасной вариант
+                                if (!logoToUse) {
+                                    logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
+                                }
+                                
+                                // 3. Любой логотип если нет языковых
+                                if (!logoToUse) {
+                                    logoToUse = images.logos[0];
+                                }
+                                
+                                // 4. Выбираем логотип с лучшим качеством
                                 if (images.logos.length > 1 && !logoToUse) {
                                     logoToUse = images.logos.reduce((prev, current) => 
                                         (prev.width * prev.height > current.width * current.height) ? prev : current
@@ -76,14 +81,11 @@
                             }
 
                             if (logoToUse?.file_path) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/w300${logoToUse.file_path}`);
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
                                 const img = new Image();
                                 
                                 img.onload = () => {
-                                    if (!currentData || currentData.timestamp !== currentTimestamp) {
-                                        delete logoLoadAttempts[cacheKey];
-                                        return;
-                                    }
+                                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
                                     
                                     const logoHtml = `
                                         <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
@@ -95,30 +97,34 @@
                                     `;
                                     logoCache[cacheKey] = logoHtml;
                                     html.find('.new-interface-info__title').html(logoHtml);
-                                    delete logoLoadAttempts[cacheKey];
                                 };
                                 
                                 img.onerror = () => {
-                                    if (attempt < 2) {
-                                        setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
+                                    if (attempt < 3) {
+                                        setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
                                     } else {
-                                        delete logoLoadAttempts[cacheKey];
+                                        showTitleFallback();
                                     }
                                 };
                                 
                                 img.src = imageUrl;
                             } else {
-                                delete logoLoadAttempts[cacheKey];
+                                showTitleFallback();
                             }
                         }, () => {
                             currentRequest = null;
-                            if (attempt < 2) {
-                                setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
+                            if (attempt < 3) {
+                                setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
                             } else {
-                                delete logoLoadAttempts[cacheKey];
+                                showTitleFallback();
                             }
                         });
                     };
+
+                    function showTitleFallback() {
+                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                        html.find('.new-interface-info__title').text(data.title || data.name);
+                    }
 
                     loadLogo();
                 }
@@ -136,6 +142,7 @@
             this.load(data);
         };
 
+        // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
@@ -204,11 +211,11 @@
             html.remove();
             loaded = {};
             logoCache = {};
-            logoLoadAttempts = {};
             html = null;
         };
     }
 
+    // ... (остальная часть кода компонента остается без изменений)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
