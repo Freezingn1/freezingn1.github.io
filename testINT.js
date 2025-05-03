@@ -7,141 +7,142 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var logoCache = {};
-      var currentData = null; // Добавляем хранение текущих данных
+      var currentData = null;
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
-    // Сохраняем текущие данные
-    currentData = data;
-    
-    // Сразу отображаем основную информацию из текущих данных
-    this.drawBasicInfo(data);
+        currentData = data;
+        
+        // Мгновенное отображение базовой информации
+        this.drawBasicInfo(data);
 
-    // Затем загружаем дополнительные данные (логотипы, TMDB детали)
-    if (Lampa.Storage.get('new_interface_logo') === true) {
-        this.loadLogo(data);
-    } else {
-        html.find('.new-interface-info__title').text(data.title);
-    }
+        // Загрузка логотипов (если включены)
+        if (Lampa.Storage.get('new_interface_logo') === true) {
+            const type = data.name ? 'tv' : 'movie';
+            const cacheKey = `${type}_${data.id}`;
+            
+            if (logoCache[cacheKey]) {
+                html.find('.new-interface-info__title').html(logoCache[cacheKey]);
+            } else {
+                const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
 
-    // Описание
-    if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
-        html.find('.new_interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
-    } else {
-        html.find('.new-interface-info__description').hide();
-    }
+                const loadLogo = (attempt = 1) => {
+                    network.silent(url, (images) => {
+                        if (images.logos?.length > 0) {
+                            const logoPath = images.logos[0].file_path;
+                            if (logoPath) {
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
+                                const img = new Image();
+                                
+                                img.onload = () => {
+                                    const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
+                                    logoCache[cacheKey] = logoHtml;
+                                    html.find('.new-interface-info__title').html(logoHtml);
+                                };
+                                
+                                img.onerror = () => {
+                                    if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                                };
+                                
+                                img.src = imageUrl;
+                            }
+                        }
+                    }, () => {
+                        if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                    });
+                };
+                loadLogo();
+            }
+        }
 
-    Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-    this.loadAdditionalData(data);
-};
+        // Описание
+        if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
+            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
+        } else {
+            html.find('.new-interface-info__description').hide();
+        }
 
-this.drawBasicInfo = function(data) {
-    if (!data) data = currentData;
-    if (!data) return;
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.loadAdditionalData(data);
+      };
 
-    // Основная информация, которая есть сразу
-    var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-    var head = [];
-    var details = [];
-    
-    // Год производства
-    if (create !== '0000') head.push('<span>' + create + '</span>');
-    
-    // Оценка (если есть в исходных данных)
-    if (data.vote_average > 0) {
-        var vote = parseFloat(data.vote_average).toFixed(1);
-        details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-    }
-    
-    // Эпизоды (если есть в исходных данных)
-    if (data.number_of_episodes > 0) {
-        details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
-    }
-    
-    // Жанры (если есть в исходных данных)
-    if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
-        details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
-    }
-    
-    html.find('.new-interface-info__head').empty().append(head.join(', '));
-    html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-    html.find('.new-interface-info__title').text(data.title); // Временный заголовок
-};
+      this.drawBasicInfo = function(data) {
+        if (!data) return;
+        
+        var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+        var vote = data.vote_average ? parseFloat(data.vote_average).toFixed(1) : null;
+        var head = [];
+        var details = [];
+        var countries = data.production_countries || [];
+        
+        if (create !== '0000') head.push('<span>' + create + '</span>');
+        if (countries.length > 0) {
+            head.push(countries.map(c => c.iso_3166_1 ? Lampa.Utils.countryName(c.iso_3166_1) : '').filter(Boolean).join(', '));
+        }
+        
+        if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+        
+        if (data.number_of_episodes > 0) {
+            details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+        }
+        
+        if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
+            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
+        }
+        
+        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+        
+        html.find('.new-interface-info__head').empty().append(head.join(', '));
+        html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+        html.find('.new-interface-info__title').text(data.title || data.name);
+      };
 
-this.loadAdditionalData = function(data) {
-    var _this = this;
-    clearTimeout(timer);
-    
-    var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-    
-    if (loaded[url]) {
-        this.drawFullInfo(loaded[url]);
-        return;
-    }
-    
-    timer = setTimeout(function() {
-        network.clear();
-        network.timeout(5000);
-        network.silent(url, function(movie) {
-            loaded[url] = movie;
-            _this.drawFullInfo(movie);
-        });
-    }, 100); // Уменьшенная задержка
-};
-
-this.drawFullInfo = function(data) {
-    // Обновляем только те данные, которые могли измениться после доп. загрузки
-    var details = [];
-    var pg = Lampa.Api.sources.tmdb.parsePG(data);
-    
-    // Обновляем оценку (на случай если в исходных данных её не было)
-    if (data.vote_average > 0) {
-        var vote = parseFloat(data.vote_average).toFixed(1);
-        details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-    }
-    
-    // Обновляем эпизоды
-    if (data.number_of_episodes > 0) {
-        details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
-    }
-    
-    // Обновляем жанры
-    if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
-        details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
-    }
-    
-    // Обновляем возрастной рейтинг
-    if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-    
-    // Обновляем только details, чтобы не сбрасывать уже отображённые данные
-    html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-};
-
-      this.load = function (data) {
+      this.loadAdditionalData = function(data) {
         var _this = this;
         clearTimeout(timer);
         
         var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
         
         if (loaded[url]) {
-            this.draw(loaded[url]);
+            this.drawAdditionalInfo(loaded[url]);
             return;
         }
         
-        timer = setTimeout(function () {
+        timer = setTimeout(function() {
             network.clear();
             network.timeout(5000);
-            network.silent(url, function (movie) {
+            network.silent(url, function(movie) {
                 loaded[url] = movie;
-                _this.draw(movie);
-            }, function() {
-                // При ошибке используем текущие данные
-                _this.draw(data);
+                _this.drawAdditionalInfo(movie);
             });
-        }, 300);
+        }, 100);
+      };
+
+      this.drawAdditionalInfo = function(data) {
+        var details = [];
+        var pg = Lampa.Api.sources.tmdb.parsePG(data);
+        
+        if (data.vote_average > 0) {
+            var vote = parseFloat(data.vote_average).toFixed(1);
+            details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+        }
+        
+        if (data.number_of_episodes > 0) {
+            details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+        }
+        
+        if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
+            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
+        }
+        
+        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+        
+        // Обновляем только details
+        var currentDetails = html.find('.new-interface-info__details').html();
+        html.find('.new-interface-info__details').html(currentDetails + details.join('<span class="new-interface-info__split">&#9679;</span>'));
       };
 
       this.render = function () {
@@ -156,6 +157,18 @@ this.drawFullInfo = function(data) {
         html = null;
       };
     }
+
+    // [Остальная часть кода остается без изменений]
+    function component(object) {
+      // ... (прежний код component)
+    }
+
+    function startPlugin() {
+      // ... (прежний код startPlugin)
+    }
+
+    if (!window.plugin_interface_ready) startPlugin();
+})();
 
     function component(object) {
       var network = new Lampa.Reguest();
