@@ -16,11 +16,16 @@
       };
 
       this.update = function (data) {
+		  if (this.currentRequest) network.clear();
+    if (this.currentImageLoad) {
+        this.currentImageLoad.onload = this.currentImageLoad.onerror = null;
+    }
+		  
         // Сохраняем текущие данные с временной меткой
         currentData = {
             data: data,
             timestamp: Date.now()
-        };
+        }};
         
         // Сначала рисуем основные данные
         this.draw(data);
