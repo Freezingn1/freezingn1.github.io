@@ -40,53 +40,56 @@
                 const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
 
                 const loadLogo = (attempt = 1) => {
-                    network.silent(url, (images) => {
+    network.silent(url, (images) => {
+        // Проверяем, что данные еще актуальны
+        if (!currentData || currentData.timestamp !== currentTimestamp) return;
+        
+        if (images.logos?.length > 0) {
+            // Сначала ищем русские логотипы
+            let russianLogo = images.logos.find(logo => logo.iso_639_1 === 'ru');
+            // Если нет русского, ищем английские
+            let englishLogo = images.logos.find(logo => logo.iso_639_1 === 'en');
+            // Если нет ни русского, ни английского, берем первый доступный логотип
+            let logoToUse = russianLogo || englishLogo || images.logos[0];
+            
+            if (logoToUse) {
+                const logoPath = logoToUse.file_path;
+                if (logoPath) {
+                    const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
+                    const img = new Image();
+                    
+                    img.onload = () => {
                         // Проверяем, что данные еще актуальны
                         if (!currentData || currentData.timestamp !== currentTimestamp) return;
                         
-                        if (images.logos?.length > 0) {
-                            // Сначала ищем русские логотипы
-                            let russianLogo = images.logos.find(logo => logo.iso_639_1 === 'ru');
-                            // Если нет русского, ищем английские
-                            let englishLogo = !russianLogo ? images.logos.find(logo => logo.iso_639_1 === 'en') : null;
-                            // Если нет ни русского, ни английского, берем первый доступный
-                            let logoToUse = russianLogo || englishLogo || images.logos[0];
-                            
-                            const logoPath = logoToUse.file_path;
-                            if (logoPath) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
-                                const img = new Image();
-                                
-                                img.onload = () => {
-                                    // Проверяем, что данные еще актуальны
-                                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                    
-                                    const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
-                                    logoCache[cacheKey] = logoHtml;
-                                    html.find('.new-interface-info__title').html(logoHtml);
-                                };
-                                
-                                img.onerror = () => {
-                                    // Проверяем, что данные еще актуальны
-                                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                    
-                                    if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
-                                    else html.find('.new-interface-info__title').text(data.title);
-                                };
-                                
-                                img.src = imageUrl;
-                                return;
-                            }
-                        }
-                        html.find('.new-interface-info__title').text(data.title);
-                    }, () => {
+                        const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
+                        logoCache[cacheKey] = logoHtml;
+                        html.find('.new-interface-info__title').html(logoHtml);
+                    };
+                    
+                    img.onerror = () => {
                         // Проверяем, что данные еще актуальны
                         if (!currentData || currentData.timestamp !== currentTimestamp) return;
                         
                         if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
                         else html.find('.new-interface-info__title').text(data.title);
-                    });
-                };
+                    };
+                    
+                    img.src = imageUrl;
+                    return;
+                }
+            }
+        }
+        // Если ничего не нашли, показываем текст
+        html.find('.new-interface-info__title').text(data.title);
+    }, () => {
+        // Проверяем, что данные еще актуальны
+        if (!currentData || currentData.timestamp !== currentTimestamp) return;
+        
+        if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+        else html.find('.new-interface-info__title').text(data.title);
+    });
+};
 
                 loadLogo();
             }
