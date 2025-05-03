@@ -45,6 +45,12 @@
                 // Очищаем предыдущий заголовок перед загрузкой нового
                 html.find('.new-interface-info__title').empty();
 
+const MAX_CACHE_SIZE = 50;
+if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
+    const oldestKey = Object.keys(logoCache)[0];
+    delete logoCache[oldestKey];
+}
+
                 if (logoCache[cacheKey]) {
                     html.find('.new-interface-info__title').html(logoCache[cacheKey]);
                 } else {
