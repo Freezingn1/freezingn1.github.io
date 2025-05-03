@@ -47,7 +47,7 @@
                             const isSvg = logoToUse.file_path.endsWith('.svg');
                             const imageUrl = isSvg 
                                 ? Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`)
-                                : Lampa.TMDB.image(`/t/p/w300${logoToUse.file_path}`);
+                                : Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
                                 
                             const img = new Image();
                             
