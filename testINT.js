@@ -16,88 +16,83 @@
       this.update = function (data) {
     currentData = data;
     
-    // Сначала очищаем предыдущие запросы
+    // Очищаем предыдущие запросы
     network.clear();
     
     // Рисуем основную информацию
     this.draw(data);
+
+    // Устанавливаем заглушку - сразу показываем текст (на случай если лого не загрузится)
+    html.find('.new-interface-info__title')
+        .text(data.title)
+        .css({opacity: 1, transition: 'opacity 0.2s'});
 
     // Если логотипы включены
     if (Lampa.Storage.get('new_interface_logo') === true) {
         const type = data.name ? 'tv' : 'movie';
         const cacheKey = `${type}_${data.id}`;
         
-        // Если лого уже в кеше - сразу показываем
-        if (logoCache[cacheKey]) {
-            html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-        } 
-        // Если нет в кеше - сначала показываем текст (прозрачным), затем пробуем загрузить лого
-        else {
-            // Временно показываем текст с прозрачностью
-            html.find('.new-interface-info__title')
-                .text(data.title)
-                .css({opacity: 0});
-            
-            const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
-
-            const loadLogo = (attempt = 1) => {
-                network.silent(url, (images) => {
-                    // Проверяем, что данные еще актуальны
-                    if (currentData.id !== data.id) return;
-                    
-                    if (images.logos?.length > 0) {
-                        const logoPath = images.logos[0].file_path;
-                        if (logoPath) {
-                            const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
-                            const img = new Image();
-                            
-                            img.onload = () => {
-                                if (currentData.id !== data.id) return;
-                                const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
-                                logoCache[cacheKey] = logoHtml;
-                                // Показываем логотип
-                                html.find('.new-interface-info__title')
-                                    .html(logoHtml)
-                                    .css({opacity: 1});
-                            };
-                            
-                            img.onerror = () => {
-                                if (attempt < 3) {
-                                    setTimeout(() => loadLogo(attempt + 1), 300);
-                                } else if (currentData.id === data.id) {
-                                    // Если лого не загрузилось - оставляем текст, но делаем его полностью видимым
-                                    html.find('.new-interface-info__title')
-                                        .css({opacity: 1});
-                                }
-                            };
-                            
-                            img.src = imageUrl;
-                            return;
-                        }
-                    }
-                    // Если логотипов нет - оставляем текст, но делаем его полностью видимым
-                    if (currentData.id === data.id) {
-                        html.find('.new-interface-info__title')
-                            .css({opacity: 1});
-                    }
-                }, () => {
-                    if (attempt < 3) {
-                        setTimeout(() => loadLogo(attempt + 1), 300);
-                    } else if (currentData.id === data.id) {
-                        // Если запрос не удался - оставляем текст, но делаем его полностью видимым
-                        html.find('.new-interface-info__title')
-                            .css({opacity: 1});
-                    }
-                });
-            };
-
-            loadLogo();
+        // Проверяем кеш
+        if (logoCache[cacheKey] === 'no-logo') {
+            // Известно что лого нет - оставляем текст
+            return;
         }
-    } else {
-        // Если логотипы отключены - просто показываем текст
-        html.find('.new-interface-info__title')
-            .text(data.title)
-            .css({opacity: 1});
+        else if (logoCache[cacheKey]) {
+            // Лого есть в кеше - показываем сразу
+            html.find('.new-interface-info__title').html(logoCache[cacheKey]);
+            return;
+        }
+
+        // Быстрая проверка локального кеша TMDB
+        const tmdbCache = Lampa.TMDB.getCache(`${type}/${data.id}/images`);
+        if (tmdbCache && tmdbCache.logos) {
+            processLogos(tmdbCache.logos, cacheKey, data);
+            return;
+        }
+
+        // Делаем запрос только если нет в кеше
+        const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
+
+        network.timeout(2000); // Уменьшаем таймаут запроса
+        network.silent(url, (images) => {
+            if (currentData.id !== data.id) return;
+            
+            if (images.logos && images.logos.length > 0) {
+                processLogos(images.logos, cacheKey, data);
+            } else {
+                // Запоминаем что лого нет
+                logoCache[cacheKey] = 'no-logo';
+            }
+        }, () => {
+            // При ошибке запроса просто оставляем текст
+            logoCache[cacheKey] = 'no-logo';
+        });
+    }
+
+    function processLogos(logos, cacheKey, data) {
+        if (logos.length === 0 || !logos[0].file_path) {
+            logoCache[cacheKey] = 'no-logo';
+            return;
+        }
+
+        const logoPath = logos[0].file_path;
+        const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
+        const img = new Image();
+        
+        img.onload = () => {
+            if (currentData.id !== data.id) return;
+            const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
+            logoCache[cacheKey] = logoHtml;
+            html.find('.new-interface-info__title')
+                .html(logoHtml)
+                .css({opacity: 1});
+        };
+        
+        img.onerror = () => {
+            logoCache[cacheKey] = 'no-logo';
+        };
+        
+        img.src = imageUrl;
     }
 
     Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
