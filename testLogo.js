@@ -45,7 +45,7 @@
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
                     event.object.activity.render()
                         .find(".full-start-new__title")
-                        .html(`<img style="margin-top: 5px; max-height: 125px;" src="${imageUrl}" />`);
+                        .html(`<img style="margin-top: 0.2em;  margin-bottom: 0.1em; max-width: 9em; max-height: 4em;" src="${imageUrl}" />`);
                 } 
                 // Если лого нет и это аниме — стилизуем текст
                 else if (isAnime) {
