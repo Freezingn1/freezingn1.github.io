@@ -9,6 +9,8 @@
         var logoCache = {};
         var currentData = null;
         var currentRequest = null;
+        // Добавляем ограничение на размер кэша логотипов
+        var MAX_LOGO_CACHE_SIZE = 50;
 
         this.create = function () {
             html = $(`
@@ -22,6 +24,16 @@
                 </div>
             `);
         };
+
+        // Метод для очистки старых записей в кэше
+        function cleanLogoCache() {
+            const keys = Object.keys(logoCache);
+            if (keys.length > MAX_LOGO_CACHE_SIZE) {
+                // Удаляем самые старые записи
+                const keysToDelete = keys.slice(0, keys.length - MAX_LOGO_CACHE_SIZE);
+                keysToDelete.forEach(key => delete logoCache[key]);
+            }
+        }
 
         this.update = function (data) {
             // Отменяем предыдущий запрос, если он есть
@@ -45,18 +57,19 @@
                 // Очищаем предыдущий заголовок перед загрузкой нового
                 html.find('.new-interface-info__title').empty();
 
-const MAX_CACHE_SIZE = 10;
-if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
-    const oldestKey = Object.keys(logoCache)[0];
-    delete logoCache[oldestKey];
-}
-
                 if (logoCache[cacheKey]) {
+                    // Используем кэшированный логотип
                     html.find('.new-interface-info__title').html(logoCache[cacheKey]);
                 } else {
+                    // Очищаем кэш, если он слишком большой
+                    cleanLogoCache();
+                    
                     const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
 
                     const loadLogo = (attempt = 1) => {
+                        // Сначала показываем название, а затем заменяем на логотип
+                        html.find('.new-interface-info__title').text(data.title || data.name);
+                        
                         currentRequest = network.silent(url, (images) => {
                             currentRequest = null;
                             if (!currentData || currentData.timestamp !== currentTimestamp) return;
@@ -126,19 +139,7 @@ if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
                             }
                         });
                     };
-this.update = function(data) {
-    // Сброс кэша при новом контенте
-    logoCache = {};
-    
-    if (currentRequest) {
-        network.clear(currentRequest);
-        currentRequest = null;
-    }
-    
-    currentData = {
-        data: data,
-        timestamp: Date.now()
-}; };
+
                     function showTitleFallback() {
                         if (!currentData || currentData.timestamp !== currentTimestamp) return;
                         html.find('.new-interface-info__title').text(data.title || data.name);
@@ -219,15 +220,7 @@ this.update = function(data) {
             return html;
         };
 
-
-
         this.empty = function () {};
-		
-		this.destroy = function() {
-    if (currentRequest) network.clear(currentRequest);
-    clearTimeout(timer); // Добавьте эту строку
-
-};
 
         this.destroy = function () {
             if (currentRequest) {
