@@ -208,6 +208,12 @@ if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
         };
 
         this.empty = function () {};
+		
+		this.destroy = function() {
+    if (currentRequest) network.clear(currentRequest);
+    clearTimeout(timer); // Добавьте эту строку
+
+};
 
         this.destroy = function () {
             if (currentRequest) {
