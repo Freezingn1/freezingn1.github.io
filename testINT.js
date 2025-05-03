@@ -9,6 +9,9 @@
         var logoCache = {};
         var currentData = null;
         var currentRequest = null;
+        var preloadedLogos = {};
+        var items = [];
+        var active = 0;
 
         this.create = function () {
             html = $(`
@@ -23,8 +26,27 @@
             `);
         };
 
+        function preloadLogo(type, id) {
+            const cacheKey = `${type}_${id}`;
+            if (!preloadedLogos[cacheKey] && !logoCache[cacheKey]) {
+                const url = Lampa.TMDB.api(`${type}/${id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
+                
+                network.timeout(1500).silent(url, (images) => {
+                    if (images.logos?.length) {
+                        let logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                                      images.logos.find(logo => logo.iso_639_1 === 'en') || 
+                                      images.logos[0];
+                        
+                        if (logoToUse?.file_path) {
+                            const imageUrl = Lampa.TMDB.image(`/t/p/w300${logoToUse.file_path}`);
+                            preloadedLogos[cacheKey] = imageUrl;
+                        }
+                    }
+                });
+            }
+        }
+
         this.update = function (data) {
-            // Отменяем предыдущий запрос, если он есть
             if (currentRequest) {
                 network.clear(currentRequest);
                 currentRequest = null;
@@ -42,16 +64,39 @@
                 const cacheKey = `${type}_${data.id}`;
                 const currentTimestamp = currentData.timestamp;
 
-                // Очищаем предыдущий заголовок перед загрузкой нового
+                // Предзагрузка следующих логотипов
+                if (items.length > 0) {
+                    const nextIndex = active + 1;
+                    if (items[nextIndex]) {
+                        const nextData = items[nextIndex].data();
+                        if (nextData) {
+                            const nextType = nextData.name ? 'tv' : 'movie';
+                            preloadLogo(nextType, nextData.id);
+                        }
+                    }
+                }
+
                 html.find('.new-interface-info__title').empty();
 
                 if (logoCache[cacheKey]) {
                     html.find('.new-interface-info__title').html(logoCache[cacheKey]);
+                } else if (preloadedLogos[cacheKey]) {
+                    const safeTitle = (data.title || data.name).replace(/'/g, "\\'");
+                    const logoHtml = `
+                        <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
+                            <img style="max-width:8em; max-height:2.8em; object-fit:contain;" 
+                                 src="${preloadedLogos[cacheKey]}" 
+                                 alt="${safeTitle}"
+                                 onerror="this.parentElement.innerHTML='${safeTitle}'" />
+                        </div>
+                    `;
+                    logoCache[cacheKey] = logoHtml;
+                    html.find('.new-interface-info__title').html(logoHtml);
                 } else {
                     const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
 
                     const loadLogo = (attempt = 1) => {
-                        currentRequest = network.silent(url, (images) => {
+                        currentRequest = network.timeout(2000).silent(url, (images) => {
                             currentRequest = null;
                             if (!currentData || currentData.timestamp !== currentTimestamp) return;
                             
@@ -59,29 +104,13 @@
                             const safeTitle = (data.title || data.name).replace(/'/g, "\\'");
                             
                             if (images.logos?.length) {
-                                // 1. Приоритет русскому логотипу
-                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
-                                
-                                // 2. Английский как запасной вариант
-                                if (!logoToUse) {
-                                    logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
-                                }
-                                
-                                // 3. Любой логотип если нет языковых
-                                if (!logoToUse) {
-                                    logoToUse = images.logos[0];
-                                }
-                                
-                                // 4. Выбираем логотип с лучшим качеством
-                                if (images.logos.length > 1 && !logoToUse) {
-                                    logoToUse = images.logos.reduce((prev, current) => 
-                                        (prev.width * prev.height > current.width * current.height) ? prev : current
-                                    );
-                                }
+                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                                           images.logos.find(logo => logo.iso_639_1 === 'en') || 
+                                           images.logos[0];
                             }
 
                             if (logoToUse?.file_path) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w300${logoToUse.file_path}`);
                                 const img = new Image();
                                 
                                 img.onload = () => {
@@ -100,8 +129,8 @@
                                 };
                                 
                                 img.onerror = () => {
-                                    if (attempt < 3) {
-                                        setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
+                                    if (attempt < 2) {
+                                        setTimeout(() => loadLogo(attempt + 1), 300);
                                     } else {
                                         showTitleFallback();
                                     }
@@ -113,8 +142,8 @@
                             }
                         }, () => {
                             currentRequest = null;
-                            if (attempt < 3) {
-                                setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
+                            if (attempt < 2) {
+                                setTimeout(() => loadLogo(attempt + 1), 300);
                             } else {
                                 showTitleFallback();
                             }
@@ -142,7 +171,6 @@
             this.load(data);
         };
 
-        // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
@@ -187,14 +215,14 @@
             
             timer = setTimeout(function () {
                 network.clear();
-                network.timeout(5000);
+                network.timeout(3000);
                 network.silent(url, function (movie) {
                     loaded[url] = movie;
                     _this.draw(movie);
                 }, function() {
                     _this.draw(data);
                 });
-            }, 400);
+            }, 300);
         };
 
         this.render = function () {
@@ -211,11 +239,11 @@
             html.remove();
             loaded = {};
             logoCache = {};
+            preloadedLogos = {};
             html = null;
         };
     }
 
-    // ... (остальная часть кода компонента остается без изменений)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -279,6 +307,7 @@
             lezydata = data;
             info = new create(object);
             info.create();
+            info.items = items;
             scroll.minus(info.render());
             data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
             html.append(info.render());
@@ -339,6 +368,7 @@
 
             item.onToggle = function () {
                 active = items.indexOf(item);
+                _this3.info.active = active;
             };
 
             if (this.onMore) item.onMore = this.onMore.bind(this);
