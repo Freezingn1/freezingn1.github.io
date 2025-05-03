@@ -35,43 +35,66 @@
                     network.silent(url, (images) => {
                         if (!currentData || currentData.timestamp !== currentTimestamp) return;
                         
-                        let logoToUse = null;
+                        let logosToShow = [];
                         
                         if (images.logos?.length) {
-                            logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
-                                        images.logos.find(logo => logo.iso_639_1 === 'en') || 
-                                        images.logos[0];
+                            // Сначала добавляем русские логотипы
+                            logosToShow = logosToShow.concat(images.logos.filter(logo => logo.iso_639_1 === 'ru'));
+                            // Затем английские
+                            logosToShow = logosToShow.concat(images.logos.filter(logo => logo.iso_639_1 === 'en'));
+                            // Затем все остальные
+                            logosToShow = logosToShow.concat(images.logos.filter(logo => !['ru','en'].includes(logo.iso_639_1)));
+                            
+                            // Удаляем дубликаты
+                            logosToShow = logosToShow.filter((logo, index, self) =>
+                                index === self.findIndex((t) => (
+                                    t.file_path === logo.file_path
+                                ))
+                            );
                         }
                         
-                        if (logoToUse?.file_path) {
-                            const isSvg = logoToUse.file_path.endsWith('.svg');
-                            const imageUrl = isSvg 
-                                ? Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`)
-                                : Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
+                        if (logosToShow.length > 0) {
+                            const logoContainer = $('<div class="logo-container" style="display: flex; flex-wrap: wrap; gap: 0.5em; margin-top: 0.3em;"></div>');
+                            
+                            let loadedLogos = 0;
+                            let totalLogos = logosToShow.length;
+                            
+                            logosToShow.forEach((logo, index) => {
+                                const isSvg = logo.file_path.endsWith('.svg');
+                                const imageUrl = isSvg 
+                                    ? Lampa.TMDB.image(`/t/p/original${logo.file_path}`)
+                                    : Lampa.TMDB.image(`/t/p/w500${logo.file_path}`);
+                                    
+                                const img = new Image();
+                                const logoDiv = $(`<div style="max-width: 8em; max-height:2.8em; flex: 1 0 auto;"></div>`);
                                 
-                            const img = new Image();
-                            
-                            img.onload = () => {
-                                if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                                img.onload = () => {
+                                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                                    
+                                    logoDiv.html(`<img style="max-width:100%; max-height:100%; object-fit:contain;" src="${imageUrl}" />`);
+                                    loadedLogos++;
+                                    
+                                    if (loadedLogos === totalLogos) {
+                                        logoCache[cacheKey] = logoContainer[0].outerHTML;
+                                        html.find('.new-interface-info__title').html(logoContainer);
+                                    }
+                                };
                                 
-                                const logoHtml = `
-                                    <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;">
-                                        <img style="max-width:100%; max-height:100%; object-fit:contain;" src="${imageUrl}" />
-                                    </div>
-                                `;
-                                logoCache[cacheKey] = logoHtml;
-                                html.find('.new-interface-info__title').html(logoHtml);
-                            };
-                            
-                            img.onerror = () => {
-                                if (attempt < 3) {
-                                    setTimeout(() => loadLogo(attempt + 1), 300);
-                                } else {
-                                    showTitleFallback();
-                                }
-                            };
-                            
-                            img.src = imageUrl;
+                                img.onerror = () => {
+                                    loadedLogos++;
+                                    if (loadedLogos === totalLogos) {
+                                        if (logoContainer.children().length > 0) {
+                                            logoCache[cacheKey] = logoContainer[0].outerHTML;
+                                            html.find('.new-interface-info__title').html(logoContainer);
+                                        } else {
+                                            showTitleFallback();
+                                        }
+                                    }
+                                };
+                                
+                                img.src = imageUrl;
+                                logoContainer.append(logoDiv);
+                            });
                         } else {
                             showTitleFallback();
                         }
@@ -172,6 +195,7 @@
       };
     }
 
+    // Остальной код компонента остается без изменений
     function component(object) {
       var network = new Lampa.Reguest();
       var scroll = new Lampa.Scroll({
@@ -423,7 +447,148 @@
           }
       });
 
-      Lampa.Template.add('new_interface_style', "\n        <style>\n        .new-interface .card--small.card--wide {\n            width: 18.3em;\n        }\n        \n        .new-interface-info {\n            position: relative;\n            padding: 1.5em;\n            height: 26em;\n        }\n        \n        .new-interface-info__body {\n            width: 80%;\n            padding-top: 1.1em;\n        }\n        \n        .new-interface-info__head {\n            color: rgba(255, 255, 255, 0.6);\n            margin-bottom: 0em;\n            font-size: 1.3em;\n            min-height: 1em;\n        }\n        \n        .new-interface-info__head span {\n            color: #fff;\n        }\n        \n        .new-interface-info__title {\n            font-size: 4em;\n     margin-top: 0.1em;\n          font-weight: 800;\n            margin-bottom: 0em;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n            display: -webkit-box;\n            -webkit-line-clamp: 3;\n            line-clamp: 3;\n            -webkit-box-orient: vertical;\n            margin-left: -0.03em;\n            line-height: 1;\n    text-shadow: 2px 3px 1px #00000040;\n    max-width: 9em;\n    text-transform: uppercase;\n   letter-spacing: -2px;\n   word-spacing: 5px;\n  }\n  .full-start__pg, .full-start__status {font-size: 0.9em;\n }      \n        .new-interface-info__details {\n            margin-bottom: 1.6em;\n            display: -webkit-box;\n            display: -webkit-flex;\n            display: -moz-box;\n            display: -ms-flexbox;\n            display: flex;\n            -webkit-box-align: center;\n            -webkit-align-items: center;\n            -moz-box-align: center;\n            -ms-flex-align: center;\n            align-items: center;\n            -webkit-flex-wrap: wrap;\n            -ms-flex-wrap: wrap;\n            flex-wrap: wrap;\n            min-height: 1.9em;\n            font-size: 1.3em;\n        }\n        \n        .new-interface-info__split {\n            margin: 0 1em;\n            font-size: 0.7em;\n        }\n        \n        .new-interface-info__description {\n            font-size: 1.2em;\n            font-weight: 300;\n            line-height: 1.5;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n            display: -webkit-box;\n            -webkit-line-clamp: 4;\n            line-clamp: 4;\n            -webkit-box-orient: vertical;\n            width: 70%;\n        }\n        \n        .new-interface .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .full-start__background {\n            height: 108%;\n     left: 30px;\n       top: -4.8em;\n        }\n        \n        .new-interface .full-start__rate {\n            font-size: 1.3em;\n            margin-right: 0;\n        }\n        \n        .new-interface .card__promo {\n            display: none;\n        }\n        \n        .new-interface .card.card--wide+.card-more .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .card.card--wide .card-watched {\n            display: none !important;\n        }\n        \n        body.light--version .new-interface-info__body {\n            width: 69%;\n            padding-top: 1.5em;\n        }\n        \n        body.light--version .new-interface-info {\n            height: 25.3em;\n        }\n\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{\n            animation: animation-card-focus 0.2s\n        }\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{\n            animation: animation-trigger-enter 0.2s forwards\n        }\n        </style>\n    ");
+      Lampa.Template.add('new_interface_style', `
+        <style>
+        .new-interface .card--small.card--wide {
+            width: 18.3em;
+        }
+        
+        .new-interface-info {
+            position: relative;
+            padding: 1.5em;
+            height: 26em;
+        }
+        
+        .new-interface-info__body {
+            width: 80%;
+            padding-top: 1.1em;
+        }
+        
+        .new-interface-info__head {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0em;
+            font-size: 1.3em;
+            min-height: 1em;
+        }
+        
+        .new-interface-info__head span {
+            color: #fff;
+        }
+        
+        .new-interface-info__title {
+            font-size: 4em;
+            margin-top: 0.1em;
+            font-weight: 800;
+            margin-bottom: 0em;
+            overflow: hidden;
+            -o-text-overflow: ".";
+            text-overflow: ".";
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            margin-left: -0.03em;
+            line-height: 1;
+            text-shadow: 2px 3px 1px #00000040;
+            max-width: 100%;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            word-spacing: 5px;
+        }
+        
+        .logo-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5em;
+            margin-top: 0.3em;
+        }
+        
+        .full-start__pg, .full-start__status {
+            font-size: 0.9em;
+        }
+        
+        .new-interface-info__details {
+            margin-bottom: 1.6em;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -moz-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            min-height: 1.9em;
+            font-size: 1.3em;
+        }
+        
+        .new-interface-info__split {
+            margin: 0 1em;
+            font-size: 0.7em;
+        }
+        
+        .new-interface-info__description {
+            font-size: 1.2em;
+            font-weight: 300;
+            line-height: 1.5;
+            overflow: hidden;
+            -o-text-overflow: ".";
+            text-overflow: ".";
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
+            -webkit-box-orient: vertical;
+            width: 70%;
+        }
+        
+        .new-interface .card-more__box {
+            padding-bottom: 95%;
+        }
+        
+        .new-interface .full-start__background {
+            height: 108%;
+            left: 30px;
+            top: -4.8em;
+        }
+        
+        .new-interface .full-start__rate {
+            font-size: 1.3em;
+            margin-right: 0;
+        }
+        
+        .new-interface .card__promo {
+            display: none;
+        }
+        
+        .new-interface .card.card--wide+.card-more .card-more__box {
+            padding-bottom: 95%;
+        }
+        
+        .new-interface .card.card--wide .card-watched {
+            display: none !important;
+        }
+        
+        body.light--version .new-interface-info__body {
+            width: 69%;
+            padding-top: 1.5em;
+        }
+        
+        body.light--version .new-interface-info {
+            height: 25.3em;
+        }
+
+        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
+            animation: animation-card-focus 0.2s
+        }
+        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
+            animation: animation-trigger-enter 0.2s forwards
+        }
+        </style>
+      `);
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
