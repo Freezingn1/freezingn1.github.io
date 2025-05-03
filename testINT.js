@@ -81,7 +81,7 @@
                             }
 
                             if (logoToUse?.file_path) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`);
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
                                 const img = new Image();
                                 
                                 img.onload = () => {
