@@ -9,7 +9,7 @@
         var logoCache = {};
         var currentData = null;
         var currentRequest = null;
-        var logoLoadAttempts = {}; // Трекер попыток загрузки
+        var logoLoadAttempts = {};
 
         this.create = function () {
             html = $(`
@@ -25,7 +25,6 @@
         };
 
         this.update = function (data) {
-            // Отменяем предыдущий запрос, если он есть
             if (currentRequest) {
                 network.clear(currentRequest);
                 currentRequest = null;
@@ -43,19 +42,14 @@
                 const cacheKey = `${type}_${data.id}`;
                 const currentTimestamp = currentData.timestamp;
 
-                // Сразу показываем название как заглушку
+                // Сначала показываем текст
                 html.find('.new-interface-info__title').text(data.title || data.name);
 
                 if (logoCache[cacheKey]) {
-                    // Используем кэшированный логотип
                     html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-                } else {
-                    // Оптимизация: проверяем, не пытаемся ли мы уже загрузить этот логотип
-                    if (logoLoadAttempts[cacheKey]) {
-                        return; // Уже в процессе загрузки
-                    }
+                } else if (!logoLoadAttempts[cacheKey]) {
                     logoLoadAttempts[cacheKey] = true;
-
+                    
                     const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
 
                     const loadLogo = (attempt = 1) => {
@@ -70,20 +64,10 @@
                             const safeTitle = (data.title || data.name).replace(/['"<>]/g, "");
                             
                             if (images.logos?.length) {
-                                // 1. Приоритет русскому логотипу
-                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
+                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                                            images.logos.find(logo => logo.iso_639_1 === 'en') || 
+                                            images.logos[0];
                                 
-                                // 2. Английский как запасной вариант
-                                if (!logoToUse) {
-                                    logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
-                                }
-                                
-                                // 3. Любой логотип если нет языковых
-                                if (!logoToUse) {
-                                    logoToUse = images.logos[0];
-                                }
-                                
-                                // 4. Выбираем логотип с лучшим качеством (если не нашли по языку)
                                 if (images.logos.length > 1 && !logoToUse) {
                                     logoToUse = images.logos.reduce((prev, current) => 
                                         (prev.width * prev.height > current.width * current.height) ? prev : current
@@ -92,7 +76,7 @@
                             }
 
                             if (logoToUse?.file_path) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/w300${logoToUse.file_path}`); // Уменьшил размер для быстрой загрузки
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w300${logoToUse.file_path}`);
                                 const img = new Image();
                                 
                                 img.onload = () => {
@@ -115,34 +99,26 @@
                                 };
                                 
                                 img.onerror = () => {
-                                    if (attempt < 2) { // Уменьшил количество попыток
+                                    if (attempt < 2) {
                                         setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
                                     } else {
-                                        showTitleFallback();
                                         delete logoLoadAttempts[cacheKey];
                                     }
                                 };
                                 
                                 img.src = imageUrl;
                             } else {
-                                showTitleFallback();
                                 delete logoLoadAttempts[cacheKey];
                             }
                         }, () => {
                             currentRequest = null;
-                            if (attempt < 2) { // Уменьшил количество попыток
+                            if (attempt < 2) {
                                 setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
                             } else {
-                                showTitleFallback();
                                 delete logoLoadAttempts[cacheKey];
                             }
                         });
                     };
-
-                    function showTitleFallback() {
-                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                        html.find('.new-interface-info__title').text(data.title || data.name);
-                    }
 
                     loadLogo();
                 }
@@ -160,7 +136,6 @@
             this.load(data);
         };
 
-        // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
@@ -229,11 +204,11 @@
             html.remove();
             loaded = {};
             logoCache = {};
+            logoLoadAttempts = {};
             html = null;
         };
     }
 
-    // ... (остальная часть кода компонента остается без изменений)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
