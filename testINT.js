@@ -44,7 +44,7 @@
 
                 // Очищаем предыдущий заголовок перед загрузкой нового
                 html.find('.new-interface-info__title').empty();
-create():
+
 const MAX_CACHE_SIZE = 10;
 if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
     const oldestKey = Object.keys(logoCache)[0];
@@ -126,7 +126,19 @@ if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
                             }
                         });
                     };
-
+this.update = function(data) {
+    // Сброс кэша при новом контенте
+    logoCache = {};
+    
+    if (currentRequest) {
+        network.clear(currentRequest);
+        currentRequest = null;
+    }
+    
+    currentData = {
+        data: data,
+        timestamp: Date.now()
+}; };
                     function showTitleFallback() {
                         if (!currentData || currentData.timestamp !== currentTimestamp) return;
                         html.find('.new-interface-info__title').text(data.title || data.name);
