@@ -73,12 +73,12 @@
                                 }
                                 
                                 // 4. Выбираем логотип с лучшим качеством
-                                if (images.logos.length > 1 && !logoToUse) {
+                               /* if (images.logos.length > 1 && !logoToUse) {
                                     logoToUse = images.logos.reduce((prev, current) => 
                                         (prev.width * prev.height > current.width * current.height) ? prev : current
                                     );
-                                }
-                            }
+                                } */
+                            } 
 
                             if (logoToUse?.file_path) {
                                 const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
@@ -100,7 +100,7 @@
                                 };
                                 
                                 img.onerror = () => {
-                                    if (attempt < 2) {
+                                    if (attempt < 4) {
                                         setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
                                     } else {
                                         showTitleFallback();
@@ -113,7 +113,7 @@
                             }
                         }, () => {
                             currentRequest = null;
-                            if (attempt < 2) {
+                            if (attempt < 4) {
                                 setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
                             } else {
                                 showTitleFallback();
