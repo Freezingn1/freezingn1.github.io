@@ -207,6 +207,10 @@ if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
             return html;
         };
 
+setInterval(() => {
+    logoCache = {};
+}, 60_000); // Каждую минуту
+
         this.empty = function () {};
 		
 		this.destroy = function() {
