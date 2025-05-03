@@ -67,9 +67,6 @@
                     const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
 
                     const loadLogo = (attempt = 1) => {
-                        // Сначала показываем название, а затем заменяем на логотип
-                        html.find('.new-interface-info__title').text(data.title || data.name);
-                        
                         currentRequest = network.silent(url, (images) => {
                             currentRequest = null;
                             if (!currentData || currentData.timestamp !== currentTimestamp) return;
