@@ -100,8 +100,8 @@
                                 };
                                 
                                 img.onerror = () => {
-                                    if (attempt < 3) {
-                                        setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
+                                    if (attempt < 2) {
+                                        setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
                                     } else {
                                         showTitleFallback();
                                     }
@@ -113,8 +113,8 @@
                             }
                         }, () => {
                             currentRequest = null;
-                            if (attempt < 3) {
-                                setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
+                            if (attempt < 2) {
+                                setTimeout(() => loadLogo(attempt + 1), 300 * attempt);
                             } else {
                                 showTitleFallback();
                             }
