@@ -56,7 +56,7 @@
         Lampa.Listener.follow("full", function(event) {
             if (event.type === "complite") {
                 applyLogo(
-                    event.object.activity.render().find(".full-start-new__title"),
+                    event.object.activity.render().find(".new-interface-info__title"),
                     event.data.movie
                 );
             }
