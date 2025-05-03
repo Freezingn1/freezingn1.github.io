@@ -14,86 +14,100 @@
       };
 
       this.update = function (data) {
+    // Сохраняем текущие данные
     currentData = data;
     
-    // Очищаем предыдущие запросы
+    // Отменяем предыдущие запросы
     network.clear();
     
-    // Рисуем основную информацию
+    // Обновляем основную информацию
     this.draw(data);
 
-    // Устанавливаем заглушку - сразу показываем текст (на случай если лого не загрузится)
+    // Всегда сначала устанавливаем текстовое название
     html.find('.new-interface-info__title')
-        .text(data.title)
-        .css({opacity: 1, transition: 'opacity 0.2s'});
+        .text(data.title || data.name)
+        .css({opacity: 1});
 
-    // Если логотипы включены
-    if (Lampa.Storage.get('new_interface_logo') === true) {
-        const type = data.name ? 'tv' : 'movie';
-        const cacheKey = `${type}_${data.id}`;
-        
-        // Проверяем кеш
-        if (logoCache[cacheKey] === 'no-logo') {
-            // Известно что лого нет - оставляем текст
-            return;
-        }
-        else if (logoCache[cacheKey]) {
-            // Лого есть в кеше - показываем сразу
-            html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-            return;
-        }
-
-        // Быстрая проверка локального кеша TMDB
-        const tmdbCache = Lampa.TMDB.getCache(`${type}/${data.id}/images`);
-        if (tmdbCache && tmdbCache.logos) {
-            processLogos(tmdbCache.logos, cacheKey, data);
-            return;
-        }
-
-        // Делаем запрос только если нет в кеше
-        const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
-
-        network.timeout(2000); // Уменьшаем таймаут запроса
-        network.silent(url, (images) => {
-            if (currentData.id !== data.id) return;
-            
-            if (images.logos && images.logos.length > 0) {
-                processLogos(images.logos, cacheKey, data);
-            } else {
-                // Запоминаем что лого нет
-                logoCache[cacheKey] = 'no-logo';
-            }
-        }, () => {
-            // При ошибке запроса просто оставляем текст
-            logoCache[cacheKey] = 'no-logo';
-        });
+    // Если логотипы отключены - на этом заканчиваем
+    if (Lampa.Storage.get('new_interface_logo') !== true) {
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.load(data);
+        return;
     }
 
-    function processLogos(logos, cacheKey, data) {
-        if (logos.length === 0 || !logos[0].file_path) {
-            logoCache[cacheKey] = 'no-logo';
-            return;
+    // Определяем тип контента (фильм или сериал)
+    const type = data.name ? 'tv' : 'movie';
+    const cacheKey = `${type}_${data.id}`;
+
+    // Если уже знаем что лого нет - выходим
+    if (logoCache[cacheKey] === null) {
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.load(data);
+        return;
+    }
+
+    // Если лого есть в кеше - используем его
+    if (logoCache[cacheKey]) {
+        html.find('.new-interface-info__title').html(logoCache[cacheKey]);
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.load(data);
+        return;
+    }
+
+    // Функция для обработки логотипов
+    const processLogo = (logos) => {
+        // Проверяем актуальность данных
+        if (!currentData || currentData.id !== data.id) return false;
+        
+        if (!logos || logos.length === 0) {
+            logoCache[cacheKey] = null; // Запоминаем что лого нет
+            return false;
         }
 
         const logoPath = logos[0].file_path;
+        if (!logoPath) {
+            logoCache[cacheKey] = null;
+            return false;
+        }
+
         const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
         const img = new Image();
-        
-        img.onload = () => {
-            if (currentData.id !== data.id) return;
+
+        img.onload = function() {
+            if (!currentData || currentData.id !== data.id) return;
+            
             const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
             logoCache[cacheKey] = logoHtml;
-            html.find('.new-interface-info__title')
-                .html(logoHtml)
-                .css({opacity: 1});
+            html.find('.new-interface-info__title').html(logoHtml);
         };
-        
-        img.onerror = () => {
-            logoCache[cacheKey] = 'no-logo';
+
+        img.onerror = function() {
+            logoCache[cacheKey] = null;
         };
-        
+
         img.src = imageUrl;
+        return true;
+    };
+
+    // Проверяем локальный кеш TMDB
+    const cached = Lampa.TMDB.getCache(`${type}/${data.id}/images`);
+    if (cached && cached.logos) {
+        if (processLogo(cached.logos)) {
+            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+            this.load(data);
+            return;
+        }
     }
+
+    // Делаем запрос к API
+    const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
+
+    network.timeout(3000);
+    network.silent(url, function(images) {
+        processLogo(images.logos);
+    }, function() {
+        logoCache[cacheKey] = null;
+    });
 
     Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
     this.load(data);
