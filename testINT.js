@@ -552,7 +552,19 @@
             left: 30px;
             top: -4.8em;
         }
-        
+		
+        /* Полное удаление card__promo */
+    .new-interface .card__promo,
+    .new-interface .card .card__promo {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        opacity: 0 !important;
+    }
+		
         .new-interface .full-start__rate {
             font-size: 1.3em;
             margin-right: 0;
