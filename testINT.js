@@ -44,7 +44,7 @@
 
                 // Очищаем предыдущий заголовок перед загрузкой нового
                 html.find('.new-interface-info__title').empty();
-
+create():
 const MAX_CACHE_SIZE = 10;
 if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
     const oldestKey = Object.keys(logoCache)[0];
