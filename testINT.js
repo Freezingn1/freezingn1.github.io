@@ -45,7 +45,14 @@
                         if (!currentData || currentData.timestamp !== currentTimestamp) return;
                         
                         if (images.logos?.length > 0) {
-                            const logoPath = images.logos[0].file_path;
+                            // Сначала ищем русские логотипы
+                            let russianLogo = images.logos.find(logo => logo.iso_639_1 === 'ru');
+                            // Если нет русского, ищем английские
+                            let englishLogo = !russianLogo ? images.logos.find(logo => logo.iso_639_1 === 'en') : null;
+                            // Если нет ни русского, ни английского, берем первый доступный
+                            let logoToUse = russianLogo || englishLogo || images.logos[0];
+                            
+                            const logoPath = logoToUse.file_path;
                             if (logoPath) {
                                 const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
                                 const img = new Image();
