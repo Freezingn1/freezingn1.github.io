@@ -11,6 +11,8 @@
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+		this.titleElement = html.find('.new-interface-info__title')[0];
+		this.headElement = html.find('.new-interface-info__head')[0];
       };
 
       this.update = function (data) {
