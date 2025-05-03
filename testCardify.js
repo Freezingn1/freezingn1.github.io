@@ -641,14 +641,12 @@
             }
         }
 
-        // Модифицируем обработчик загрузки данных
         Lampa.Listener.follow('full', function(e) {
             if (e.type == 'complete') {
                 const element = e.object.activity.render();
                 element.find('.full-start__background').addClass('cardify__background');
                 
-                // Загружаем логотип
-                loadMovieLogo(element, e.data);
+                loadLogo(e.data, element);
                 
                 if (!Lampa.Storage.field('cardify_run_trailers')) return;
                 const trailer = video(e.data);
