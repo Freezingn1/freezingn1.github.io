@@ -6,7 +6,6 @@
       var timer;
       var network = new Lampa.Reguest();
       var loaded = {};
-      var logoCache = {};
       var currentData = null;
 
       this.create = function () {
@@ -21,88 +20,7 @@
         
         this.draw(data);
 
-        if (Lampa.Storage.get('new_interface_logo') === true) {
-            const type = data.name ? 'tv' : 'movie';
-            const cacheKey = `${type}_${data.id}`;
-            const currentTimestamp = currentData.timestamp;
-
-            if (logoCache[cacheKey]) {
-                html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-            } else {
-                const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
-
-                const loadLogo = (attempt = 1) => {
-                    network.silent(url, (images) => {
-                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                        
-                        let logoToUse = null;
-                        
-                        // Ищем русский логотип
-                        if (images.logos?.length) {
-                            logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
-                            
-                            // Если русский не найден, ищем английский
-                            if (!logoToUse) {
-                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
-                            }
-                            
-                            // Если ни русский, ни английский не найдены, берем первый доступный
-                            if (!logoToUse && images.logos.length > 0) {
-                                logoToUse = images.logos[0];
-                            }
-                        }
-                        
-                        if (logoToUse?.file_path) {
-                            const isSvg = logoToUse.file_path.endsWith('.svg');
-                            const imageUrl = isSvg 
-                                ? Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`)
-                                : Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
-                                
-                            const img = new Image();
-                            
-                            img.onload = () => {
-                                if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                
-                                const logoHtml = `
-                                    <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
-                                        <img style="max-width:100%; max-height:100%; object-fit:contain;" src="${imageUrl}" />
-                                    </div>
-                                `;
-                                logoCache[cacheKey] = logoHtml;
-                                html.find('.new-interface-info__title').html(logoHtml);
-                            };
-                            
-                            img.onerror = () => {
-                                if (attempt < 3) {
-                                    setTimeout(() => loadLogo(attempt + 1), 300);
-                                } else {
-                                    showTitleFallback();
-                                }
-                            };
-                            
-                            img.src = imageUrl;
-                        } else {
-                            showTitleFallback();
-                        }
-                    }, () => {
-                        if (attempt < 3) {
-                            setTimeout(() => loadLogo(attempt + 1), 300);
-                        } else {
-                            showTitleFallback();
-                        }
-                    });
-                };
-
-                function showTitleFallback() {
-                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                    html.find('.new-interface-info__title').text(data.title || data.name);
-                }
-
-                loadLogo();
-            }
-        } else {
-            html.find('.new-interface-info__title').text(data.title || data.name);
-        }
+        html.find('.new-interface-info__title').text(data.title || data.name);
 
         if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
             html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
@@ -177,7 +95,6 @@
       this.destroy = function () {
         html.remove();
         loaded = {};
-        logoCache = {};
         html = null;
       };
     }
@@ -419,19 +336,6 @@
 
         return new use(object);
       };
-
-      Lampa.SettingsApi.addParam({
-          component: 'interface',
-          param: {
-              name: 'new_interface_logo',
-              type: 'trigger',
-              default: true
-          },
-          field: {
-              name: 'Логотипы вместо названий',
-              description: 'Отображать логотипы фильмов/сериалов вместо названий (приоритет русскоязычным логотипам)'
-          }
-      });
 
       Lampa.SettingsApi.addParam({
           component: 'interface',
