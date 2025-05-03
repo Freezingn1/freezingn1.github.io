@@ -7,14 +7,13 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var logoCache = {};
-      var currentData = null; // Добавляем хранение текущих данных
+      var currentData = null;
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
-        // Сохраняем текущие данные
         currentData = data;
         
         // Сначала рисуем основные данные
@@ -66,19 +65,11 @@
             html.find('.new-interface-info__title').text(data.title);
         }
 
-        // Описание
-        if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
-            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
-        } else {
-            html.find('.new-interface-info__description').hide();
-        }
-
         Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
         this.load(data);
       };
 
       this.draw = function (data) {
-        // Если данные не пришли, используем сохраненные
         if (!data && currentData) data = currentData;
         if (!data) return;
 
@@ -98,14 +89,9 @@
             details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
         }
         
-        if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
-            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
-        }
-        
         if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
         if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
         
-        // Обновляем информацию без сброса
         html.find('.new-interface-info__head').empty().append(head.join(', '));
         html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
       };
@@ -128,7 +114,6 @@
                 loaded[url] = movie;
                 _this.draw(movie);
             }, function() {
-                // При ошибке используем текущие данные
                 _this.draw(data);
             });
         }, 300);
@@ -397,34 +382,6 @@
           field: {
               name: 'Логотипы в новом интерфейсе',
               description: 'Отображать логотипы фильмов/сериалов вместо названия в новом интерфейсе'
-          }
-      });
-
-      // Add setting for showing/hiding description
-      Lampa.SettingsApi.addParam({
-          component: 'interface',
-          param: {
-              name: 'new_interface_show_description',
-              type: 'trigger',
-              default: true
-          },
-          field: {
-              name: 'Показывать описание',
-              description: 'Отображать описание фильма/сериала в новом интерфейсе'
-          }
-      });
-
-      // Add setting for showing/hiding genres
-      Lampa.SettingsApi.addParam({
-          component: 'interface',
-          param: {
-              name: 'new_interface_show_genres',
-              type: 'trigger',
-              default: true
-          },
-          field: {
-              name: 'Показывать жанры',
-              description: 'Отображать жанры фильма/сериала в новом интерфейсе'
           }
       });
 
