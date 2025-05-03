@@ -9,7 +9,6 @@
         var logoCache = {};
         var currentData = null;
         var currentRequest = null;
-        var preloadedLogos = {}; // Кэш предзагруженных логотипов
 
         this.create = function () {
             html = $(`
@@ -24,30 +23,8 @@
             `);
         };
 
-        // Функция предзагрузки логотипов
-        function preloadLogo(type, id) {
-            const cacheKey = `${type}_${id}`;
-            if (!preloadedLogos[cacheKey]) {
-                const url = Lampa.TMDB.api(`${type}/${id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
-                
-                network.silent(url, (images) => {
-                    if (images.logos?.length) {
-                        let logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
-                                      images.logos.find(logo => logo.iso_639_1 === 'en') || 
-                                      images.logos[0];
-                        
-                        if (logoToUse?.file_path) {
-                            const imageUrl = Lampa.TMDB.image(`/t/p/original${logoToUse.file_path}`);
-                            const img = new Image();
-                            img.src = imageUrl;
-                            preloadedLogos[cacheKey] = imageUrl;
-                        }
-                    }
-                });
-            }
-        }
-
         this.update = function (data) {
+            // Отменяем предыдущий запрос, если он есть
             if (currentRequest) {
                 network.clear(currentRequest);
                 currentRequest = null;
@@ -65,37 +42,16 @@
                 const cacheKey = `${type}_${data.id}`;
                 const currentTimestamp = currentData.timestamp;
 
-                // Предзагрузка логотипа для следующего элемента
-                if (items && items[active + 1]) {
-                    const nextData = items[active + 1].data();
-                    if (nextData) {
-                        const nextType = nextData.name ? 'tv' : 'movie';
-                        preloadLogo(nextType, nextData.id);
-                    }
-                }
-
+                // Очищаем предыдущий заголовок перед загрузкой нового
                 html.find('.new-interface-info__title').empty();
 
                 if (logoCache[cacheKey]) {
                     html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-                } else if (preloadedLogos[cacheKey]) {
-                    // Используем предзагруженный логотип если он есть
-                    const safeTitle = (data.title || data.name).replace(/'/g, "\\'");
-                    const logoHtml = `
-                        <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
-                            <img style="max-width:8em; max-height:2.8em; object-fit:contain;" 
-                                 src="${preloadedLogos[cacheKey]}" 
-                                 alt="${safeTitle}"
-                                 onerror="this.parentElement.innerHTML='${safeTitle}'" />
-                        </div>
-                    `;
-                    logoCache[cacheKey] = logoHtml;
-                    html.find('.new-interface-info__title').html(logoHtml);
                 } else {
                     const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
 
                     const loadLogo = (attempt = 1) => {
-                        currentRequest = network.timeout(2000).silent(url, (images) => {
+                        currentRequest = network.silent(url, (images) => {
                             currentRequest = null;
                             if (!currentData || currentData.timestamp !== currentTimestamp) return;
                             
@@ -103,13 +59,29 @@
                             const safeTitle = (data.title || data.name).replace(/'/g, "\\'");
                             
                             if (images.logos?.length) {
-                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
-                                           images.logos.find(logo => logo.iso_639_1 === 'en') || 
-                                           images.logos[0];
+                                // 1. Приоритет русскому логотипу
+                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
+                                
+                                // 2. Английский как запасной вариант
+                                if (!logoToUse) {
+                                    logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
+                                }
+                                
+                                // 3. Любой логотип если нет языковых
+                                if (!logoToUse) {
+                                    logoToUse = images.logos[0];
+                                }
+                                
+                                // 4. Выбираем логотип с лучшим качеством
+                                if (images.logos.length > 1 && !logoToUse) {
+                                    logoToUse = images.logos.reduce((prev, current) => 
+                                        (prev.width * prev.height > current.width * current.height) ? prev : current
+                                    );
+                                }
                             }
 
                             if (logoToUse?.file_path) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/w300${logoToUse.file_path}`); // Используем меньший размер
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
                                 const img = new Image();
                                 
                                 img.onload = () => {
@@ -128,8 +100,8 @@
                                 };
                                 
                                 img.onerror = () => {
-                                    if (attempt < 2) { // Уменьшено количество попыток
-                                        setTimeout(() => loadLogo(attempt + 1), 300); // Уменьшена задержка
+                                    if (attempt < 3) {
+                                        setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
                                     } else {
                                         showTitleFallback();
                                     }
@@ -141,8 +113,8 @@
                             }
                         }, () => {
                             currentRequest = null;
-                            if (attempt < 2) {
-                                setTimeout(() => loadLogo(attempt + 1), 300);
+                            if (attempt < 3) {
+                                setTimeout(() => loadLogo(attempt + 1), 500 * attempt);
                             } else {
                                 showTitleFallback();
                             }
