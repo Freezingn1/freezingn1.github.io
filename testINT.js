@@ -9,7 +9,6 @@
         var logoCache = {};
         var currentData = null;
         var currentRequest = null;
-        var MAX_CACHE_SIZE = 200;
 
         this.create = function () {
             html = $(`
@@ -24,16 +23,8 @@
             `);
         };
 
-        function cleanCache() {
-            var keys = Object.keys(logoCache);
-            if (keys.length > MAX_CACHE_SIZE) {
-                for (var i = 0; i < keys.length - MAX_CACHE_SIZE; i++) {
-                    delete logoCache[keys[i]];
-                }
-            }
-        }
-
         this.update = function (data) {
+            // Отменяем предыдущий запрос, если он есть
             if (currentRequest) {
                 network.clear(currentRequest);
                 currentRequest = null;
@@ -43,11 +34,102 @@
                 data: data,
                 timestamp: Date.now()
             };
-
+            
             this.draw(data);
 
             if (Lampa.Storage.get('new_interface_logo') === true) {
-                this.loadLogo(data);
+                const type = data.name ? 'tv' : 'movie';
+                const cacheKey = `${type}_${data.id}`;
+                const currentTimestamp = currentData.timestamp;
+
+                // Очищаем предыдущий заголовок перед загрузкой нового
+                html.find('.new-interface-info__title').empty();
+
+
+
+                if (logoCache[cacheKey]) {
+                    html.find('.new-interface-info__title').html(logoCache[cacheKey]);
+                } else {
+                    const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
+
+                    const loadLogo = (attempt = 1) => {
+                        currentRequest = network.silent(url, (images) => {
+                            currentRequest = null;
+                            if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                            
+                            let logoToUse = null;
+                            const safeTitle = (data.title || data.name).replace(/'/g, "\\'");
+                            
+                            if (images.logos?.length) {
+                                // 1. Приоритет русскому логотипу
+                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
+                                
+                                // 2. Английский как запасной вариант
+                                if (!logoToUse) {
+                                    logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
+                                }
+                                
+                                // 3. Любой логотип если нет языковых
+                                if (!logoToUse) {
+                                    logoToUse = images.logos[0];
+                                }
+                                
+                                // 4. Выбираем логотип с лучшим качеством
+                                if (images.logos.length > 1 && !logoToUse) {
+                                    logoToUse = images.logos.reduce((prev, current) => 
+                                        (prev.width * prev.height > current.width * current.height) ? prev : current
+                                    );
+                                }
+                            }
+
+                            if (logoToUse?.file_path) {
+                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
+                                const img = new Image();
+                                
+                                img.onload = () => {
+                                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                                    
+                                    const logoHtml = `
+                                        <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
+                                            <img style="max-width:8em; max-height:2.8em; object-fit:contain;" 
+                                                 src="${imageUrl}" 
+                                                 alt="${safeTitle}"
+                                                 onerror="this.parentElement.innerHTML='${safeTitle}'" />
+                                        </div>
+                                    `;
+                                    logoCache[cacheKey] = logoHtml;
+                                    html.find('.new-interface-info__title').html(logoHtml);
+                                };
+                                
+                                img.onerror = () => {
+                                    if (attempt < 3) {
+                                        setTimeout(() => loadLogo(attempt + 1), 100 * attempt);
+                                    } else {
+                                        showTitleFallback();
+                                    }
+                                };
+                                
+                                img.src = imageUrl;
+                            } else {
+                                showTitleFallback();
+                            }
+                        }, () => {
+                            currentRequest = null;
+                            if (attempt < 3) {
+                                setTimeout(() => loadLogo(attempt + 1), 100 * attempt);
+                            } else {
+                                showTitleFallback();
+                            }
+                        });
+                    };
+
+                    function showTitleFallback() {
+                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                        html.find('.new-interface-info__title').text(data.title || data.name);
+                    }
+
+                    loadLogo();
+                }
             } else {
                 html.find('.new-interface-info__title').text(data.title || data.name);
             }
@@ -62,129 +144,53 @@
             this.load(data);
         };
 
-        this.loadLogo = function(data) {
-            var type = data.name ? 'tv' : 'movie';
-            var cacheKey = type + '_' + data.id;
-            var currentTimestamp = currentData.timestamp;
+        // ... (остальные методы остаются без изменений)
+        this.draw = function (data) {
+            if (!data && currentData && currentData.data) data = currentData.data;
+            if (!data) return;
 
-            html.find('.new-interface-info__title').empty();
-
-            if (logoCache[cacheKey]) {
-                html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-                return;
-            }
-
-            var url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + 
-                    Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language') + 
-                    '&include_image_language=ru,en,null');
-
-            currentRequest = network.timeout(3000).silent(url, function(images) {
-                currentRequest = null;
-                if (!currentData || currentData.timestamp !== currentTimestamp) return;
-
-                var logoToUse = null;
-                var safeTitle = (data.title || data.name).replace(/['"]/g, '');
-
-                if (images.logos && images.logos.length) {
-                    logoToUse = images.logos.find(function(logo) {
-                        return logo.iso_639_1 === 'ru';
-                    }) || images.logos.find(function(logo) {
-                        return logo.iso_639_1 === 'en';
-                    }) || images.logos[0];
-                }
-
-                if (logoToUse && logoToUse.file_path) {
-                    var imageUrl = Lampa.TMDB.image('/t/p/w500' + logoToUse.file_path);
-                    var img = new Image();
-                    
-                    img.onload = function() {
-                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                        
-                        var logoHtml = '<div style="margin-top:0.3em; margin-bottom:0.3em; max-width:8em; max-height:4em;">' +
-                            '<img style="max-width:8em; max-height:2.8em; object-fit:contain;" ' +
-                            'src="' + imageUrl + '" alt="' + safeTitle + '" ' +
-                            'onerror="this.parentElement.innerHTML=\'' + safeTitle + '\'">' +
-                            '</div>';
-                        
-                        logoCache[cacheKey] = logoHtml;
-                        cleanCache();
-                        html.find('.new-interface-info__title').html(logoHtml);
-                    };
-                    
-                    img.onerror = function() {
-                        logoCache[cacheKey] = '<div>' + safeTitle + '</div>';
-                        cleanCache();
-                        html.find('.new-interface-info__title').text(data.title || data.name);
-                    };
-                    
-                    img.src = imageUrl;
-                } else {
-                    logoCache[cacheKey] = '<div>' + safeTitle + '</div>';
-                    cleanCache();
-                    html.find('.new-interface-info__title').text(data.title || data.name);
-                }
-            }, function() {
-                currentRequest = null;
-                logoCache[cacheKey] = '<div>' + (data.title || data.name) + '</div>';
-                cleanCache();
-                html.find('.new-interface-info__title').text(data.title || data.name);
-            });
-        };
-
-        this.draw = function(data) {
-            if (!data) {
-                if (currentData && currentData.data) data = currentData.data;
-                else return;
-            }
-
-            var createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+            var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
             var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
             var head = [];
             var details = [];
             var countries = Lampa.Api.sources.tmdb.parseCountries(data);
             var pg = Lampa.Api.sources.tmdb.parsePG(data);
             
-            if (createYear !== '0000') head.push('<span>' + createYear + '</span>');
-            
+            if (create !== '0000') head.push('<span>' + create + '</span>');
             if (countries.length > 0) head.push(countries.join(', '));
             
             if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
             
-            if (data.number_of_episodes > 0) {
+            if (data.number_of_episodes && data.number_of_episodes > 0) {
                 details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
             }
             
-            if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres && data.genres.length > 0) {
-                details.push(data.genres.map(function(item) {
-                    return Lampa.Utils.capitalizeFirstLetter(item.name);
-                }).join(' | '));
+            if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
+                details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
             }
             
             if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-            
-            if (pg) details.push('<span class="full-start__pg" style="font-size:0.9em;">' + pg + '</span>');
+            if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
             
             html.find('.new-interface-info__head').empty().append(head.join(', '));
             html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
         };
 
-        this.load = function(data) {
+        this.load = function (data) {
             var _this = this;
             clearTimeout(timer);
             
-            var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + 
-                    '?api_key=' + Lampa.TMDB.key() + 
-                    '&append_to_response=content_ratings,release_dates' + 
-                    '&language=' + Lampa.Storage.get('language'));
+            var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
             
             if (loaded[url]) {
                 this.draw(loaded[url]);
                 return;
             }
             
-            timer = setTimeout(function() {
+            timer = setTimeout(function () {
                 network.clear();
-                network.timeout(5000).silent(url, function(movie) {
+                network.timeout(5000);
+                network.silent(url, function (movie) {
                     loaded[url] = movie;
                     _this.draw(movie);
                 }, function() {
@@ -193,24 +199,25 @@
             }, 400);
         };
 
-        this.render = function() {
+        this.render = function () {
             return html;
         };
 
-        this.empty = function() {};
+        this.empty = function () {};
 
-        this.destroy = function() {
+        this.destroy = function () {
             if (currentRequest) {
                 network.clear(currentRequest);
                 currentRequest = null;
             }
-            if (html) html.remove();
+            html.remove();
             loaded = {};
             logoCache = {};
             html = null;
         };
     }
 
+    // ... (остальная часть кода компонента остается без изменений)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
