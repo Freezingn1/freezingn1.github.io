@@ -7,18 +7,16 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var currentData = null;
-      var currentRequest = null;
+      var activeRequest = null;
+      var activeImageLoad = null;
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
-        // Отменяем предыдущий запрос, если он есть
-        if (currentRequest) {
-            network.clear();
-            currentRequest = null;
-        }
+        // Отменяем предыдущие запросы
+        this.cancelPendingRequests();
 
         // Сохраняем текущие данные с временной меткой
         currentData = {
@@ -26,60 +24,15 @@
             timestamp: Date.now()
         };
         
-        // Сначала рисуем основные данные
+        // Сразу устанавливаем текст названия
+        html.find('.new-interface-info__title').text(data.title || data.name);
+        
+        // Рисуем основные данные
         this.draw(data);
 
-        // Затем загружаем логотипы (если включены)
+        // Загружаем логотипы (если включены)
         if (Lampa.Storage.get('new_interface_logo') === true) {
-            const type = data.name ? 'tv' : 'movie';
-            const currentTimestamp = currentData.timestamp;
-
-            const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
-
-            const loadLogo = (attempt = 1) => {
-                currentRequest = network.silent(url, (images) => {
-                    // Проверяем, что данные еще актуальны
-                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                    
-                    if (images.logos?.length > 0) {
-                        const logoPath = images.logos[0].file_path;
-                        if (logoPath) {
-                            const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
-                            const img = new Image();
-                            
-                            img.onload = () => {
-                                // Проверяем, что данные еще актуальны
-                                if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                
-                                const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
-                                html.find('.new-interface-info__title').html(logoHtml);
-                            };
-                            
-                            img.onerror = () => {
-                                // Проверяем, что данные еще актуальны
-                                if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                
-                                if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
-                                else html.find('.new-interface-info__title').text(data.title);
-                            };
-                            
-                            img.src = imageUrl;
-                            return;
-                        }
-                    }
-                    html.find('.new-interface-info__title').text(data.title);
-                }, () => {
-                    // Проверяем, что данные еще актуальны
-                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                    
-                    if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
-                    else html.find('.new-interface-info__title').text(data.title);
-                });
-            };
-
-            loadLogo();
-        } else {
-            html.find('.new-interface-info__title').text(data.title);
+            this.loadLogo(data);
         }
 
         // Описание
@@ -91,6 +44,67 @@
 
         Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
         this.load(data);
+      };
+
+      this.loadLogo = function(data) {
+        const type = data.name ? 'tv' : 'movie';
+        const currentTimestamp = currentData.timestamp;
+
+        const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
+
+        activeRequest = network.silent(url, (images) => {
+            // Проверяем, что данные еще актуальны
+            if (!currentData || currentData.timestamp !== currentTimestamp) return;
+            
+            if (images.logos?.length > 0) {
+                const logoPath = images.logos[0].file_path;
+                if (logoPath) {
+                    const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoPath.replace(".svg", ".png")}`);
+                    
+                    // Отменяем предыдущую загрузку изображения
+                    if (activeImageLoad) {
+                        activeImageLoad.onload = null;
+                        activeImageLoad.onerror = null;
+                        activeImageLoad = null;
+                    }
+                    
+                    const img = new Image();
+                    activeImageLoad = img;
+                    
+                    img.onload = () => {
+                        // Проверяем, что данные еще актуальны
+                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
+                        
+                        const logoHtml = `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:2.8em;" src="${imageUrl}" />`;
+                        html.find('.new-interface-info__title').html(logoHtml);
+                        activeImageLoad = null;
+                    };
+                    
+                    img.onerror = () => {
+                        activeImageLoad = null;
+                        // Оставляем текстовое название
+                    };
+                    
+                    img.src = imageUrl;
+                    return;
+                }
+            }
+            // Оставляем текстовое название, если логотип не найден
+        }, () => {
+            // Оставляем текстовое название при ошибке запроса
+        });
+      };
+
+      this.cancelPendingRequests = function() {
+        if (activeRequest) {
+            network.clear();
+            activeRequest = null;
+        }
+        if (activeImageLoad) {
+            activeImageLoad.onload = null;
+            activeImageLoad.onerror = null;
+            activeImageLoad = null;
+        }
       };
 
       this.draw = function (data) {
@@ -155,10 +169,7 @@
       this.empty = function () {};
 
       this.destroy = function () {
-        if (currentRequest) {
-            network.clear();
-            currentRequest = null;
-        }
+        this.cancelPendingRequests();
         html.remove();
         loaded = {};
         html = null;
