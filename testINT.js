@@ -68,11 +68,6 @@
                                 if (!logoToUse) {
                                     logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
                                 }
-								
-								// 2. Японский как запасной вариант
-                                if (!logoToUse) {
-                                    logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ja');
-                                }
                                 
                                 // 3. Любой логотип если нет языковых
                                 if (!logoToUse) {
