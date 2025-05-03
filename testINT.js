@@ -69,7 +69,7 @@
                                 
                                 const logoHtml = `
                                     <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
-                                        <img style="max-width:100%; max-height:100%; object-fit:contain;" 
+                                        <img style="max-width:8em; max-height:2.8em; object-fit:contain;" 
                                              src="${imageUrl}" 
                                              alt="${safeTitle}"
                                              onerror="this.parentElement.innerHTML='${safeTitle}'" />
