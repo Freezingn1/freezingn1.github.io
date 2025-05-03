@@ -7,19 +7,20 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var logoCache = {};
-      var currentData = null;
+      var currentData = null; // Добавляем хранение текущих данных
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
+        // Сохраняем текущие данные
         currentData = data;
         
-        // Мгновенное отображение базовой информации
-        this.drawBasicInfo(data);
+        // Сначала рисуем основные данные
+        this.draw(data);
 
-        // Загрузка логотипов (если включены)
+        // Затем загружаем логотипы (если включены)
         if (Lampa.Storage.get('new_interface_logo') === true) {
             const type = data.name ? 'tv' : 'movie';
             const cacheKey = `${type}_${data.id}`;
@@ -45,89 +46,92 @@
                                 
                                 img.onerror = () => {
                                     if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                                    else html.find('.new-interface-info__title').text(data.title);
                                 };
                                 
                                 img.src = imageUrl;
+                                return;
                             }
                         }
+                        html.find('.new-interface-info__title').text(data.title);
                     }, () => {
                         if (attempt < 3) setTimeout(() => loadLogo(attempt + 1), 300);
+                        else html.find('.new-interface-info__title').text(data.title);
                     });
                 };
+
                 loadLogo();
             }
+        } else {
+            html.find('.new-interface-info__title').text(data.title);
+        }
+
+        // Описание
+        if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
+            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
+        } else {
+            html.find('.new-interface-info__description').hide();
         }
 
         Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.loadAdditionalData(data);
+        this.load(data);
       };
 
-      this.drawBasicInfo = function(data) {
+      this.draw = function (data) {
+        // Если данные не пришли, используем сохраненные
+        if (!data && currentData) data = currentData;
         if (!data) return;
-        
+
         var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-        var vote = data.vote_average ? parseFloat(data.vote_average).toFixed(1) : null;
+        var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
         var head = [];
         var details = [];
-        var countries = data.production_countries || [];
+        var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+        var pg = Lampa.Api.sources.tmdb.parsePG(data);
         
         if (create !== '0000') head.push('<span>' + create + '</span>');
-        if (countries.length > 0) {
-            head.push(countries.map(c => c.iso_3166_1 ? Lampa.Utils.countryName(c.iso_3166_1) : '').filter(Boolean).join(', '));
-        }
+        if (countries.length > 0) head.push(countries.join(', '));
         
         if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
         
-        if (data.number_of_episodes > 0) {
+        if (data.number_of_episodes && data.number_of_episodes > 0) {
             details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
         }
         
-        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+        if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
+            details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
+        }
         
+        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+        
+        // Обновляем информацию без сброса
         html.find('.new-interface-info__head').empty().append(head.join(', '));
         html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-        html.find('.new-interface-info__title').text(data.title || data.name);
       };
 
-      this.loadAdditionalData = function(data) {
+      this.load = function (data) {
         var _this = this;
         clearTimeout(timer);
         
         var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
         
         if (loaded[url]) {
-            this.drawAdditionalInfo(loaded[url]);
+            this.draw(loaded[url]);
             return;
         }
         
-        timer = setTimeout(function() {
+        timer = setTimeout(function () {
             network.clear();
             network.timeout(5000);
-            network.silent(url, function(movie) {
+            network.silent(url, function (movie) {
                 loaded[url] = movie;
-                _this.drawAdditionalInfo(movie);
+                _this.draw(movie);
+            }, function() {
+                // При ошибке используем текущие данные
+                _this.draw(data);
             });
-        }, 100);
-      };
-
-      this.drawAdditionalInfo = function(data) {
-        var details = [];
-        var pg = Lampa.Api.sources.tmdb.parsePG(data);
-        
-        if (data.vote_average > 0) {
-            var vote = parseFloat(data.vote_average).toFixed(1);
-            details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-        }
-        
-        if (data.number_of_episodes > 0) {
-            details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
-        }
-        
-        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-        
-        // Обновляем только details
-        var currentDetails = html.find('.new-interface-info__details').html();
-        html.find('.new-interface-info__details').html(currentDetails + details.join('<span class="new-interface-info__split">&#9679;</span>'));
+        }, 300);
       };
 
       this.render = function () {
@@ -374,9 +378,10 @@
 
         if (window.innerWidth < 767) use = old_interface;
         if (Lampa.Manifest.app_digital < 153) use = old_interface;
-        if (object.title === 'Избранное') {
+        if (object.title === 'Избранное') { // Keep the check for Избранное
             use = old_interface;
         }
+
 
         return new use(object);
       };
@@ -399,139 +404,34 @@
       Lampa.SettingsApi.addParam({
           component: 'interface',
           param: {
-              name: 'new_interface_logo',
+              name: 'new_interface_show_description',
               type: 'trigger',
-              default: false
+              default: true
           },
           field: {
-              name: 'Логотипы в новом интерфейсе',
-              description: 'Отображать логотипы фильмов/сериалов вместо названия в новом интерфейсе'
+              name: 'Показывать описание',
+              description: 'Отображать описание фильма/сериала в новом интерфейсе'
           }
       });
 
-      Lampa.Template.add('new_interface_style', `
-        <style>
-        .new-interface .card--small.card--wide {
-            width: 18.3em;
-        }
-        
-        .new-interface-info {
-            position: relative;
-            padding: 1.5em;
-            height: 20em; /* Уменьшена высота, так как убрано описание */
-        }
-        
-        .new-interface-info__body {
-            width: 80%;
-            padding-top: 1.1em;
-        }
-        
-        .new-interface-info__head {
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 0em;
-            font-size: 1.3em;
-            min-height: 1em;
-        }
-        
-        .new-interface-info__head span {
-            color: #fff;
-        }
-        
-        .new-interface-info__title {
-            font-size: 4em;
-            margin-top: 0.1em;
-            font-weight: 800;
-            margin-bottom: 0.1em;
-            overflow: hidden;
-            -o-text-overflow: ".";
-            text-overflow: ".";
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            line-clamp: 3;
-            -webkit-box-orient: vertical;
-            margin-left: -0.03em;
-            line-height: 1;
-            text-shadow: 2px 3px 1px #00000040;
-            max-width: 9em;
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            word-spacing: 5px;
-        }
-        
-        .full-start__pg, .full-start__status {
-            font-size: 0.9em;
-        }
-        
-        .new-interface-info__details {
-            margin-bottom: 1.6em;
-            display: -webkit-box;
-            display: -webkit-flex;
-            display: -moz-box;
-            display: -ms-flexbox;
-            display: flex;
-            -webkit-box-align: center;
-            -webkit-align-items: center;
-            -moz-box-align: center;
-            -ms-flex-align: center;
-            align-items: center;
-            -webkit-flex-wrap: wrap;
-            -ms-flex-wrap: wrap;
-            flex-wrap: wrap;
-            min-height: 1.9em;
-            font-size: 1.3em;
-        }
-        
-        .new-interface-info__split {
-            margin: 0 1em;
-            font-size: 0.7em;
-        }
-        
-        .new-interface .card-more__box {
-            padding-bottom: 95%;
-        }
-        
-        .new-interface .full-start__background {
-            height: 108%;
-            left: 30px;
-            top: -4.8em;
-        }
-        
-        .new-interface .full-start__rate {
-            font-size: 1.3em;
-            margin-right: 0;
-        }
-        
-        .new-interface .card__promo {
-            display: none;
-        }
-        
-        .new-interface .card.card--wide+.card-more .card-more__box {
-            padding-bottom: 95%;
-        }
-        
-        .new-interface .card.card--wide .card-watched {
-            display: none !important;
-        }
-        
-        body.light--version .new-interface-info__body {
-            width: 69%;
-            padding-top: 1.5em;
-        }
-        
-        body.light--version .new-interface-info {
-            height: 20em;
-        }
+      // Add setting for showing/hiding genres
+      Lampa.SettingsApi.addParam({
+          component: 'interface',
+          param: {
+              name: 'new_interface_show_genres',
+              type: 'trigger',
+              default: true
+          },
+          field: {
+              name: 'Показывать жанры',
+              description: 'Отображать жанры фильма/сериала в новом интерфейсе'
+          }
+      });
 
-        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
-            animation: animation-card-focus 0.2s
-        }
-        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
-            animation: animation-trigger-enter 0.2s forwards
-        }
-        </style>
-      `);
+      Lampa.Template.add('new_interface_style', "\n        <style>\n        .new-interface .card--small.card--wide {\n            width: 18.3em;\n        }\n        \n        .new-interface-info {\n            position: relative;\n            padding: 1.5em;\n            height: 26em;\n        }\n        \n        .new-interface-info__body {\n            width: 80%;\n            padding-top: 1.1em;\n        }\n        \n        .new-interface-info__head {\n            color: rgba(255, 255, 255, 0.6);\n            margin-bottom: 0em;\n            font-size: 1.3em;\n            min-height: 1em;\n        }\n        \n        .new-interface-info__head span {\n            color: #fff;\n        }\n        \n        .new-interface-info__title {\n            font-size: 4em;\n     margin-top: 0.1em;\n          font-weight: 800;\n            margin-bottom: 0.1em;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n            display: -webkit-box;\n            -webkit-line-clamp: 3;\n            line-clamp: 3;\n            -webkit-box-orient: vertical;\n            margin-left: -0.03em;\n            line-height: 1;\n    text-shadow: 2px 3px 1px #00000040;\n    max-width: 9em;\n    text-transform: uppercase;\n   letter-spacing: -2px;\n   word-spacing: 5px;\n  }\n  .full-start__pg, .full-start__status {font-size: 0.9em;\n }      \n        .new-interface-info__details {\n            margin-bottom: 1.6em;\n            display: -webkit-box;\n            display: -webkit-flex;\n            display: -moz-box;\n            display: -ms-flexbox;\n            display: flex;\n            -webkit-box-align: center;\n            -webkit-align-items: center;\n            -moz-box-align: center;\n            -ms-flex-align: center;\n            align-items: center;\n            -webkit-flex-wrap: wrap;\n            -ms-flex-wrap: wrap;\n            flex-wrap: wrap;\n            min-height: 1.9em;\n            font-size: 1.3em;\n        }\n        \n        .new-interface-info__split {\n            margin: 0 1em;\n            font-size: 0.7em;\n        }\n        \n        .new-interface-info__description {\n            font-size: 1.2em;\n            font-weight: 300;\n            line-height: 1.5;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n            display: -webkit-box;\n            -webkit-line-clamp: 4;\n            line-clamp: 4;\n            -webkit-box-orient: vertical;\n            width: 70%;\n        }\n        \n        .new-interface .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .full-start__background {\n            height: 108%;\n     left: 30px;\n       top: -4.8em;\n        }\n        \n        .new-interface .full-start__rate {\n            font-size: 1.3em;\n            margin-right: 0;\n        }\n        \n        .new-interface .card__promo {\n            display: none;\n        }\n        \n        .new-interface .card.card--wide+.card-more .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .card.card--wide .card-watched {\n            display: none !important;\n        }\n        \n        body.light--version .new-interface-info__body {\n            width: 69%;\n            padding-top: 1.5em;\n        }\n        \n        body.light--version .new-interface-info {\n            height: 25.3em;\n        }\n\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{\n            animation: animation-card-focus 0.2s\n        }\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{\n            animation: animation-trigger-enter 0.2s forwards\n        }\n        </style>\n    ");
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
     if (!window.plugin_interface_ready) startPlugin();
+
 })();
