@@ -36,7 +36,7 @@
             // Временно показываем текст с прозрачностью
             html.find('.new-interface-info__title')
                 .text(data.title)
-                .css({opacity: 0, transition: 'opacity 0s'});
+                .css({opacity: 0, transition: 'opacity 1s'});
             
             const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}`);
 
