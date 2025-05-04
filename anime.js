@@ -14,7 +14,7 @@
     function addTranslations() {
         Lampa.Lang.add({
             custom_anime_title: {
-                ru: "Аниме [Custom]",
+                ru: "Аниме2",
                 en: "Anime [Custom]",
                 uk: "Аніме [Custom]",
                 zh: "动漫 [Custom]"
