@@ -49,14 +49,36 @@
         const params = {
             url: 'discover/tv?vote_average.gte=6.5&vote_average.lte=9.5&first_air_date.lte=2026-12-31&first_air_date.gte=2000-01-01&with_original_language=ja&with_genres=16',
             title: 'Аниме',
-            component: 'category_full',
+            component: 'scroll_content', // Используем scroll_content вместо category_full
             source: 'tmdb',
-            card_type: 'true',
-            page: 1
+            card_type: 'poster_card',
+            page: 1,
+            scroll: true // Включаем прокрутку
         };
 
+        // Добавляем кастомные стили для прокрутки
+        addScrollStyles();
+        
         // Открываем раздел
         Lampa.Activity.push(params);
+    }
+
+    function addScrollStyles() {
+        const css = `
+            .content--scroll .content__wrap {
+                overflow-y: auto;
+                height: calc(100vh - 80px);
+                padding-bottom: 30px;
+            }
+            .content--scroll .content__body {
+                display: block;
+            }
+            .selector--full {
+                height: auto;
+            }
+        `;
+        
+        $('<style>').html(css).appendTo('head');
     }
 
     // Устанавливаем платформу как TV (для корректного отображения)
