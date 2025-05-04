@@ -12,7 +12,7 @@
         `);
         
         darkBackgroundElements.forEach(el => {
-            el.style.cssText = 'background-color: #121212 !important;';
+            el.style.cssText = 'background-color: rgb(0 0 0 / 25%) !important;';
         });
 
         // 2. Полупрозрачный фон для папки закладок
