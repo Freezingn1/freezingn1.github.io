@@ -8,44 +8,55 @@
         defaultEnabled: true,
         menuIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>`,
         settingsAdded: false,
-        // Используем альтернативные источники вместо CUB
+        // Используем TMDB с конкретными параметрами для аниме
         sources: {
             movies: {
-                url: 'anime/movies',
-                source: 'tmdb', // Используем TMDB как основной источник
+                url: 'movie',
+                source: 'tmdb',
                 type: 'movie',
-                genre: '16' // ID жанра аниме в TMDB
+                genre: '16', // ID жанра аниме в TMDB
+                sort_by: 'popularity.desc',
+                with_genres: '16,10751', // Аниме + анимация
+                with_original_language: 'ja' // Японские
             },
             tv: {
-                url: 'anime/tv',
+                url: 'tv',
                 source: 'tmdb',
                 type: 'tv',
-                genre: '16'
+                genre: '16',
+                sort_by: 'popularity.desc',
+                with_genres: '16,10751',
+                with_original_language: 'ja'
             },
             popular: {
-                url: 'anime/popular',
+                url: 'discover/movie',
                 source: 'tmdb',
-                sort_by: 'popularity',
-                genre: '16'
+                sort_by: 'popularity.desc',
+                with_genres: '16,10751',
+                with_original_language: 'ja',
+                'vote_count.gte': '50' // Минимальное количество голосов
             },
             top: {
-                url: 'anime/top',
+                url: 'discover/movie',
                 source: 'tmdb',
                 sort_by: 'vote_average.desc',
-                genre: '16',
-                vote_count: '100' // Минимальное количество голосов для топа
+                with_genres: '16,10751',
+                with_original_language: 'ja',
+                'vote_count.gte': '100' // Только с достаточным количеством оценок
             },
             new: {
-                url: 'anime/new',
+                url: 'discover/movie',
                 source: 'tmdb',
                 sort_by: 'primary_release_date.desc',
-                genre: '16',
-                year: new Date().getFullYear()
+                with_genres: '16,10751',
+                with_original_language: 'ja',
+                'primary_release_date.gte': `${new Date().getFullYear()-1}-01-01`,
+                'primary_release_date.lte': `${new Date().getFullYear()+1}-12-31`
             }
         }
     };
 
-    // Добавляем переводы
+    // Добавляем переводы (остается без изменений)
     function addTranslations() {
         Lampa.Lang.add({
             custom_anime_title: {
@@ -87,7 +98,7 @@
         });
     }
 
-    // Добавляем стили
+    // Добавляем стили (остается без изменений)
     function addStyles() {
         const style = document.createElement('style');
         style.textContent = `
@@ -120,7 +131,7 @@
         document.head.appendChild(style);
     }
 
-    // Создаем пункт меню
+    // Создаем пункт меню (остается без изменений)
     function createMenuItem() {
         const existingItem = $(`[data-action="${CONFIG.pluginName}"]`);
         if (existingItem.length) return existingItem;
@@ -134,17 +145,17 @@
 
         menuItem.on('hover:enter', () => {
             loadContent({
-                url: 'anime',
+                url: CONFIG.sources.movies.url,
                 title: Lampa.Lang.translate('custom_anime_title'),
                 source: CONFIG.sources.movies.source,
-                genre: CONFIG.sources.movies.genre
+                with_genres: CONFIG.sources.movies.with_genres
             });
         });
 
         return menuItem;
     }
 
-    // Загрузка контента из альтернативных источников
+    // Загрузка контента с улучшенными параметрами
     function loadContent(params) {
         const baseParams = {
             component: 'category',
@@ -153,10 +164,22 @@
             plugin: CONFIG.pluginName
         };
 
+        // Добавляем дополнительные параметры для TMDB
+        if (params.source === 'tmdb') {
+            params = {
+                ...params,
+                with_original_language: 'ja',
+                with_genres: params.with_genres || '16,10751',
+                'vote_count.gte': params['vote_count.gte'] || '20'
+            };
+        }
+
+        // Проверяем параметры перед загрузкой
+        console.log('Loading anime content with params:', params);
         Lampa.Activity.push(Object.assign(baseParams, params));
     }
 
-    // Создаем подменю
+    // Создаем подменю (остается без изменений)
     function createSubmenu() {
         let submenu = $(`.${CONFIG.pluginName}-submenu`)[0];
         if (submenu) return submenu;
@@ -213,7 +236,7 @@
             submenu.appendChild(menuItem);
         });
 
-        // Управление подменю
+        // Управление подменю (остается без изменений)
         $('body').on('hover:enter', `[data-action="${CONFIG.pluginName}"]`, () => {
             const rect = $(`[data-action="${CONFIG.pluginName}"]`)[0].getBoundingClientRect();
             submenu.style.display = 'block';
@@ -232,7 +255,7 @@
         return submenu;
     }
 
-    // Настройки плагина
+    // Настройки плагина (остается без изменений)
     function setupSettings() {
         if (CONFIG.settingsAdded) return;
         CONFIG.settingsAdded = true;
@@ -265,7 +288,7 @@
         }
     }
 
-    // Обновляем видимость меню
+    // Обновляем видимость меню (остается без изменений)
     function updateMenuVisibility(visible) {
         if (visible) {
             const menuItem = createMenuItem();
@@ -282,7 +305,7 @@
         }
     }
 
-    // Инициализация плагина
+    // Инициализация плагина (остается без изменений)
     function initPlugin() {
         addTranslations();
         addStyles();
