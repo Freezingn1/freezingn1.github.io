@@ -36,9 +36,14 @@
             </li>
         `);
 
-        // Обработчик клика
+        // Обработчик клика с обработкой ошибок
         menuItem.on('hover:enter', function() {
-            openAnimeSection();
+            try {
+                openAnimeSection();
+            } catch (e) {
+                console.error('Error opening anime section:', e);
+                Lampa.Noty.show('Ошибка при открытии раздела Аниме');
+            }
         });
 
         return menuItem;
@@ -46,33 +51,50 @@
 
     function openAnimeSection() {
         // ЗДЕСЬ УКАЖИТЕ ID ВАШЕГО СПИСКА АНИМЕ ИЗ TMDB
-        // Например: 12345 - замените на ваш реальный ID списка
-        const tmdbListId = '146567';
+        const tmdbListId = '146567'; // Замените на реальный ID
         
-        // Параметры для запроса конкретного списка аниме с TMDB
+        // Параметры для запроса с обработкой ошибок
         const params = {
             url: `list/${tmdbListId}`,
             title: 'Аниме',
             component: 'category_full',
             source: 'tmdb',
             card_type: 'true',
-            page: 1
+            page: 1,
+            error: function() {
+                Lampa.Noty.show('Не удалось загрузить список аниме');
+            },
+            success: function(data) {
+                if (!data || !data.results || data.results.length === 0) {
+                    Lampa.Noty.show('Список аниме пуст');
+                    return false; // Прерываем обработку
+                }
+                return true; // Продолжаем стандартную обработку
+            }
         };
 
-        // Альтернативный вариант - если хотите использовать discover с фильтрами
+        // Альтернативный вариант с discover API
         // const params = {
         //     url: 'discover/tv?with_genres=16&with_original_language=ja&sort_by=popularity.desc',
         //     title: 'Аниме',
         //     component: 'category_full',
         //     source: 'tmdb',
         //     card_type: 'true',
-        //     page: 1
+        //     page: 1,
+        //     error: function() {
+        //         Lampa.Noty.show('Не удалось загрузить аниме');
+        //     }
         // };
 
-        // Открываем раздел
-        Lampa.Activity.push(params);
+        // Открываем раздел с обработкой ошибок
+        try {
+            Lampa.Activity.push(params);
+        } catch (e) {
+            console.error('Activity push error:', e);
+            Lampa.Noty.show('Ошибка при открытии раздела');
+        }
     }
 
-    // Устанавливаем платформу как TV (для корректного отображения)
+    // Устанавливаем платформу как TV
     Lampa.Platform.tv();
 })();
