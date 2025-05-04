@@ -98,6 +98,12 @@
 			}
 			
 			
+			.menu__item.focus, .menu__item.traverse, .menu__item.hover {
+				background: #c22222;
+				color: #fff;
+			}
+			
+			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
 				background-color: #c22222;
