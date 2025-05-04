@@ -50,6 +50,31 @@
                 background-color: #c22222;
             }
 			
+			.settings-param.focus {
+				background-color: #c22222;
+				color: #fff;
+			}
+			
+			.simple-button.focus {
+				background-color: #c22222;
+				color: #fff;
+			}
+			
+			.torrent-item.focus::after {
+				content: "";
+				position: absolute;
+				top: -0.5em;
+				left: -0.5em;
+				right: -0.5em;
+				bottom: -0.5em;
+				border: 0.3em solid #c22222;
+				background-color: #c22222;
+				-webkit-border-radius: 0.7em;
+				border-radius: 0.7em;
+				z-index: -1;
+			}
+						
+			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
 				background-color: #c22222;
