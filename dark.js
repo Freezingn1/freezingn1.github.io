@@ -1,5 +1,22 @@
 (function() {
-    console.log("[Lampa Custom Styles] Плагин запущен");
+    console.log("[Lampa Ultimate Styles] Плагин запущен");
+
+    // Проверяем, находится ли пользователь в исключённом разделе
+    function isExcludedSection() {
+        const path = window.location.pathname.toLowerCase();
+        const excludedSections = [
+            '/history', 
+            '/favorites', 
+            '/releases', 
+            '/torrents',
+            // Дополнительные алиасы (если есть)
+            '/istoriya', 
+            '/izbrannoe',
+            '/relizy'
+        ];
+        
+        return excludedSections.some(section => path.includes(section));
+    }
 
     // Основная функция для применения стилей
     function applyStyles() {
@@ -8,23 +25,43 @@
             .selectbox__content, 
             .layer--height,
             .selector__body,
-            .modal-layer
+            .modal-layer,
+            .bookmarks-folder__layer
         `);
         
         darkBackgroundElements.forEach(el => {
-            el.style.cssText = 'background-color: #121212 !important;';
+            if (el.classList.contains('bookmarks-folder__layer')) {
+                el.style.cssText = 'background: rgba(0, 0, 0, 0.3) !important;';
+            } else {
+                el.style.cssText = 'background-color: #121212 !important;';
+            }
         });
 
-        // 2. Полупрозрачный фон для папки закладок
-        const bookmarkFolder = document.querySelector('.bookmarks-folder__layer');
-        if (bookmarkFolder) {
-            bookmarkFolder.style.cssText = 'background: rgba(0, 0, 0, 0.3) !important;';
+        // 2. Стили для рейтинга (если не в исключённом разделе)
+        if (!isExcludedSection()) {
+            const voteElements = document.querySelectorAll('.card__vote');
+            voteElements.forEach(el => {
+                el.style.cssText = `
+                    bottom: 4.8em !important;
+                    top: 0 !important;
+                    right: 0em !important;
+                    background: #c22222 !important;
+                    color: #ffffff !important;
+                    font-size: 1.5em !important;
+                    font-weight: 700 !important;
+                    padding: 0.5em !important;
+                    border-radius: 0em 0.5em 0em 0.5em !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: center !important;
+                `;
+            });
         }
     }
 
-    // Добавляем CSS для карточек (разово, через <style>)
-    function addCardStyles() {
-        const styleId = 'lampa-custom-css';
+    // Добавляем CSS для карточек (разово)
+    function addStaticStyles() {
+        const styleId = 'lampa-ultimate-styles';
         if (document.getElementById(styleId)) return;
 
         const style = document.createElement('style');
@@ -45,27 +82,29 @@
                 pointer-events: none;
                 background-color: #c22222;
             }
-
-            /* Полупрозрачный фон для папки закладок */
-            .bookmarks-folder__layer {
-                background: rgba(0, 0, 0, 0.3) !important;
-            }
         `;
         document.head.appendChild(style);
     }
 
     // Первое применение
+    addStaticStyles();
     applyStyles();
-    addCardStyles();
 
-    // Автообновление стилей (каждую секунду)
-    const interval = setInterval(applyStyles, 1000);
+    // Автообновление (с проверкой раздела)
+    let lastPath = window.location.pathname;
+    const interval = setInterval(() => {
+        if (window.location.pathname !== lastPath) {
+            lastPath = window.location.pathname;
+            console.log("[Lampa] Раздел изменён, перепроверяем стили");
+        }
+        applyStyles();
+    }, 1000);
 
     // Функция остановки
-    window.stopLampaCustomStyles = () => {
+    window.stopLampaUltimateStyles = () => {
         clearInterval(interval);
-        const style = document.getElementById('lampa-custom-css');
+        const style = document.getElementById('lampa-ultimate-styles');
         if (style) style.remove();
-        console.log("[Lampa Custom Styles] Плагин остановлен");
+        console.log("[Lampa Ultimate Styles] Плагин остановлен");
     };
 })();
