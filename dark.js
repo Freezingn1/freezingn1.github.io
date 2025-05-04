@@ -157,7 +157,12 @@
 				display: none;
 			}
 			.head__split {
-				display: none;
+				display: none ;
+			}
+			
+			
+			.menu__item + li {
+			display: flex !important;
 			}
 			
 			
