@@ -25,7 +25,7 @@
         menuItem.on('hover:enter', function() {
             // Пробуем сначала TMDB, если пусто - переключаемся на CUB
             Lampa.Activity.push({
-                url: 'list/146567',
+                url: 'list/210024',
                 title: 'Аниме (TMDB)',
                 component: 'category_full',
                 source: 'tmdb',
