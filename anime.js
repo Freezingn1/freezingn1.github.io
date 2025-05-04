@@ -47,7 +47,7 @@
     function openAnimeSection() {
         // Параметры для запроса конкретного списка TMDB (ID 146567)
         const params = {
-            url: 'keyword/210024', // Используем конкретный список
+            url: 'list/210024', // Используем конкретный список
             title: 'Аниме',
             component: 'category_full',
             source: 'tmdb',
