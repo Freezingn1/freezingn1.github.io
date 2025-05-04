@@ -119,6 +119,10 @@
 				stroke: #ffffff;
 			}
 			
+			.head__actions {
+				opacity: 0.80;
+			}
+			
 			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
