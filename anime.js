@@ -1,173 +1,64 @@
 (function() {
     'use strict';
 
-    // Конфигурация плагина
-    const config = {
-        name: 'Аниме',
-        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>`,
-        collections: [
-            {
-                title: 'Популярное аниме',
-                url: 'discover/tv?with_genres=16&sort_by=popularity.desc',
-                component: 'full'
-            },
-            {
-                title: 'Топ по рейтингу',
-                url: 'discover/tv?with_genres=16&sort_by=vote_average.desc&vote_count.gte=100',
-                component: 'full'
-            },
-            {
-                title: 'Новинки',
-                url: 'discover/tv?with_genres=16&sort_by=first_air_date.desc',
-                component: 'full'
-            }
-        ]
-    };
-
-    // Инициализация плагина
+    // Ждем готовности приложения
     Lampa.Listener.follow('app', function(e) {
-        if (e.type === 'ready') initPlugin();
+        if (e.type === 'ready') {
+            initAnimePlugin();
+        }
     });
 
-    function initPlugin() {
-        if (!Lampa.Storage.get('lampa_origin')) {
-            Lampa.Noty.show('Доступ запрещен', 3000);
+    function initAnimePlugin() {
+        // Проверяем, что это официальное приложение Lampa
+        if (Lampa.Manifest.origin !== 'bylampa') {
+            Lampa.Noty.show('Ошибка доступа');
             return;
         }
+
+        // Создаем пункт меню для Аниме
+        const menuItem = createMenuItem();
         
-        addMenuItem();
-        addCustomStyles();
+        // Добавляем пункт в начало меню
+        $('.menu .menu__list').eq(0).prepend(menuItem);
     }
 
-    function addMenuItem() {
+    function createMenuItem() {
+        // SVG иконка для аниме
+        const animeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+            <path fill="currentColor" fill-rule="evenodd" d="m368.256 214.573l-102.627 187.35c40.554 71.844 73.647 97.07 138.664 94.503c63.67-2.514 136.974-89.127 95.694-163.243L397.205 150.94c-3.676 12.266-25.16 55.748-28.95 63.634M216.393 440.625C104.077 583.676-57.957 425.793 20.85 302.892c0 0 83.895-147.024 116.521-204.303c25.3-44.418 53.644-72.37 90.497-81.33c44.94-10.926 97.565 12.834 125.62 56.167c19.497 30.113 36.752 57.676 6.343 109.738c-3.613 6.184-136.326 248.402-143.438 257.46m8.014-264.595c-30.696-17.696-30.696-62.177 0-79.873s69.273 4.544 69.273 39.936s-38.578 57.633-69.273 39.937" clip-rule="evenodd"/>
+        </svg>`;
+
+        // Создаем элемент меню
         const menuItem = $(`
-            <li class="menu__item selector" data-action="anime">
-                <div class="menu__ico">${config.icon}</div>
-                <div class="menu__text">${config.name}</div>
+            <li class="menu__item selector" data-action="anime_tmdb">
+                <div class="menu__ico">${animeIcon}</div>
+                <div class="menu__text">Аниме</div>
             </li>
         `);
 
+        // Обработчик клика
         menuItem.on('hover:enter', function() {
-            openAnimePage();
+            openAnimeSection();
         });
 
-        $('.menu .menu__list').prepend(menuItem);
+        return menuItem;
     }
 
-    function openAnimePage() {
-        // Создаем структуру страницы
-        const page = $(`
-            <div class="selector">
-                <div class="selector__body">
-                    <div class="selector__header">
-                        <div class="selector__title">${config.name}</div>
-                    </div>
-                    <div class="selector__items"></div>
-                </div>
-            </div>
-        `);
-        
-        // Добавляем подборки
-        config.collections.forEach(collection => {
-            page.find('.selector__items').append(`
-                <div class="selector__group">
-                    <div class="selector__group-head">
-                        <div class="selector__group-title">${collection.title}</div>
-                        <div class="selector__group-more selector" data-action="more" data-url="${collection.url}">Ещё</div>
-                    </div>
-                    <div class="selector__group-content" data-url="${collection.url}"></div>
-                </div>
-            `);
-        });
-        
-        // Открываем страницу
-        Lampa.Activity.push({
-            component: 'simple',
-            template: page,
-            title: config.name,
-            back: true,
-            onRender: function() {
-                // Загружаем данные для каждой подборки
-                page.find('[data-url]').each(function() {
-                    const element = $(this);
-                    const url = element.data('url');
-                    
-                    Lampa.API.tv(url, function(response) {
-                        renderCollection(element, response.results.slice(0, 8));
-                    });
-                });
-                
-                // Обработка кнопки "Ещё"
-                page.find('[data-action="more"]').on('hover:enter', function() {
-                    const url = $(this).data('url');
-                    const title = $(this).closest('.selector__group').find('.selector__group-title').text();
-                    
-                    Lampa.Activity.push({
-                        url: url,
-                        title: title,
-                        component: 'full',
-                        source: 'tmdb',
-                        card_type: 'poster_card'
-                    });
-                });
-            }
-        });
+    function openAnimeSection() {
+        // Параметры для запроса аниме с TMDB
+        const params = {
+            url: 'discover/tv?vote_average.gte=6.5&vote_average.lte=9.5&first_air_date.lte=2026-12-31&first_air_date.gte=2020-01-01&with_original_language=ja',
+            title: 'Аниме',
+            component: 'category_full',
+            source: 'tmdb',
+            card_type: 'true',
+            page: 1
+        };
+
+        // Открываем раздел
+        Lampa.Activity.push(params);
     }
 
-    function renderCollection(element, items) {
-        const html = items.map(item => `
-            <div class="selector__item">
-                <div class="card poster_card" data-action="open" data-id="${item.id}" data-type="tv">
-                    <div class="card__poster">
-                        <img src="${Lampa.Utils.imageUrl(item.poster_path, 'poster')}" alt="${item.name}">
-                        <div class="card__title">${item.name}</div>
-                        ${item.vote_average ? `<div class="card__rating">${item.vote_average.toFixed(1)}</div>` : ''}
-                    </div>
-                </div>
-            </div>
-        `).join('');
-        
-        element.html(html);
-    }
-
-    function addCustomStyles() {
-        const css = `
-            .selector__group {
-                margin-bottom: 30px;
-            }
-            .selector__group-head {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 15px;
-                padding: 0 15px;
-            }
-            .selector__group-title {
-                font-size: 18px;
-                font-weight: bold;
-                color: #fff;
-            }
-            .selector__group-more {
-                color: rgba(255,255,255,0.7);
-                font-size: 14px;
-                padding: 5px 10px;
-            }
-            .selector__group-content {
-                display: flex;
-                overflow-x: auto;
-                padding: 0 15px;
-                gap: 15px;
-            }
-            .selector__group-content::-webkit-scrollbar {
-                display: none;
-            }
-            .card__rating {
-                background: #ff4757;
-            }
-        `;
-        
-        $('<style>').html(css).appendTo('head');
-    }
-
+    // Устанавливаем платформу как TV (для корректного отображения)
     Lampa.Platform.tv();
 })();
