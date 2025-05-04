@@ -13,7 +13,7 @@
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
-                'background-color': '#121212'
+                'background-color': '#121212 !important'
             });
         });
 
