@@ -137,7 +137,7 @@
 			}
 			
 			.online-prestige.focus::after {
-				border: solid .3em #c22222;
+				border: solid .3em #c22222 !important;
 				background-color: #871818;
 			}
 			
