@@ -45,15 +45,29 @@
     }
 
     function openAnimeSection() {
-        // Параметры для запроса аниме с TMDB
+        // ЗДЕСЬ УКАЖИТЕ ID ВАШЕГО СПИСКА АНИМЕ ИЗ TMDB
+        // Например: 12345 - замените на ваш реальный ID списка
+        const tmdbListId = '12345';
+        
+        // Параметры для запроса конкретного списка аниме с TMDB
         const params = {
-            url: 'discover/tv?vote_average.gte=6.5&vote_average.lte=9.5&first_air_date.lte=2026-12-31&first_air_date.gte=2023-01-01&with_original_language=ja&with_genres=16',
+            url: `list/${tmdbListId}`,
             title: 'Аниме',
             component: 'category_full',
             source: 'tmdb',
             card_type: 'true',
             page: 1
         };
+
+        // Альтернативный вариант - если хотите использовать discover с фильтрами
+        // const params = {
+        //     url: 'discover/tv?with_genres=16&with_original_language=ja&sort_by=popularity.desc',
+        //     title: 'Аниме',
+        //     component: 'category_full',
+        //     source: 'tmdb',
+        //     card_type: 'true',
+        //     page: 1
+        // };
 
         // Открываем раздел
         Lampa.Activity.push(params);
