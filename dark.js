@@ -158,7 +158,12 @@
 			}
 			.head__split {
 				display: none ;
-			}			
+			}
+			
+			
+			.menu__item + li {
+			display: flex !important;
+			}
 			
 			
             /* Градиентный текст для рейтинга */
