@@ -1,6 +1,29 @@
 // Публичный API ключ TheMovieDB (v3 auth)
 const TMDB_API_KEY = '8a8a1e62d9b9c49a50d280b5f6a9c3f4';
 
+// Конфигурация плагина
+const animePluginConfig = {
+    enabled: true,
+    init() {
+        // Загружаем сохраненные настройки
+        const savedConfig = localStorage.getItem('animePluginConfig');
+        if (savedConfig) {
+            Object.assign(this, JSON.parse(savedConfig));
+        }
+        
+        // Инициализируем плагин
+        if (this.enabled) {
+            addAnimeSection();
+        }
+        
+        // Добавляем настройку в меню
+        addSettingsControl();
+    },
+    save() {
+        localStorage.setItem('animePluginConfig', JSON.stringify(this));
+    }
+};
+
 // Добавляем раздел "Аниме" в меню
 function addAnimeSection() {
     // Проверяем, существует ли уже раздел "Аниме"
@@ -37,6 +60,51 @@ function addAnimeSection() {
                 loadAnimeList(action, listId);
             });
         });
+    }
+}
+
+// Удаляем раздел "Аниме" из меню
+function removeAnimeSection() {
+    const animeSection = document.querySelector('.menu-section[data-section="anime"]');
+    if (animeSection) {
+        animeSection.remove();
+    }
+}
+
+// Добавляем переключатель в настройки
+function addSettingsControl() {
+    // Проверяем, существует ли уже наш переключатель
+    if (!document.querySelector('.settings-param[data-param="anime-plugin"]')) {
+        const settingsHTML = `
+            <div class="settings-param" data-param="anime-plugin">
+                <div class="settings-param__name">Раздел "Аниме"</div>
+                <div class="settings-param__value">
+                    <div class="switch">
+                        <input type="checkbox" id="anime-plugin-switch" ${animePluginConfig.enabled ? 'checked' : ''}>
+                        <label for="anime-plugin-switch"></label>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Вставляем в раздел настроек
+        const settingsSection = document.querySelector('.settings-params');
+        if (settingsSection) {
+            settingsSection.insertAdjacentHTML('beforeend', settingsHTML);
+            
+            // Добавляем обработчик изменения
+            const switchElement = document.getElementById('anime-plugin-switch');
+            switchElement.addEventListener('change', function() {
+                animePluginConfig.enabled = this.checked;
+                animePluginConfig.save();
+                
+                if (this.checked) {
+                    addAnimeSection();
+                } else {
+                    removeAnimeSection();
+                }
+            });
+        }
     }
 }
 
@@ -89,7 +157,9 @@ async function loadAnimeList(type, listId = null) {
         }
         
         // Показываем loader
-        Lampa.Loader.show();
+        if (typeof Lampa !== 'undefined' && Lampa.Loader) {
+            Lampa.Loader.show();
+        }
         
         // Делаем запрос
         const response = await fetch(`${url}?${new URLSearchParams(params)}`, {
@@ -111,9 +181,13 @@ async function loadAnimeList(type, listId = null) {
         
     } catch (error) {
         console.error('Error loading anime list:', error);
-        Lampa.Noty.show(`Ошибка загрузки: ${error.message}`);
+        if (typeof Lampa !== 'undefined' && Lampa.Noty) {
+            Lampa.Noty.show(`Ошибка загрузки: ${error.message}`);
+        }
     } finally {
-        Lampa.Loader.hide();
+        if (typeof Lampa !== 'undefined' && Lampa.Loader) {
+            Lampa.Loader.hide();
+        }
     }
 }
 
@@ -150,7 +224,7 @@ function displayAnimeItems(items) {
         const img = document.createElement('img');
         img.className = 'card__poster-item';
         img.loading = 'lazy';
-        img.src = `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+        img.src = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+poster';
         img.alt = item.name || item.title;
         
         poster.appendChild(img);
@@ -183,28 +257,20 @@ function displayAnimeItems(items) {
     }
     
     // Инициализируем карточки (если в Lampa есть такой функционал)
-    if (typeof Lampa.Cards === 'object') {
+    if (typeof Lampa !== 'undefined' && Lampa.Cards) {
         Lampa.Cards.init();
     }
 }
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    // Проверяем, что мы на нужной странице (lampa uncensored)
-    if (document.querySelector('.menu')) {
-        // Добавляем раздел в меню
-        addAnimeSection();
-        
-        // Если нужно сразу загрузить список при открытии
-        if (window.location.hash === '#anime') {
-            loadAnimeList('anime-list', '146567');
-        }
+// Инициализация плагина
+function initAnimePlugin() {
+    // Ждем загрузки DOM
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        animePluginConfig.init();
+    } else {
+        document.addEventListener('DOMContentLoaded', () => animePluginConfig.init());
     }
-});
+}
 
-// Добавляем обработчик для hash изменений
-window.addEventListener('hashchange', function() {
-    if (window.location.hash === '#anime') {
-        loadAnimeList('anime-list', '146567');
-    }
-});
+// Запускаем плагин
+initAnimePlugin();
