@@ -47,34 +47,33 @@
     function openAnimeSection() {
         // Параметры для запроса аниме с TMDB
         const params = {
-            url: 'discover/tv?vote_average.gte=6.5&vote_average.lte=9.5&first_air_date.lte=2026-12-31&first_air_date.gte=2000-01-01&with_original_language=ja&with_genres=16',
+            url: 'discover/tv?with_genres=16&sort_by=popularity.desc&vote_average.gte=6&with_original_language=ja',
             title: 'Аниме',
-            component: 'scroll_content', // Используем scroll_content вместо category_full
+            component: 'full', // Возвращаем стандартный компонент
             source: 'tmdb',
             card_type: 'poster_card',
-            page: 1,
-            scroll: true // Включаем прокрутку
+            page: 1
         };
 
-        // Добавляем кастомные стили для прокрутки
-        addScrollStyles();
-        
         // Открываем раздел
         Lampa.Activity.push(params);
+        
+        // Добавляем стили для прокрутки
+        addScrollStyles();
     }
 
     function addScrollStyles() {
         const css = `
-            .content--scroll .content__wrap {
+            .content--full .content__wrap {
                 overflow-y: auto;
                 height: calc(100vh - 80px);
-                padding-bottom: 30px;
             }
-            .content--scroll .content__body {
-                display: block;
+            .content--full .selector--full {
+                min-height: 100%;
+                padding-bottom: 50px;
             }
-            .selector--full {
-                height: auto;
+            .selector--full .card {
+                margin-bottom: 20px;
             }
         `;
         
