@@ -103,6 +103,12 @@
 				color: #fff;
 			}
 			
+			.menu__item.focus .menu__ico path[fill], .menu__item.focus .menu__ico rect[fill], .menu__item.focus .menu__ico circle[fill], .menu__item.traverse .menu__ico path[fill], .menu__item.traverse .menu__ico rect[fill], .menu__item.traverse .menu__ico circle[fill], .menu__item.hover .menu__ico path[fill], .menu__item.hover .menu__ico rect[fill], .menu__item.hover .menu__ico circle[fill] {
+				fill: #ffffff;
+			}
+			
+			
+			
 			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
