@@ -574,9 +574,7 @@
                 width: 70%;
             }
             
-			.full-start__background.loaded { 
-			opacity: 0.7; 
-			}
+
 			
             .new-interface .full-start__background {
                 height: 108%;
