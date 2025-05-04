@@ -73,7 +73,11 @@
 				border-radius: 0.7em;
 				z-index: -1;
 			}
-						
+					
+			.explorer__left {
+				display: none;
+			}
+					
 			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
