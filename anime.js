@@ -86,6 +86,9 @@
 
     // Создаем пункт меню
     function createMenuItem() {
+        const existingItem = $(`[data-action="${CONFIG.pluginName}"]`);
+        if (existingItem.length) return existingItem;
+
         const menuItem = $(`
             <li class="menu__item selector" data-action="${CONFIG.pluginName}">
                 <div class="menu__ico">${CONFIG.menuIcon}</div>
@@ -119,7 +122,10 @@
 
     // Создаем подменю
     function createSubmenu() {
-        const submenu = document.createElement('div');
+        let submenu = $(`.${CONFIG.pluginName}-submenu`)[0];
+        if (submenu) return submenu;
+
+        submenu = document.createElement('div');
         submenu.className = `${CONFIG.pluginName}-submenu`;
         submenu.style.display = 'none';
         document.body.appendChild(submenu);
@@ -212,6 +218,9 @@
 
     // Настройки плагина
     function setupSettings() {
+        // Проверяем, не добавлен ли уже наш компонент
+        if (Lampa.SettingsApi.hasComponent(CONFIG.pluginName)) return;
+
         Lampa.SettingsApi.addComponent({
             component: CONFIG.pluginName,
             name: Lampa.Lang.translate('custom_anime_title'),
@@ -231,36 +240,55 @@
             },
             onChange: (value) => {
                 Lampa.Storage.set(`${CONFIG.pluginName}_enabled`, value);
-                location.reload(); // Перезагрузка для применения изменений
+                updateMenuVisibility(value === 'true');
             }
         });
     }
 
+    // Обновляем видимость меню
+    function updateMenuVisibility(visible) {
+        if (visible) {
+            const menuItem = createMenuItem();
+            const $target = $(CONFIG.menuItemAfter);
+            
+            if ($target.length && !$target.next(`[data-action="${CONFIG.pluginName}"]`).length) {
+                $target.after(menuItem);
+            }
+            
+            createSubmenu();
+        } else {
+            $(`[data-action="${CONFIG.pluginName}"]`).remove();
+            $(`.${CONFIG.pluginName}-submenu`).remove();
+        }
+    }
+
     // Инициализация плагина
     function initPlugin() {
-        if (Lampa.Storage.get(`${CONFIG.pluginName}_enabled`, CONFIG.defaultEnabled.toString()) !== 'true') return;
-
         addTranslations();
         addStyles();
         setupSettings();
 
-        // Ждем готовности меню
-        const waitForMenu = setInterval(() => {
-            if ($(CONFIG.menuItemAfter).length) {
-                clearInterval(waitForMenu);
-                
-                const menuItem = createMenuItem();
-                $(CONFIG.menuItemAfter).after(menuItem);
-                
-                createSubmenu();
-            }
-        }, 100);
+        // Проверяем статус из настроек
+        const isEnabled = Lampa.Storage.get(`${CONFIG.pluginName}_enabled`, CONFIG.defaultEnabled.toString()) === 'true';
+        
+        if (isEnabled) {
+            // Ждем готовности меню
+            const waitForMenu = setInterval(() => {
+                if ($(CONFIG.menuItemAfter).length) {
+                    clearInterval(waitForMenu);
+                    updateMenuVisibility(true);
+                }
+            }, 100);
+        }
     }
 
     // Запуск
     if (window.Lampa) {
-        initPlugin();
+        // Добавляем небольшую задержку для гарантированной инициализации Lampa
+        setTimeout(initPlugin, 500);
     } else {
-        window.addEventListener('lampa_loaded', initPlugin);
+        window.addEventListener('lampa_loaded', () => {
+            setTimeout(initPlugin, 500);
+        });
     }
 })();
