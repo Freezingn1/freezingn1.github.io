@@ -4,20 +4,55 @@
     // Конфигурация
     const CONFIG = {
         menuItemAfter: '[data-action="tv"]',
-        pluginName: 'custom_anime_cub',
+        pluginName: 'custom_anime_alt',
         defaultEnabled: true,
         menuIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>`,
-        settingsAdded: false
+        settingsAdded: false,
+        // Используем альтернативные источники вместо CUB
+        sources: {
+            movies: {
+                url: 'anime/movies',
+                source: 'tmdb', // Используем TMDB как основной источник
+                type: 'movie',
+                genre: '16' // ID жанра аниме в TMDB
+            },
+            tv: {
+                url: 'anime/tv',
+                source: 'tmdb',
+                type: 'tv',
+                genre: '16'
+            },
+            popular: {
+                url: 'anime/popular',
+                source: 'tmdb',
+                sort_by: 'popularity',
+                genre: '16'
+            },
+            top: {
+                url: 'anime/top',
+                source: 'tmdb',
+                sort_by: 'vote_average.desc',
+                genre: '16',
+                vote_count: '100' // Минимальное количество голосов для топа
+            },
+            new: {
+                url: 'anime/new',
+                source: 'tmdb',
+                sort_by: 'primary_release_date.desc',
+                genre: '16',
+                year: new Date().getFullYear()
+            }
+        }
     };
 
     // Добавляем переводы
     function addTranslations() {
         Lampa.Lang.add({
             custom_anime_title: {
-                ru: "Аниме CUB",
-                en: "Anime CUB",
-                uk: "Аніме CUB",
-                zh: "动漫 CUB"
+                ru: "Аниме",
+                en: "Anime",
+                uk: "Аніме",
+                zh: "动漫"
             },
             custom_anime_movies: {
                 ru: "Аниме фильмы",
@@ -101,18 +136,18 @@
             loadContent({
                 url: 'anime',
                 title: Lampa.Lang.translate('custom_anime_title'),
-                source: 'cub'
+                source: CONFIG.sources.movies.source,
+                genre: CONFIG.sources.movies.genre
             });
         });
 
         return menuItem;
     }
 
-    // Загрузка контента из CUB
+    // Загрузка контента из альтернативных источников
     function loadContent(params) {
         const baseParams = {
             component: 'category',
-            source: 'cub',
             page: 1,
             card_type: true,
             plugin: CONFIG.pluginName
@@ -135,47 +170,27 @@
             {
                 title: 'custom_anime_movies',
                 icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>',
-                params: {
-                    url: 'anime/movies',
-                    source: 'cub',
-                    type: 'movie'
-                }
+                params: CONFIG.sources.movies
             },
             {
                 title: 'custom_anime_tv',
                 icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>',
-                params: {
-                    url: 'anime/tv',
-                    source: 'cub',
-                    type: 'tv'
-                }
+                params: CONFIG.sources.tv
             },
             {
                 title: 'custom_anime_popular',
                 icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>',
-                params: {
-                    url: 'anime/popular',
-                    source: 'cub',
-                    sort_by: 'popularity'
-                }
+                params: CONFIG.sources.popular
             },
             {
                 title: 'custom_anime_top',
                 icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>',
-                params: {
-                    url: 'anime/top',
-                    source: 'cub',
-                    sort_by: 'rating'
-                }
+                params: CONFIG.sources.top
             },
             {
                 title: 'custom_anime_new',
                 icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-10 5h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
-                params: {
-                    url: 'anime/new',
-                    source: 'cub',
-                    sort_by: 'date'
-                }
+                params: CONFIG.sources.new
             }
         ];
 
@@ -217,7 +232,7 @@
         return submenu;
     }
 
-    // Настройки плагина (безопасная версия без hasComponent)
+    // Настройки плагина
     function setupSettings() {
         if (CONFIG.settingsAdded) return;
         CONFIG.settingsAdded = true;
@@ -238,7 +253,7 @@
                 },
                 field: {
                     name: Lampa.Lang.translate('custom_anime_title'),
-                    description: "Включить раздел Аниме CUB"
+                    description: "Включить раздел Аниме"
                 },
                 onChange: (value) => {
                     Lampa.Storage.set(`${CONFIG.pluginName}_enabled`, value);
@@ -246,7 +261,7 @@
                 }
             });
         } catch (e) {
-            console.error('Anime CUB plugin settings error:', e);
+            console.error('Anime plugin settings error:', e);
         }
     }
 
@@ -288,14 +303,14 @@
     }
 
     // Запуск с защитой от повторной инициализации
-    if (window.Lampa && !window.__anime_cub_plugin_loaded) {
-        window.__anime_cub_plugin_loaded = true;
+    if (window.Lampa && !window.__anime_alt_plugin_loaded) {
+        window.__anime_alt_plugin_loaded = true;
         
         // Добавляем небольшую задержку для гарантированной инициализации Lampa
         setTimeout(initPlugin, 1000);
-    } else if (!window.__anime_cub_plugin_loaded) {
+    } else if (!window.__anime_alt_plugin_loaded) {
         window.addEventListener('lampa_loaded', () => {
-            window.__anime_cub_plugin_loaded = true;
+            window.__anime_alt_plugin_loaded = true;
             setTimeout(initPlugin, 1000);
         });
     }
