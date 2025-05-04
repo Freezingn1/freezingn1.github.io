@@ -123,6 +123,9 @@
 				opacity: 0.80;
 			}
 			
+			.head__title {
+				opacity: 0.80;
+			}
 			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
