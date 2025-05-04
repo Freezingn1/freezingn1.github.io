@@ -141,6 +141,9 @@
 				background-color: #871818;
 			}
 			
+			.full-start__pg, .full-start__status {
+				font-size: 0.9em;
+			}
             
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
