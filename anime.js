@@ -47,7 +47,7 @@
     function openAnimeSection() {
         // Параметры для запроса аниме с TMDB
         const params = {
-            url: 'discover/tv?vote_average.gte=6.5&vote_average.lte=9.5&first_air_date.lte=2026-12-31&first_air_date.gte=2020-01-01&with_original_language=ja&with_genres=16',
+            url: 'discover/tv?vote_average.gte=6.5&vote_average.lte=9.5&first_air_date.lte=2026-12-31&first_air_date.gte=2023-01-01&with_original_language=ja&with_genres=16',
             title: 'Аниме',
             component: 'category_full',
             source: 'tmdb',
