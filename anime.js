@@ -9,37 +9,17 @@
             {
                 title: 'Популярное аниме',
                 url: 'discover/tv?with_genres=16&sort_by=popularity.desc',
-                type: 'poster'
+                component: 'full'
             },
             {
                 title: 'Топ по рейтингу',
                 url: 'discover/tv?with_genres=16&sort_by=vote_average.desc&vote_count.gte=100',
-                type: 'poster'
+                component: 'full'
             },
             {
                 title: 'Новинки',
-                url: 'discover/tv?with_genres=16&sort_by=first_air_date.desc&first_air_date.lte=' + new Date().toISOString().split('T')[0],
-                type: 'poster'
-            },
-            {
-                title: 'Скоро выйдет',
-                url: 'discover/tv?with_genres=16&sort_by=first_air_date.asc&first_air_date.gte=' + new Date().toISOString().split('T')[0],
-                type: 'poster'
-            },
-            {
-                title: 'Классика аниме',
-                url: 'discover/tv?with_genres=16&sort_by=vote_average.desc&first_air_date.lte=2000-12-31',
-                type: 'poster'
-            },
-            {
-                title: 'Сёнен',
-                url: 'discover/tv?with_genres=16&with_keywords=210024|210027&sort_by=popularity.desc',
-                type: 'poster'
-            },
-            {
-                title: 'Сёдзе',
-                url: 'discover/tv?with_genres=16&with_keywords=210023|210026&sort_by=popularity.desc',
-                type: 'poster'
+                url: 'discover/tv?with_genres=16&sort_by=first_air_date.desc',
+                component: 'full'
             }
         ]
     };
@@ -50,66 +30,77 @@
     });
 
     function initPlugin() {
-        if (!Lampa.Manifest.origin) return;
+        if (!Lampa.Storage.get('lampa_origin')) {
+            Lampa.Noty.show('Доступ запрещен', 3000);
+            return;
+        }
         
         addMenuItem();
-        registerAnimeComponent();
         addCustomStyles();
     }
 
     function addMenuItem() {
         const menuItem = $(`
-            <li class="menu__item selector" data-action="anime_home">
+            <li class="menu__item selector" data-action="anime">
                 <div class="menu__ico">${config.icon}</div>
                 <div class="menu__text">${config.name}</div>
             </li>
         `);
 
         menuItem.on('hover:enter', function() {
-            openAnimeHome();
+            openAnimePage();
         });
 
         $('.menu .menu__list').prepend(menuItem);
     }
 
-    function openAnimeHome() {
-        Lampa.Activity.push({
-            component: 'anime_home',
-            url: '',
-            title: config.name,
-            back: true
-        });
-    }
-
-    function registerAnimeComponent() {
-        Lampa.Template.add('anime_home', `
-            <div class="home">
-                ${config.collections.map(collection => `
-                    <div class="home__category">
-                        <div class="home__category-head">
-                            <div class="home__category-title">${collection.title}</div>
-                            <div class="home__category-more selector" data-action="more" data-url="${collection.url}" data-title="${collection.title}">Ещё</div>
-                        </div>
-                        <div class="home__category-content" data-type="${collection.type}" data-url="${collection.url}"></div>
+    function openAnimePage() {
+        // Создаем структуру страницы
+        const page = $(`
+            <div class="selector">
+                <div class="selector__body">
+                    <div class="selector__header">
+                        <div class="selector__title">${config.name}</div>
                     </div>
-                `).join('')}
+                    <div class="selector__items"></div>
+                </div>
             </div>
         `);
-
-        Lampa.Activity.add('anime_home', {
-            init: function(data) {
-                this.data = data;
-                this.render();
-                this.loadCollections();
-            },
-            render: function() {
-                this.html = Lampa.Template.render('anime_home', this.data);
-                this.activity.append(this.html);
+        
+        // Добавляем подборки
+        config.collections.forEach(collection => {
+            page.find('.selector__items').append(`
+                <div class="selector__group">
+                    <div class="selector__group-head">
+                        <div class="selector__group-title">${collection.title}</div>
+                        <div class="selector__group-more selector" data-action="more" data-url="${collection.url}">Ещё</div>
+                    </div>
+                    <div class="selector__group-content" data-url="${collection.url}"></div>
+                </div>
+            `);
+        });
+        
+        // Открываем страницу
+        Lampa.Activity.push({
+            component: 'simple',
+            template: page,
+            title: config.name,
+            back: true,
+            onRender: function() {
+                // Загружаем данные для каждой подборки
+                page.find('[data-url]').each(function() {
+                    const element = $(this);
+                    const url = element.data('url');
+                    
+                    Lampa.API.tv(url, function(response) {
+                        renderCollection(element, response.results.slice(0, 8));
+                    });
+                });
                 
-                // Обработчик кнопки "Ещё"
-                this.html.find('[data-action="more"]').on('hover:enter', function() {
+                // Обработка кнопки "Ещё"
+                page.find('[data-action="more"]').on('hover:enter', function() {
                     const url = $(this).data('url');
-                    const title = $(this).data('title');
+                    const title = $(this).closest('.selector__group').find('.selector__group-title').text();
                     
                     Lampa.Activity.push({
                         url: url,
@@ -119,52 +110,58 @@
                         card_type: 'poster_card'
                     });
                 });
-            },
-            loadCollections: function() {
-                this.html.find('[data-url]').each((i, el) => {
-                    const element = $(el);
-                    const url = element.data('url');
-                    
-                    Lampa.API.load(url, (response) => {
-                        this.renderCollection(element, response.results.slice(0, 10));
-                    });
-                });
-            },
-            renderCollection: function(element, items) {
-                const type = element.data('type');
-                const html = items.map(item => `
-                    <div class="selector__item">
-                        <div class="card ${type}_card" data-action="open" data-id="${item.id}" data-type="tv">
-                            <div class="card__poster">
-                                <img src="${Lampa.Utils.imageUrl(item.poster_path, 'poster')}" alt="${item.name || item.title}">
-                                <div class="card__title">${item.name || item.title}</div>
-                                ${item.vote_average ? `<div class="card__rating">${item.vote_average.toFixed(1)}</div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-                element.html(html);
             }
         });
     }
 
+    function renderCollection(element, items) {
+        const html = items.map(item => `
+            <div class="selector__item">
+                <div class="card poster_card" data-action="open" data-id="${item.id}" data-type="tv">
+                    <div class="card__poster">
+                        <img src="${Lampa.Utils.imageUrl(item.poster_path, 'poster')}" alt="${item.name}">
+                        <div class="card__title">${item.name}</div>
+                        ${item.vote_average ? `<div class="card__rating">${item.vote_average.toFixed(1)}</div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        element.html(html);
+    }
+
     function addCustomStyles() {
         const css = `
-            .home__category[data-type="anime"] .card {
-                border-radius: 6px;
-                overflow: hidden;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            .selector__group {
+                margin-bottom: 30px;
             }
-            .home__category[data-type="anime"] .card:hover {
-                transform: scale(1.03);
+            .selector__group-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding: 0 15px;
             }
-            .home__category[data-type="anime"] .card__title {
-                font-size: 13px;
-                padding: 8px;
-                background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            .selector__group-title {
+                font-size: 18px;
+                font-weight: bold;
+                color: #fff;
             }
-            .home__category[data-type="anime"] .card__rating {
+            .selector__group-more {
+                color: rgba(255,255,255,0.7);
+                font-size: 14px;
+                padding: 5px 10px;
+            }
+            .selector__group-content {
+                display: flex;
+                overflow-x: auto;
+                padding: 0 15px;
+                gap: 15px;
+            }
+            .selector__group-content::-webkit-scrollbar {
+                display: none;
+            }
+            .card__rating {
                 background: #ff4757;
             }
         `;
