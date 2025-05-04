@@ -22,10 +22,19 @@
             if (event.type !== "complite" || Lampa.Storage.get("logo_glav") === "1") return;
 
             const movie = event.data.movie;
+            const titleElement = event.object.activity.render().find(".full-start-new__title");
+            const originalTitle = movie.title || movie.name;
             const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
-                            || /аниме|anime/i.test(movie.title || movie.name);
+                            || /аниме|anime/i.test(originalTitle);
 
-            // Запрос логотипов (сначала русские, потом английские, потом любые)
+            // Сначала показываем оригинальное название
+            if (isAnime) {
+                titleElement.html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${originalTitle}</span>`);
+            } else {
+                titleElement.text(originalTitle);
+            }
+
+            // Затем пытаемся загрузить логотип
             const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}&include_image_language=ru,en,null`;
 
             $.get(tmdbUrl, function(data) {
@@ -40,19 +49,13 @@
                 // 3. Если нет английского — берём первый доступный
                 if (!logo) logo = logos[0];
                 
-                // Если логотип найден — вставляем его
+                // Если логотип найден — заменяем текст на логотип
                 if (logo?.file_path) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-                    event.object.activity.render()
-                        .find(".full-start-new__title")
-                        .html(`<img style="margin-top: 0.2em;  margin-bottom: 0.1em; max-width: 9em; max-height: 4em;" src="${imageUrl}" />`);
-                } 
-                // Если лого нет и это аниме — стилизуем текст
-                else if (isAnime) {
-                    event.object.activity.render()
-                        .find(".full-start-new__title")
-                        .html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${movie.title || movie.name}</span>`);
+                    titleElement.html(`<img style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em;" src="${imageUrl}" />`);
                 }
+                // Если лого нет и это аниме — оставляем стилизованный текст
+                // Для не-аниме оставляем обычный текст
             }).fail(() => console.error("Ошибка загрузки логотипов из TMDB"));
         });
     }
