@@ -90,6 +90,38 @@
                 border-radius: 0em 0.5em 0em 0.5em;
                 bottom: auto;
             }
+            
+            /* Анимация для кнопки в фокусе */
+            @keyframes gradientAnimation {
+                0% {
+                    background-position: 0% 50%;
+                }
+                50% {
+                    background-position: 100% 50%;
+                }
+                100% {
+                    background-position: 0% 50%;
+                }
+            }
+            
+            .full-start__button.focus {
+                background: #c22222;
+                color: white;
+                background-size: 200% 200%;
+                animation: gradientAnimation 5s ease infinite;
+            }
+            
+            /* Стиль для элемента selectbox в фокусе */
+            .selectbox-item.focus {
+                background-color: #c22222;
+                color: #fff;
+            }
+            
+            /* Стиль для папки настроек в фокусе */
+            .settings-folder.focus {
+                background-color: #c22222;
+                color: #fff;
+            }
         `;
         document.head.appendChild(style);
     }
