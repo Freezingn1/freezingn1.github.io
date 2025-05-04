@@ -474,7 +474,7 @@
             param: {
                 name: 'new_interface_show_description',
                 type: 'trigger',
-                default: false
+                default: true
             },
             field: {
                 name: 'Показывать описание',
@@ -487,7 +487,7 @@
             param: {
                 name: 'new_interface_show_genres',
                 type: 'trigger',
-                default: false
+                default: true
             },
             field: {
                 name: 'Показывать жанры',
