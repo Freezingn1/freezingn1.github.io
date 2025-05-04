@@ -1,30 +1,34 @@
 (function() {
-    console.log("[Lampa Custom Styles] Плагин запущен");
+    console.log("[Lampa Safe Styles] Плагин запущен");
+
+    // Безопасное добавление стилей (сохраняет оригинальные свойства)
+    function safeAddStyle(element, styles) {
+        Object.keys(styles).forEach(property => {
+            element.style.setProperty(property, styles[property], 'important');
+        });
+    }
 
     // Основная функция для применения стилей
     function applyStyles() {
-        // 1. Тёмный фон для элементов интерфейса
-        const darkBackgroundElements = document.querySelectorAll(`
-            .selectbox__content, 
-            .layer--height,
-            .selector__body,
-            .modal-layer
-        `);
-        
-        darkBackgroundElements.forEach(el => {
-            el.style.cssText = 'background-color: #121212 !important;';
+        // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
+        document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
+            safeAddStyle(el, {
+                'background-color': '#121212'
+            });
         });
 
         // 2. Полупрозрачный фон для папки закладок
         const bookmarkFolder = document.querySelector('.bookmarks-folder__layer');
         if (bookmarkFolder) {
-            bookmarkFolder.style.cssText = 'background: rgba(0, 0, 0, 0.3) !important;';
+            safeAddStyle(bookmarkFolder, {
+                'background': 'rgba(0, 0, 0, 0.3)'
+            });
         }
     }
 
     // Добавляем CSS для карточек (разово, через <style>)
     function addCardStyles() {
-        const styleId = 'lampa-custom-css';
+        const styleId = 'lampa-safe-css';
         if (document.getElementById(styleId)) return;
 
         const style = document.createElement('style');
@@ -45,11 +49,6 @@
                 pointer-events: none;
                 background-color: #c22222;
             }
-
-            /* Полупрозрачный фон для папки закладок */
-            .bookmarks-folder__layer {
-                background: rgba(0, 0, 0, 0.3) !important;
-            }
         `;
         document.head.appendChild(style);
     }
@@ -58,14 +57,28 @@
     applyStyles();
     addCardStyles();
 
-    // Автообновление стилей (каждую секунду)
-    const interval = setInterval(applyStyles, 1000);
+    // Более безопасный интервал проверки (реже и с проверкой видимости)
+    let isApplying = false;
+    const interval = setInterval(() => {
+        if (!isApplying) {
+            isApplying = true;
+            applyStyles();
+            isApplying = false;
+        }
+    }, 3000); // Проверяем реже (каждые 3 секунды)
 
     // Функция остановки
-    window.stopLampaCustomStyles = () => {
+    window.stopLampaSafeStyles = () => {
         clearInterval(interval);
-        const style = document.getElementById('lampa-custom-css');
+        const style = document.getElementById('lampa-safe-css');
         if (style) style.remove();
-        console.log("[Lampa Custom Styles] Плагин остановлен");
+        
+        // Восстанавливаем оригинальные стили
+        document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer, .bookmarks-folder__layer').forEach(el => {
+            el.style.removeProperty('background-color');
+            el.style.removeProperty('background');
+        });
+        
+        console.log("[Lampa Safe Styles] Плагин остановлен");
     };
 })();
