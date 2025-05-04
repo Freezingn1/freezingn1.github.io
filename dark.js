@@ -62,6 +62,34 @@
             .full-start-new__rate-line .full-start__pg {
                 font-size: 0.9em;
             }
+            
+            /* Стили для рейтинга на карточке */
+            .card__vote {
+                position: absolute;
+                top: 0;
+                right: 0em;
+                background: #c22222;
+                color: #ffffff;
+                font-size: 1.5em;
+                font-weight: 700;
+                padding: 0.5em;
+                -webkit-border-radius: 0em 0.5em 0em 0.5em;
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column;
+                -webkit-box-align: center;
+                -webkit-align-items: center;
+                -ms-flex-align: center;
+                align-items: center;
+                border-radius: 0em 0.5em 0em 0.5em;
+                bottom: 10.em;
+            }
         `;
         document.head.appendChild(style);
     }
