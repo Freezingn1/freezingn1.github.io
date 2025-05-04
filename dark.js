@@ -115,6 +115,9 @@
 				background: #871818;
 			}
 			
+			.menu__item.focus .menu__ico [stroke], .menu__item.traverse .menu__ico [stroke], .menu__item.hover .menu__ico [stroke] {
+				stroke: #ffffff;
+			}
 			
 			
 			/* Цвет иконок правый угол */
