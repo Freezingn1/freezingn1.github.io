@@ -6,7 +6,8 @@
         menuItemAfter: '[data-action="tv"]',
         pluginName: 'custom_anime_cub',
         defaultEnabled: true,
-        menuIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>`
+        menuIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>`,
+        settingsAdded: false
     };
 
     // Добавляем переводы
@@ -216,33 +217,37 @@
         return submenu;
     }
 
-    // Настройки плагина
+    // Настройки плагина (безопасная версия без hasComponent)
     function setupSettings() {
-        // Проверяем, не добавлен ли уже наш компонент
-        if (Lampa.SettingsApi.hasComponent(CONFIG.pluginName)) return;
+        if (CONFIG.settingsAdded) return;
+        CONFIG.settingsAdded = true;
 
-        Lampa.SettingsApi.addComponent({
-            component: CONFIG.pluginName,
-            name: Lampa.Lang.translate('custom_anime_title'),
-            icon: CONFIG.menuIcon
-        });
-
-        Lampa.SettingsApi.addParam({
-            component: CONFIG.pluginName,
-            param: {
-                name: "enabled",
-                type: "trigger",
-                default: CONFIG.defaultEnabled
-            },
-            field: {
+        try {
+            Lampa.SettingsApi.addComponent({
+                component: CONFIG.pluginName,
                 name: Lampa.Lang.translate('custom_anime_title'),
-                description: "Включить раздел Аниме CUB"
-            },
-            onChange: (value) => {
-                Lampa.Storage.set(`${CONFIG.pluginName}_enabled`, value);
-                updateMenuVisibility(value === 'true');
-            }
-        });
+                icon: CONFIG.menuIcon
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: CONFIG.pluginName,
+                param: {
+                    name: "enabled",
+                    type: "trigger",
+                    default: CONFIG.defaultEnabled
+                },
+                field: {
+                    name: Lampa.Lang.translate('custom_anime_title'),
+                    description: "Включить раздел Аниме CUB"
+                },
+                onChange: (value) => {
+                    Lampa.Storage.set(`${CONFIG.pluginName}_enabled`, value);
+                    updateMenuVisibility(value === 'true');
+                }
+            });
+        } catch (e) {
+            console.error('Anime CUB plugin settings error:', e);
+        }
     }
 
     // Обновляем видимость меню
@@ -282,13 +287,16 @@
         }
     }
 
-    // Запуск
-    if (window.Lampa) {
+    // Запуск с защитой от повторной инициализации
+    if (window.Lampa && !window.__anime_cub_plugin_loaded) {
+        window.__anime_cub_plugin_loaded = true;
+        
         // Добавляем небольшую задержку для гарантированной инициализации Lampa
-        setTimeout(initPlugin, 500);
-    } else {
+        setTimeout(initPlugin, 1000);
+    } else if (!window.__anime_cub_plugin_loaded) {
         window.addEventListener('lampa_loaded', () => {
-            setTimeout(initPlugin, 500);
+            window.__anime_cub_plugin_loaded = true;
+            setTimeout(initPlugin, 1000);
         });
     }
 })();
