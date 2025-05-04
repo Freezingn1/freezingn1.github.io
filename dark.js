@@ -88,7 +88,7 @@
                 -ms-flex-align: center;
                 align-items: center;
                 border-radius: 0em 0.5em 0em 0.5em;
-                bottom: 10.em;
+                bottom: auto;
             }
         `;
         document.head.appendChild(style);
