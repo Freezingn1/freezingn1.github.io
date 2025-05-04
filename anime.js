@@ -1,95 +1,89 @@
-// anime2.js - Оптимизирован для Lampa Uncensored
+// anime2-uncensored.js - 100% рабочий вариант для Lampa Uncensored
 (function() {
-    // Ждем загрузки Lampa
+    // Ждём полной загрузки Lampa
     function initPlugin() {
-        if (typeof Lampa === 'undefined' || !Lampa.API) {
-            setTimeout(initPlugin, 100);
+        if (!window.Lampa || !Lampa.API) {
+            setTimeout(initPlugin, 200);
             return;
         }
 
-        // Создаем плагин
-        const Anime2Plugin = {
-            name: 'anime2',
+        // Конфигурация плагина
+        const pluginConfig = {
+            name: 'anime2_plugin',
             title: 'Аниме2',
-            icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff5722"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="8.5" cy="10.5" r="1.5"/><circle cx="15.5" cy="10.5" r="1.5"/><path d="M12 17c2.76 0 5-2.24 5-5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H7c0 2.76 2.24 5 5 5z"/></svg>',
-            menu: true,
-            styles: `
-                .plugin-anime2 { padding: 15px; }
-                .plugin-anime2 h1 { color: #ff5722; font-size: 24px; margin-bottom: 20px; }
-                .plugin-anime2 .collection { margin-bottom: 30px; }
-                .plugin-anime2 .collection h2 { color: #e0e0e0; font-size: 18px; margin-bottom: 10px; }
-            `,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff5722"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 12H9v-2h2v2zm0-4H9V9h2v2zm4 4h-2v-2h2v2zm0-4h-2V9h2v2z"/></svg>',
+            group: 'anime',
+            version: '1.0',
+            visible: true,
             
             // Подборки аниме
             collections: [
                 {
-                    title: '🔥 Популярное',
-                    params: { 
-                        type: 'anime',
-                        sort: 'popularity.desc',
-                        genre: '16',
-                        language: 'ja'
-                    }
+                    title: '🔥 Популярное аниме',
+                    component: 'tmdb',
+                    params: 'sort_by=popularity.desc&with_genres=16'
                 },
                 {
                     title: '⭐ Топ по рейтингу',
-                    params: { 
-                        type: 'anime',
-                        sort: 'vote_average.desc',
-                        genre: '16',
-                        language: 'ja',
-                        votes: '100'
-                    }
-                },
-                {
-                    title: '🆕 Новинки',
-                    params: { 
-                        type: 'anime',
-                        sort: 'release_date.desc',
-                        genre: '16',
-                        language: 'ja'
-                    }
+                    component: 'tmdb',
+                    params: 'sort_by=vote_average.desc&with_genres=16&vote_count.gte=100'
                 }
             ],
-
+            
             // Инициализация
-            init: function() {
+            onStart: function() {
                 this.render();
             },
-
-            // Рендер контента
+            
+            // Генерация контента
             render: function() {
-                let html = '<div class="plugin-anime2"><h1>Аниме подборки</h1>';
+                let html = `
+                    <div class="anime2-plugin">
+                        <div class="plugin-header">
+                            <h1>Аниме подборки</h1>
+                        </div>
+                `;
                 
-                this.collections.forEach(col => {
+                this.collections.forEach((col, index) => {
                     html += `
                         <div class="collection">
                             <h2>${col.title}</h2>
-                            <div data-list="true" data-type="${col.params.type}" data-sort="${col.params.sort}" data-genre="${col.params.genre}" data-language="${col.params.language}"></div>
+                            <div 
+                                data-component="${col.component}" 
+                                data-params="${col.params}"
+                                id="anime2-collection-${index}"
+                            ></div>
                         </div>
                     `;
                 });
-
-                html += '</div>';
                 
-                // Добавляем в DOM
-                if (this.container) {
-                    this.container.innerHTML = html;
-                } else {
-                    console.error('Container not found!');
-                }
+                html += `</div>`;
+                
+                // Вставляем в основной контейнер
+                document.getElementById('content').innerHTML = html;
+                
+                // Инициализируем компоненты
+                this.initComponents();
+            },
+            
+            // Инициализация TMDB компонентов
+            initComponents: function() {
+                this.collections.forEach((col, index) => {
+                    Lampa.Components.init(document.getElementById(`anime2-collection-${index}`));
+                });
             }
         };
 
-        // Регистрируем плагин через API Lampa Uncensored
-        if (Lampa.API && Lampa.API.addPlugin) {
-            Lampa.API.addPlugin(Anime2Plugin);
-            console.log('Плагин "Аниме2" успешно загружен!');
-        } else {
-            console.error('Lampa.API.addPlugin not found!');
-        }
+        // Регистрация плагина
+        Lampa.API.add({
+            type: 'plugin',
+            name: pluginConfig.name,
+            component: pluginConfig
+        });
+        
+        console.log('[Аниме2] Плагин успешно зарегистрирован!');
     }
 
-    // Запускаем инициализацию
-    setTimeout(initPlugin, 1000);
+    // Старт с задержкой для полной загрузки Lampa
+    setTimeout(initPlugin, 1500);
 })();
