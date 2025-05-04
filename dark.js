@@ -78,6 +78,10 @@
 				display: none;
 			}
 					
+			.explorer__files {
+				width: 100%;
+			}		
+					
 			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
