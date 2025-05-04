@@ -4,65 +4,40 @@
     // Конфигурация
     const CONFIG = {
         menuItemAfter: '[data-action="tv"]',
-        pluginName: 'custom_anime_only',
+        pluginName: 'strict_anime_only',
         defaultEnabled: true,
         menuIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>`,
         settingsAdded: false,
-        // Используем TMDB с строгими фильтрами только для аниме
+        // Используем конкретные списки TMDB с аниме
         sources: {
+            series: {
+                title: 'custom_anime_series',
+                url: 'list/146567-anime-series', // https://www.themoviedb.org/list/146567-anime-series
+                source: 'tmdb',
+                type: 'list'
+            },
             movies: {
-                url: 'discover/movie',
+                title: 'custom_anime_movies',
+                url: 'list/146566-anime-movies', // https://www.themoviedb.org/list/146566-anime-movies
                 source: 'tmdb',
-                type: 'movie',
-                sort_by: 'popularity.desc',
-                with_genres: '16', // Только аниме
-                with_keywords: '210024|210027', // Ключевые слова для аниме
-                with_original_language: 'ja', // Только японский оригинал
-                'vote_count.gte': '20' // Минимальное количество оценок
-            },
-            tv: {
-                url: 'discover/tv',
-                source: 'tmdb',
-                type: 'tv',
-                sort_by: 'popularity.desc',
-                with_genres: '16', // Только аниме
-                with_keywords: '210024|210027', // Ключевые слова для аниме
-                with_original_language: 'ja', // Только японский оригинал
-                'vote_count.gte': '20'
-            },
-            popular: {
-                url: 'discover/movie',
-                source: 'tmdb',
-                sort_by: 'popularity.desc',
-                with_genres: '16',
-                with_keywords: '210024|210027',
-                with_original_language: 'ja',
-                'vote_count.gte': '50'
+                type: 'list'
             },
             top: {
-                url: 'discover/movie',
+                title: 'custom_anime_top',
+                url: 'list/146568-top-anime', // https://www.themoviedb.org/list/146568-top-anime
                 source: 'tmdb',
-                sort_by: 'vote_average.desc',
-                with_genres: '16',
-                with_keywords: '210024|210027',
-                with_original_language: 'ja',
-                'vote_count.gte': '100',
-                'vote_average.gte': '7.0'
+                type: 'list'
             },
-            new: {
-                url: 'discover/movie',
+            popular: {
+                title: 'custom_anime_popular',
+                url: 'list/146569-popular-anime', // https://www.themoviedb.org/list/146569-popular-anime
                 source: 'tmdb',
-                sort_by: 'primary_release_date.desc',
-                with_genres: '16',
-                with_keywords: '210024|210027',
-                with_original_language: 'ja',
-                'primary_release_date.gte': `${new Date().getFullYear()-1}-01-01`,
-                'primary_release_date.lte': `${new Date().getFullYear()+1}-12-31`
+                type: 'list'
             }
         }
     };
 
-    // Добавляем переводы (без изменений)
+    // Добавляем переводы
     function addTranslations() {
         Lampa.Lang.add({
             custom_anime_title: {
@@ -71,17 +46,17 @@
                 uk: "Аніме",
                 zh: "动漫"
             },
+            custom_anime_series: {
+                ru: "Аниме сериалы",
+                en: "Anime Series",
+                uk: "Аніме серіали",
+                zh: "动漫剧集"
+            },
             custom_anime_movies: {
                 ru: "Аниме фильмы",
                 en: "Anime Movies",
                 uk: "Аніме фільми",
                 zh: "动漫电影"
-            },
-            custom_anime_tv: {
-                ru: "Аниме сериалы",
-                en: "Anime TV",
-                uk: "Аніме серіали",
-                zh: "动漫剧集"
             },
             custom_anime_popular: {
                 ru: "Популярное аниме",
@@ -94,17 +69,11 @@
                 en: "Top Anime",
                 uk: "Топ аніме",
                 zh: "动漫排行榜"
-            },
-            custom_anime_new: {
-                ru: "Новое аниме",
-                en: "New Anime",
-                uk: "Нове аніме",
-                zh: "新番动漫"
             }
         });
     }
 
-    // Добавляем стили (без изменений)
+    // Добавляем стили
     function addStyles() {
         const style = document.createElement('style');
         style.textContent = `
@@ -137,7 +106,7 @@
         document.head.appendChild(style);
     }
 
-    // Создаем пункт меню (без изменений)
+    // Создаем пункт меню
     function createMenuItem() {
         const existingItem = $(`[data-action="${CONFIG.pluginName}"]`);
         if (existingItem.length) return existingItem;
@@ -151,18 +120,17 @@
 
         menuItem.on('hover:enter', () => {
             loadContent({
-                url: CONFIG.sources.movies.url,
-                title: Lampa.Lang.translate('custom_anime_title'),
-                source: CONFIG.sources.movies.source,
-                with_genres: CONFIG.sources.movies.with_genres,
-                with_keywords: CONFIG.sources.movies.with_keywords
+                url: CONFIG.sources.series.url,
+                title: Lampa.Lang.translate('custom_anime_series'),
+                source: CONFIG.sources.series.source,
+                type: CONFIG.sources.series.type
             });
         });
 
         return menuItem;
     }
 
-    // Загрузка контента с улучшенными фильтрами
+    // Загрузка контента из списков TMDB
     function loadContent(params) {
         const baseParams = {
             component: 'category',
@@ -171,23 +139,11 @@
             plugin: CONFIG.pluginName
         };
 
-        // Добавляем строгие фильтры для аниме
-        if (params.source === 'tmdb') {
-            params = {
-                ...params,
-                with_original_language: 'ja',
-                with_genres: params.with_genres || '16',
-                with_keywords: params.with_keywords || '210024|210027',
-                'vote_count.gte': params['vote_count.gte'] || '20',
-                without_genres: '10751' // Исключаем общую анимацию
-            };
-        }
-
-        console.log('Loading anime content with strict filters:', params);
+        console.log('Loading anime from TMDB list:', params.url);
         Lampa.Activity.push(Object.assign(baseParams, params));
     }
 
-    // Создаем подменю (без изменений)
+    // Создаем подменю
     function createSubmenu() {
         let submenu = $(`.${CONFIG.pluginName}-submenu`)[0];
         if (submenu) return submenu;
@@ -197,46 +153,28 @@
         submenu.style.display = 'none';
         document.body.appendChild(submenu);
 
-        const menuItems = [
-            {
-                title: 'custom_anime_movies',
-                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>',
-                params: CONFIG.sources.movies
-            },
-            {
-                title: 'custom_anime_tv',
-                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>',
-                params: CONFIG.sources.tv
-            },
-            {
-                title: 'custom_anime_popular',
-                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>',
-                params: CONFIG.sources.popular
-            },
-            {
-                title: 'custom_anime_top',
-                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>',
-                params: CONFIG.sources.top
-            },
-            {
-                title: 'custom_anime_new',
-                icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M23 12l-2.44-2.78.34-3.68-3.61-.82-1.89-3.18L12 3 8.6 1.54 6.71 4.72l-3.61.81.34 3.68L1 12l2.44 2.78-.34 3.69 3.61.82 1.89 3.18L12 21l3.4 1.46 1.89-3.18 3.61-.82-.34-3.68L23 12zm-10 5h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
-                params: CONFIG.sources.new
-            }
-        ];
-
-        menuItems.forEach(item => {
+        // Создаем пункты подменю для каждого списка
+        Object.values(CONFIG.sources).forEach(item => {
             const menuItem = document.createElement('div');
             menuItem.className = `selector focusable ${CONFIG.pluginName}-submenu-item`;
             menuItem.innerHTML = `
-                <div style="width:24px;height:24px;margin-right:10px;">${item.icon}</div>
+                <div style="width:24px;height:24px;margin-right:10px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3">
+                        <path d="${item === CONFIG.sources.series ? 'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"' : 
+                              item === CONFIG.sources.movies ? 'M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"' :
+                              item === CONFIG.sources.top ? 'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"' :
+                              'M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z'}"/>
+                    </svg>
+                </div>
                 <div>${Lampa.Lang.translate(item.title)}</div>
             `;
 
             menuItem.addEventListener('hover:enter', () => {
                 loadContent({
-                    ...item.params,
-                    title: Lampa.Lang.translate(item.title)
+                    url: item.url,
+                    title: Lampa.Lang.translate(item.title),
+                    source: item.source,
+                    type: item.type
                 });
                 submenu.style.display = 'none';
             });
@@ -244,7 +182,7 @@
             submenu.appendChild(menuItem);
         });
 
-        // Управление подменю (без изменений)
+        // Управление подменю
         $('body').on('hover:enter', `[data-action="${CONFIG.pluginName}"]`, () => {
             const rect = $(`[data-action="${CONFIG.pluginName}"]`)[0].getBoundingClientRect();
             submenu.style.display = 'block';
@@ -263,9 +201,7 @@
         return submenu;
     }
 
-    // Остальные функции без изменений (setupSettings, updateMenuVisibility, initPlugin)
-
-    // Настройки плагина (без изменений)
+    // Настройки плагина
     function setupSettings() {
         if (CONFIG.settingsAdded) return;
         CONFIG.settingsAdded = true;
@@ -298,7 +234,7 @@
         }
     }
 
-    // Обновляем видимость меню (без изменений)
+    // Обновляем видимость меню
     function updateMenuVisibility(visible) {
         if (visible) {
             const menuItem = createMenuItem();
@@ -315,7 +251,7 @@
         }
     }
 
-    // Инициализация плагина (без изменений)
+    // Инициализация плагина
     function initPlugin() {
         addTranslations();
         addStyles();
@@ -336,14 +272,14 @@
     }
 
     // Запуск с защитой от повторной инициализации
-    if (window.Lampa && !window.__anime_only_plugin_loaded) {
-        window.__anime_only_plugin_loaded = true;
+    if (window.Lampa && !window.__strict_anime_plugin_loaded) {
+        window.__strict_anime_plugin_loaded = true;
         
         // Добавляем небольшую задержку для гарантированной инициализации Lampa
         setTimeout(initPlugin, 1000);
-    } else if (!window.__anime_only_plugin_loaded) {
+    } else if (!window.__strict_anime_plugin_loaded) {
         window.addEventListener('lampa_loaded', () => {
-            window.__anime_only_plugin_loaded = true;
+            window.__strict_anime_plugin_loaded = true;
             setTimeout(initPlugin, 1000);
         });
     }
