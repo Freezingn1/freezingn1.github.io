@@ -81,7 +81,22 @@
 			.explorer__files {
 				width: 100%;
 			}		
-					
+			
+			.tag-count.focus {
+				background-color: #c22222;
+				color: #fff;
+			}
+
+			.full-person.focus {
+				background-color: #c22222;
+				color: #fff;
+			}
+
+			.full-review.focus {
+				background-color: #c22222;
+				color: #fff;
+			}
+			
 			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
