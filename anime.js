@@ -1,45 +1,42 @@
 class LampaTMDBAnimePlugin {
-  constructor(options = {}) {
+  constructor(apiKey, options = {}) {
+    if (!apiKey) throw new Error("TMDB API key is required!");
     this.name = "Lampa Anime TMDB Plugin";
-    this.version = "1.0";
-    this.apiKey = options.apiKey || "f83446fde4dacae2924b41ff789d2bb0"; // Замените на свой API-ключ
+    this.version = "1.1";
+    this.apiKey = apiKey;
     this.baseUrl = "https://api.themoviedb.org/3";
-    this.language = options.language || "ru-RU"; // Язык (можно поменять)
+    this.language = options.language || "ru-RU";
+    this.cache = {}; // Простое кеширование
   }
 
-  // Поиск аниме по названию
+  async _fetch(url) {
+    if (this.cache[url]) return this.cache[url];
+    const response = await fetch(url);
+    const data = await response.json();
+    this.cache[url] = data; // Сохраняем в кеш
+    return data;
+  }
+
   async searchAnime(query, page = 1) {
     const url = `${this.baseUrl}/search/tv?api_key=${this.apiKey}&query=${encodeURIComponent(query)}&page=${page}&language=${this.language}&with_genres=16`;
-    const response = await fetch(url);
-    return await response.json();
+    return this._fetch(url);
   }
 
-  // Получить популярные аниме
   async getPopularAnime(page = 1) {
     const url = `${this.baseUrl}/discover/tv?api_key=${this.apiKey}&page=${page}&language=${this.language}&with_genres=16&sort_by=popularity.desc`;
-    const response = await fetch(url);
-    return await response.json();
+    return this._fetch(url);
   }
 
-  // Получить информацию о конкретном аниме (по ID)
   async getAnimeDetails(tvId) {
     const url = `${this.baseUrl}/tv/${tvId}?api_key=${this.apiKey}&language=${this.language}&append_to_response=videos`;
-    const response = await fetch(url);
-    return await response.json();
+    return this._fetch(url);
   }
 }
 
-// Пример использования
-const animePlugin = new LampaTMDBAnimePlugin({
-  apiKey: "ВАШ_API_КЛЮЧ", // Получите на https://www.themoviedb.org/settings/api
-  language: "ru-RU" // Язык результатов
+// Пример инициализации (ключ должен вводиться в вашем приложении, а не храниться в коде)
+const animePlugin = new LampaTMDBAnimePlugin("ВАШ_API_КЛЮЧ", { language: "ru-RU" });
+
+// Использование
+animePlugin.getPopularAnime().then(data => {
+  console.log("Популярные аниме:", data.results);
 });
-
-// Поиск аниме
-animePlugin.searchAnime("Наруто").then(data => console.log(data.results));
-
-// Получить популярные аниме
-animePlugin.getPopularAnime().then(data => console.log(data.results));
-
-// Получить информацию о конкретном аниме (например, ID 46260 — Sword Art Online)
-animePlugin.getAnimeDetails(46260).then(data => console.log(data));
