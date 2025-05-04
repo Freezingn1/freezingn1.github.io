@@ -1,25 +1,36 @@
 (function() {
-    console.log("[Lampa Styler] Плагин запущен");
+    console.log("[Lampa Custom Styles] Плагин запущен");
 
-    // Применяем тёмный фон для selectbox и layer
-    function applyDarkStyles() {
-        const elements = document.querySelectorAll(`
+    // Основная функция для применения стилей
+    function applyStyles() {
+        // 1. Тёмный фон для элементов интерфейса
+        const darkBackgroundElements = document.querySelectorAll(`
             .selectbox__content, 
             .layer--height,
             .selector__body,
             .modal-layer
         `);
-
-        elements.forEach(el => {
+        
+        darkBackgroundElements.forEach(el => {
             el.style.cssText = 'background-color: #121212 !important;';
         });
+
+        // 2. Полупрозрачный фон для папки закладок
+        const bookmarkFolder = document.querySelector('.bookmarks-folder__layer');
+        if (bookmarkFolder) {
+            bookmarkFolder.style.cssText = 'background: rgba(0, 0, 0, 0.3) !important;';
+        }
     }
 
-    // Добавляем стили для карточек (рамка при фокусе/наведении)
-    function applyCardStyles() {
+    // Добавляем CSS для карточек (разово, через <style>)
+    function addCardStyles() {
+        const styleId = 'lampa-custom-css';
+        if (document.getElementById(styleId)) return;
+
         const style = document.createElement('style');
-        style.id = 'lampa-custom-styles';
+        style.id = styleId;
         style.innerHTML = `
+            /* Красная рамка для карточек */
             .card.focus .card__view::after,
             .card.hover .card__view::after {
                 content: "";
@@ -34,24 +45,27 @@
                 pointer-events: none;
                 background-color: #c22222;
             }
+
+            /* Полупрозрачный фон для папки закладок */
+            .bookmarks-folder__layer {
+                background: rgba(0, 0, 0, 0.3) !important;
+            }
         `;
         document.head.appendChild(style);
     }
 
-    // Запускаем стили сразу
-    applyDarkStyles();
-    applyCardStyles();
+    // Первое применение
+    applyStyles();
+    addCardStyles();
 
-    // Проверяем каждую секунду (на случай динамической загрузки)
-    const interval = setInterval(() => {
-        applyDarkStyles();
-    }, 1000);
+    // Автообновление стилей (каждую секунду)
+    const interval = setInterval(applyStyles, 1000);
 
-    // Остановка плагина (если нужно)
-    window.stopLampaStyler = () => {
+    // Функция остановки
+    window.stopLampaCustomStyles = () => {
         clearInterval(interval);
-        const style = document.getElementById('lampa-custom-styles');
+        const style = document.getElementById('lampa-custom-css');
         if (style) style.remove();
-        console.log("[Lampa Styler] Плагин остановлен");
+        console.log("[Lampa Custom Styles] Плагин остановлен");
     };
 })();
