@@ -57,6 +57,11 @@
                 color: transparent;
                 font-weight: bold;
             }
+            
+            /* Размер текста для прогресс-бара рейтинга */
+            .full-start-new__rate-line .full-start__pg {
+                font-size: 0.9em;
+            }
         `;
         document.head.appendChild(style);
     }
