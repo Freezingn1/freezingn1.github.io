@@ -1,185 +1,64 @@
-// Публичный API ключ TheMovieDB
-const TMDB_API_KEY = '8a8a1e62d9b9c49a50d280b5f6a9c3f4';
+(function() {
+    'use strict';
 
-// Конфигурация плагина
-const animePlugin = {
-    enabled: true,
-    initialized: false,
-    
-    init() {
-        // Загружаем сохраненные настройки
-        const savedConfig = localStorage.getItem('lampa_anime_plugin');
-        if (savedConfig) {
-            this.enabled = JSON.parse(savedConfig).enabled;
+    // Ждем готовности приложения
+    Lampa.Listener.follow('app', function(e) {
+        if (e.type === 'ready') {
+            initAnimePlugin();
         }
+    });
+
+    function initAnimePlugin() {
+        // Проверяем, что это официальное приложение Lampa
+        if (Lampa.Manifest.origin !== 'bylampa') {
+            Lampa.Noty.show('Ошибка доступа');
+            return;
+        }
+
+        // Создаем пункт меню для Аниме
+        const menuItem = createMenuItem();
         
-        // Ждем готовности DOM
-        this.waitForElements().then(() => {
-            if (this.enabled) {
-                this.addAnimeSection();
-            }
-            this.addSettingsControl();
-            this.initialized = true;
-        }).catch(e => {
-            console.error('Anime plugin init error:', e);
-        });
-    },
-    
-    saveConfig() {
-        localStorage.setItem('lampa_anime_plugin', JSON.stringify({
-            enabled: this.enabled
-        }));
-    },
-    
-    waitForElements() {
-        return new Promise((resolve, reject) => {
-            const maxAttempts = 10;
-            let attempts = 0;
-            
-            const checkElements = () => {
-                attempts++;
-                
-                // Проверяем разные возможные селекторы меню и настроек
-                const menu = document.querySelector('.menu, [class*="menu"], #menu');
-                const settings = document.querySelector('.settings-params, [class*="settings"], #settings');
-                
-                if (menu && settings) {
-                    resolve();
-                } else if (attempts < maxAttempts) {
-                    setTimeout(checkElements, 500);
-                } else {
-                    reject(new Error('Не удалось найти необходимые элементы DOM'));
-                }
-            };
-            
-            checkElements();
-        });
-    },
-    
-    addAnimeSection() {
-        // Удаляем существующий раздел, если есть
-        this.removeAnimeSection();
-        
-        // Создаем HTML для раздела
-        const animeSectionHTML = `
-            <div class="menu-section" data-section="anime">
-                <div class="menu-section__title">Аниме</div>
-                <div class="menu-section__items">
-                    <a href="#" class="menu-section__item" data-action="anime-list" data-list-id="146567">Лучшие аниме</a>
-                    <a href="#" class="menu-section__item" data-action="anime-popular">Популярные</a>
-                    <a href="#" class="menu-section__item" data-action="anime-trending">Тренды</a>
-                </div>
-            </div>
-        `;
-        
-        // Пытаемся найти меню разными способами
-        const menu = document.querySelector('.menu, [class*="menu"], #menu');
-        if (menu) {
-            // Пытаемся вставить перед настройками или в конец меню
-            const settingsSection = menu.querySelector('[data-section="settings"], .settings');
-            if (settingsSection) {
-                settingsSection.insertAdjacentHTML('beforebegin', animeSectionHTML);
-            } else {
-                menu.insertAdjacentHTML('beforeend', animeSectionHTML);
-            }
-            
-            // Добавляем обработчики
-            this.addMenuEventListeners();
-        }
-    },
-    
-    removeAnimeSection() {
-        const animeSection = document.querySelector('[data-section="anime"]');
-        if (animeSection) {
-            animeSection.remove();
-        }
-    },
-    
-    addMenuEventListeners() {
-        document.querySelectorAll('[data-action^="anime-"]').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const action = item.getAttribute('data-action');
-                const listId = item.getAttribute('data-list-id');
-                this.loadAnimeList(action, listId);
-            });
-        });
-    },
-    
-    addSettingsControl() {
-        // Удаляем существующий переключатель, если есть
-        const existingSwitch = document.querySelector('[data-setting="anime-plugin"]');
-        if (existingSwitch) existingSwitch.remove();
-        
-        // Пытаемся найти контейнер настроек разными способами
-        const settingsContainer = document.querySelector('.settings-params, .settings__params, [class*="settings-params"]');
-        if (settingsContainer) {
-            const switchHTML = `
-                <div class="settings-param" data-setting="anime-plugin">
-                    <div class="settings-param__name">Раздел "Аниме"</div>
-                    <div class="settings-param__value">
-                        <div class="switch">
-                            <input type="checkbox" id="anime-plugin-switch" ${this.enabled ? 'checked' : ''}>
-                            <label for="anime-plugin-switch"></label>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            settingsContainer.insertAdjacentHTML('beforeend', switchHTML);
-            
-            // Добавляем обработчик
-            const switchElement = document.getElementById('anime-plugin-switch');
-            if (switchElement) {
-                switchElement.addEventListener('change', () => {
-                    this.enabled = switchElement.checked;
-                    this.saveConfig();
-                    
-                    if (this.enabled) {
-                        this.addAnimeSection();
-                    } else {
-                        this.removeAnimeSection();
-                    }
-                });
-            }
-        }
-    },
-    
-    async loadAnimeList(type, listId = null) {
-        try {
-            // Реализация загрузки списка (как в предыдущих примерах)
-            console.log(`Loading anime list: ${type}, ID: ${listId}`);
-            // ... остальной код загрузки ...
-        } catch (e) {
-            console.error('Error loading anime list:', e);
-        }
+        // Добавляем пункт в начало меню
+        $('.menu .menu__list').eq(0).prepend(menuItem);
     }
-};
 
-// Инициализация плагина с проверкой среды
-function initializePlugin() {
-    // Проверяем, что мы на странице Lampa
-    if (document.querySelector('body.lampa, body[class*="lampa"], #lampa')) {
-        // Ждем полной загрузки страницы
-        if (document.readyState === 'complete') {
-            animePlugin.init();
-        } else {
-            window.addEventListener('load', () => animePlugin.init());
-        }
+    function createMenuItem() {
+        // SVG иконка для аниме
+        const animeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+            <path fill="currentColor" fill-rule="evenodd" d="m368.256 214.573l-102.627 187.35c40.554 71.844 73.647 97.07 138.664 94.503c63.67-2.514 136.974-89.127 95.694-163.243L397.205 150.94c-3.676 12.266-25.16 55.748-28.95 63.634M216.393 440.625C104.077 583.676-57.957 425.793 20.85 302.892c0 0 83.895-147.024 116.521-204.303c25.3-44.418 53.644-72.37 90.497-81.33c44.94-10.926 97.565 12.834 125.62 56.167c19.497 30.113 36.752 57.676 6.343 109.738c-3.613 6.184-136.326 248.402-143.438 257.46m8.014-264.595c-30.696-17.696-30.696-62.177 0-79.873s69.273 4.544 69.273 39.936s-38.578 57.633-69.273 39.937" clip-rule="evenodd"/>
+        </svg>`;
+
+        // Создаем элемент меню
+        const menuItem = $(`
+            <li class="menu__item selector" data-action="anime_tmdb">
+                <div class="menu__ico">${animeIcon}</div>
+                <div class="menu__text">Аниме</div>
+            </li>
+        `);
+
+        // Обработчик клика
+        menuItem.on('hover:enter', function() {
+            openAnimeSection();
+        });
+
+        return menuItem;
     }
-}
 
-// Запускаем инициализацию
-initializePlugin();
+    function openAnimeSection() {
+        // Параметры для запроса аниме с TMDB
+        const params = {
+            url: 'discover/tv?vote_average.gte=6.5&vote_average.lte=9.5&first_air_date.lte=2026-12-31&first_air_date.gte=2020-01-01&with_original_language=ja',
+            title: 'Аниме',
+            component: 'category_full',
+            source: 'tmdb',
+            card_type: 'true',
+            page: 1
+        };
 
-// Альтернативный способ инициализации для SPA
-const observer = new MutationObserver(() => {
-    if (!animePlugin.initialized && document.querySelector('.menu, [class*="menu"], #menu')) {
-        animePlugin.init();
+        // Открываем раздел
+        Lampa.Activity.push(params);
     }
-});
 
-observer.observe(document.body, {
-    childList: true,
-    subtree: true
-});
+    // Устанавливаем платформу как TV (для корректного отображения)
+    Lampa.Platform.tv();
+})();
