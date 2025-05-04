@@ -1,99 +1,136 @@
 (function() {
     'use strict';
 
-    // Ждем готовности приложения
-    Lampa.Listener.follow('app', function(e) {
-        if (e.type === 'ready') {
-            initAnimePlugin();
+    // Конфигурация плагина
+    const config = {
+        name: 'Аниме',
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>`,
+        apiUrl: 'discover/tv?with_genres=16&sort_by=popularity.desc',
+        filters: {
+            years: '2020-2024',
+            rating: '7+',
+            sort: 'popular'
+        },
+        cardStyle: {
+            type: 'poster',
+            ratio: 0.7,
+            title: true,
+            rating: true
         }
+    };
+
+    // Инициализация после загрузки приложения
+    Lampa.Listener.follow('app', function(e) {
+        if (e.type === 'ready') initPlugin();
     });
 
-    function initAnimePlugin() {
-        // Проверяем, что это официальное приложение Lampa
-        if (Lampa.Manifest.origin !== 'bylampa') {
-            Lampa.Noty.show('Ошибка доступа');
-            return;
-        }
-
-        // Создаем пункт меню для Аниме
-        const menuItem = createMenuItem();
+    function initPlugin() {
+        if (!Lampa.Manifest.origin) return;
         
-        // Добавляем пункт в начало меню
-        $('.menu .menu__list').eq(0).prepend(menuItem);
+        addMenuItem();
+        addCustomStyles();
     }
 
-    function createMenuItem() {
-        // SVG иконка для аниме
-        const animeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-            <path fill="currentColor" fill-rule="evenodd" d="m368.256 214.573l-102.627 187.35c40.554 71.844 73.647 97.07 138.664 94.503c63.67-2.514 136.974-89.127 95.694-163.243L397.205 150.94c-3.676 12.266-25.16 55.748-28.95 63.634M216.393 440.625C104.077 583.676-57.957 425.793 20.85 302.892c0 0 83.895-147.024 116.521-204.303c25.3-44.418 53.644-72.37 90.497-81.33c44.94-10.926 97.565 12.834 125.62 56.167c19.497 30.113 36.752 57.676 6.343 109.738c-3.613 6.184-136.326 248.402-143.438 257.46m8.014-264.595c-30.696-17.696-30.696-62.177 0-79.873s69.273 4.544 69.273 39.936s-38.578 57.633-69.273 39.937" clip-rule="evenodd"/>
-        </svg>`;
-
-        // Создаем элемент меню
+    function addMenuItem() {
         const menuItem = $(`
-            <li class="menu__item selector" data-action="anime_section">
-                <div class="menu__ico">${animeIcon}</div>
-                <div class="menu__text">Аниме</div>
+            <li class="menu__item selector" data-action="anime">
+                <div class="menu__ico">${config.icon}</div>
+                <div class="menu__text">${config.name}</div>
             </li>
         `);
 
-        // Обработчик клика
         menuItem.on('hover:enter', function() {
-            openAnimeHomePage();
+            Lampa.Activity.push({
+                url: config.apiUrl,
+                title: config.name,
+                component: 'anime_collection',
+                source: 'tmdb',
+                card_type: 'poster_card',
+                params: {
+                    view: 'poster',
+                    sort: 'popularity.desc',
+                    filters: JSON.stringify(config.filters)
+                }
+            });
         });
 
-        return menuItem;
+        $('.menu .menu__list').prepend(menuItem);
     }
 
-    function openAnimeHomePage() {
-        // Создаем страницу в стиле главной
-        Lampa.Activity.push({
-            component: 'main',
-            url: '',
-            title: 'Аниме',
-            content: createAnimeContent(),
-            back: true
-        });
+    function addCustomStyles() {
+        const css = `
+            .anime-collection {
+                background: rgba(20, 20, 30, 0.95);
+            }
+            .anime-card {
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                transition: transform 0.2s;
+            }
+            .anime-card:hover {
+                transform: scale(1.05);
+            }
+            .anime-card .card__title {
+                font-size: 14px;
+                color: #fff;
+                text-shadow: 1px 1px 2px #000;
+            }
+            .anime-card .card__rating {
+                background: rgba(255, 71, 87, 0.9);
+            }
+        `;
+        
+        $('<style>').html(css).appendTo('head');
     }
 
-    function createAnimeContent() {
-        // Создаем контент в стиле главной страницы
-        return `
-            <div class="home">
-                <!-- Популярное аниме -->
-                <div class="home__category">
-                    <div class="home__category-head">
-                        <div class="home__category-title">Популярное аниме</div>
-                    </div>
-                    <div class="home__category-content" data-component="full" data-source="tmdb" data-type="anime_popular" data-url="discover/tv?with_original_language=ja&sort_by=popularity.desc"></div>
-                </div>
-                
-                <!-- Топ аниме по рейтингу -->
-                <div class="home__category">
-                    <div class="home__category-head">
-                        <div class="home__category-title">Топ аниме</div>
-                    </div>
-                    <div class="home__category-content" data-component="full" data-source="tmdb" data-type="anime_top" data-url="discover/tv?with_original_language=ja&sort_by=vote_average.desc&vote_count.gte=100"></div>
-                </div>
-                
-                <!-- Новинки аниме -->
-                <div class="home__category">
-                    <div class="home__category-head">
-                        <div class="home__category-title">Новинки аниме</div>
-                    </div>
-                    <div class="home__category-content" data-component="full" data-source="tmdb" data-type="anime_new" data-url="discover/tv?with_original_language=ja&sort_by=first_air_date.desc"></div>
-                </div>
-                
-                <!-- Скоро выйдет -->
-                <div class="home__category">
-                    <div class="home__category-head">
-                        <div class="home__category-title">Скоро выйдет</div>
-                    </div>
-                    <div class="home__category-content" data-component="full" data-source="tmdb" data-type="anime_upcoming" data-url="discover/tv?with_original_language=ja&sort_by=first_air_date.desc&first_air_date.gte=${new Date().toISOString().split('T')[0]}"></div>
+    // Регистрируем кастомный компонент для аниме
+    Lampa.Template.add('anime_collection', `
+        <div class="selector__layer">
+            <div class="selector__header">
+                <div class="selector__title">{{title}}</div>
+                <div class="selector__filters">
+                    <div class="selector__filter selector" data-action="filter" data-type="sort">Сортировка: {{params.sort}}</div>
+                    <div class="selector__filter selector" data-action="filter" data-type="years">Годы: {{params.filters.years}}</div>
+                    <div class="selector__filter selector" data-action="filter" data-type="rating">Рейтинг: {{params.filters.rating}}</div>
                 </div>
             </div>
-        `;
-    }
+            <div class="selector__items anime-collection" data-type="items"></div>
+        </div>
+    `);
 
-    // Устанавливаем платформу как TV (для корректного отображения)
+    // Устанавливаем обработчик для аниме-раздела
+    Lampa.Activity.add('anime_collection', {
+        init: function(data) {
+            this.data = data;
+            this.render();
+            this.loadData();
+        },
+        render: function() {
+            this.html = Lampa.Template.render('anime_collection', this.data);
+            this.activity.append(this.html);
+        },
+        loadData: function() {
+            Lampa.API.load(this.data.url, (response) => {
+                this.renderItems(response.results);
+            });
+        },
+        renderItems: function(items) {
+            const html = items.map(item => `
+                <div class="selector__item anime-card" data-id="${item.id}">
+                    <div class="card ${this.data.card_type}" data-action="open" data-type="anime" data-id="${item.id}">
+                        <div class="card__poster">
+                            <img src="${Lampa.Utils.imageUrl(item.poster_path, 'poster')}" alt="${item.name}">
+                            <div class="card__title">${item.name}</div>
+                            ${item.vote_average ? `<div class="card__rating">${item.vote_average.toFixed(1)}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            this.html.find('[data-type="items"]').html(html);
+        }
+    });
+
     Lampa.Platform.tv();
 })();
