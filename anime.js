@@ -4,51 +4,57 @@
     // Конфигурация
     const CONFIG = {
         menuItemAfter: '[data-action="tv"]',
-        pluginName: 'custom_anime_alt',
+        pluginName: 'custom_anime_only',
         defaultEnabled: true,
         menuIcon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="#ff7eb3"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>`,
         settingsAdded: false,
-        // Используем TMDB с конкретными параметрами для аниме
+        // Используем TMDB с строгими фильтрами только для аниме
         sources: {
             movies: {
-                url: 'movie',
+                url: 'discover/movie',
                 source: 'tmdb',
                 type: 'movie',
-                genre: '16', // ID жанра аниме в TMDB
                 sort_by: 'popularity.desc',
-                with_genres: '16,10751', // Аниме + анимация
-                with_original_language: 'ja' // Японские
+                with_genres: '16', // Только аниме
+                with_keywords: '210024|210027', // Ключевые слова для аниме
+                with_original_language: 'ja', // Только японский оригинал
+                'vote_count.gte': '20' // Минимальное количество оценок
             },
             tv: {
-                url: 'tv',
+                url: 'discover/tv',
                 source: 'tmdb',
                 type: 'tv',
-                genre: '16',
                 sort_by: 'popularity.desc',
-                with_genres: '16,10751',
-                with_original_language: 'ja'
+                with_genres: '16', // Только аниме
+                with_keywords: '210024|210027', // Ключевые слова для аниме
+                with_original_language: 'ja', // Только японский оригинал
+                'vote_count.gte': '20'
             },
             popular: {
                 url: 'discover/movie',
                 source: 'tmdb',
                 sort_by: 'popularity.desc',
-                with_genres: '16,10751',
+                with_genres: '16',
+                with_keywords: '210024|210027',
                 with_original_language: 'ja',
-                'vote_count.gte': '50' // Минимальное количество голосов
+                'vote_count.gte': '50'
             },
             top: {
                 url: 'discover/movie',
                 source: 'tmdb',
                 sort_by: 'vote_average.desc',
-                with_genres: '16,10751',
+                with_genres: '16',
+                with_keywords: '210024|210027',
                 with_original_language: 'ja',
-                'vote_count.gte': '100' // Только с достаточным количеством оценок
+                'vote_count.gte': '100',
+                'vote_average.gte': '7.0'
             },
             new: {
                 url: 'discover/movie',
                 source: 'tmdb',
                 sort_by: 'primary_release_date.desc',
-                with_genres: '16,10751',
+                with_genres: '16',
+                with_keywords: '210024|210027',
                 with_original_language: 'ja',
                 'primary_release_date.gte': `${new Date().getFullYear()-1}-01-01`,
                 'primary_release_date.lte': `${new Date().getFullYear()+1}-12-31`
@@ -56,7 +62,7 @@
         }
     };
 
-    // Добавляем переводы (остается без изменений)
+    // Добавляем переводы (без изменений)
     function addTranslations() {
         Lampa.Lang.add({
             custom_anime_title: {
@@ -78,27 +84,27 @@
                 zh: "动漫剧集"
             },
             custom_anime_popular: {
-                ru: "Популярное",
-                en: "Popular",
-                uk: "Популярне",
-                zh: "热门"
+                ru: "Популярное аниме",
+                en: "Popular Anime",
+                uk: "Популярне аніме",
+                zh: "热门动漫"
             },
             custom_anime_top: {
-                ru: "Топ рейтинга",
-                en: "Top Rated",
-                uk: "Топ рейтингу",
-                zh: "评分最高"
+                ru: "Топ аниме",
+                en: "Top Anime",
+                uk: "Топ аніме",
+                zh: "动漫排行榜"
             },
             custom_anime_new: {
-                ru: "Новинки",
-                en: "New Releases",
-                uk: "Новинки",
-                zh: "新发布"
+                ru: "Новое аниме",
+                en: "New Anime",
+                uk: "Нове аніме",
+                zh: "新番动漫"
             }
         });
     }
 
-    // Добавляем стили (остается без изменений)
+    // Добавляем стили (без изменений)
     function addStyles() {
         const style = document.createElement('style');
         style.textContent = `
@@ -131,7 +137,7 @@
         document.head.appendChild(style);
     }
 
-    // Создаем пункт меню (остается без изменений)
+    // Создаем пункт меню (без изменений)
     function createMenuItem() {
         const existingItem = $(`[data-action="${CONFIG.pluginName}"]`);
         if (existingItem.length) return existingItem;
@@ -148,14 +154,15 @@
                 url: CONFIG.sources.movies.url,
                 title: Lampa.Lang.translate('custom_anime_title'),
                 source: CONFIG.sources.movies.source,
-                with_genres: CONFIG.sources.movies.with_genres
+                with_genres: CONFIG.sources.movies.with_genres,
+                with_keywords: CONFIG.sources.movies.with_keywords
             });
         });
 
         return menuItem;
     }
 
-    // Загрузка контента с улучшенными параметрами
+    // Загрузка контента с улучшенными фильтрами
     function loadContent(params) {
         const baseParams = {
             component: 'category',
@@ -164,22 +171,23 @@
             plugin: CONFIG.pluginName
         };
 
-        // Добавляем дополнительные параметры для TMDB
+        // Добавляем строгие фильтры для аниме
         if (params.source === 'tmdb') {
             params = {
                 ...params,
                 with_original_language: 'ja',
-                with_genres: params.with_genres || '16,10751',
-                'vote_count.gte': params['vote_count.gte'] || '20'
+                with_genres: params.with_genres || '16',
+                with_keywords: params.with_keywords || '210024|210027',
+                'vote_count.gte': params['vote_count.gte'] || '20',
+                without_genres: '10751' // Исключаем общую анимацию
             };
         }
 
-        // Проверяем параметры перед загрузкой
-        console.log('Loading anime content with params:', params);
+        console.log('Loading anime content with strict filters:', params);
         Lampa.Activity.push(Object.assign(baseParams, params));
     }
 
-    // Создаем подменю (остается без изменений)
+    // Создаем подменю (без изменений)
     function createSubmenu() {
         let submenu = $(`.${CONFIG.pluginName}-submenu`)[0];
         if (submenu) return submenu;
@@ -236,7 +244,7 @@
             submenu.appendChild(menuItem);
         });
 
-        // Управление подменю (остается без изменений)
+        // Управление подменю (без изменений)
         $('body').on('hover:enter', `[data-action="${CONFIG.pluginName}"]`, () => {
             const rect = $(`[data-action="${CONFIG.pluginName}"]`)[0].getBoundingClientRect();
             submenu.style.display = 'block';
@@ -255,7 +263,9 @@
         return submenu;
     }
 
-    // Настройки плагина (остается без изменений)
+    // Остальные функции без изменений (setupSettings, updateMenuVisibility, initPlugin)
+
+    // Настройки плагина (без изменений)
     function setupSettings() {
         if (CONFIG.settingsAdded) return;
         CONFIG.settingsAdded = true;
@@ -288,7 +298,7 @@
         }
     }
 
-    // Обновляем видимость меню (остается без изменений)
+    // Обновляем видимость меню (без изменений)
     function updateMenuVisibility(visible) {
         if (visible) {
             const menuItem = createMenuItem();
@@ -305,7 +315,7 @@
         }
     }
 
-    // Инициализация плагина (остается без изменений)
+    // Инициализация плагина (без изменений)
     function initPlugin() {
         addTranslations();
         addStyles();
@@ -326,14 +336,14 @@
     }
 
     // Запуск с защитой от повторной инициализации
-    if (window.Lampa && !window.__anime_alt_plugin_loaded) {
-        window.__anime_alt_plugin_loaded = true;
+    if (window.Lampa && !window.__anime_only_plugin_loaded) {
+        window.__anime_only_plugin_loaded = true;
         
         // Добавляем небольшую задержку для гарантированной инициализации Lampa
         setTimeout(initPlugin, 1000);
-    } else if (!window.__anime_alt_plugin_loaded) {
+    } else if (!window.__anime_only_plugin_loaded) {
         window.addEventListener('lampa_loaded', () => {
-            window.__anime_alt_plugin_loaded = true;
+            window.__anime_only_plugin_loaded = true;
             setTimeout(initPlugin, 1000);
         });
     }
