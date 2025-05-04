@@ -1,9 +1,10 @@
 (function () {
     'use strict';
 
-    // Добавляем определение NEW_ITEM_SOURCES
     var NEW_ITEM_SOURCES = ["tmdb", "cub"];
-
+    var ITEM_TV_SELECTOR = '[data-action="tv"]';
+    var ITEM_MOVE_TIMEOUT = 2000;
+    
     function data() {
       Lampa.Lang.add({
         anime_title: {
@@ -12,45 +13,38 @@
           uk: "Аніме",
           zh: "动漫"
         },
-        anime_popular: {
-          ru: "Популярное аниме",
-          en: "Popular Anime",
-          uk: "Популярне аніме",
-          zh: "热门动漫"
+        anime_watching: {
+          ru: "Сейчас смотрят",
+          en: "Trending Now",
+          uk: "Зараз дивляться",
+          zh: "正在观看"
         },
         anime_top: {
-          ru: "Топ аниме",
-          en: "Top Anime",
-          uk: "Топ аніме",
-          zh: "动漫排行榜"
+          ru: "В топе",
+          en: "Top Rated",
+          uk: "В топі",
+          zh: "热门排行"
+        },
+        anime_ongoing: {
+          ru: "Онгоинги",
+          en: "Ongoing",
+          uk: "Онгоінги",
+          zh: "连载中"
         },
         anime_new: {
-          ru: "Новое аниме",
-          en: "New Anime",
-          uk: "Нове аніме",
-          zh: "新番动漫"
-        },
-        anime_collections: {
-          ru: "Подборки аниме",
-          en: "Anime Collections",
-          uk: "Підбірки аніме",
-          zh: "动漫合集"
+          ru: "Новинки этого года",
+          en: "New This Year",
+          uk: "Новинки цього року",
+          zh: "今年新番"
         }
       });
     }
-    
-    var lang = {
-      data: data
-    };
 
-    var ITEM_TV_SELECTOR = '[data-action="tv"]';
-    var ITEM_MOVE_TIMEOUT = 2000;
-    
-    var moveItemAfter = function moveItemAfter(item, after) {
+    function moveItemAfter(item, after) {
       return setTimeout(function () {
         return $(item).insertAfter($(after));
       }, ITEM_MOVE_TIMEOUT);
-    };
+    }
 
     function animeSubmenu() {
         var NEW_ITEM_ATTR = 'data-action="anime"';
@@ -69,17 +63,10 @@
         `);
         
         field.on("hover:enter", function () {
-          var currentSource = Lampa.Activity.active().source;
-          var source = NEW_ITEM_SOURCES.includes(currentSource) ? currentSource : NEW_ITEM_SOURCES[0];
-          
           Lampa.Activity.push({
-            url: "movie",
+            url: '',
             title: NEW_ITEM_TEXT,
-            component: "category",
-            genres: 16, // ID жанра аниме в TMDB
-            id: 16,
-            source: source,
-            card_type: true,
+            component: 'animeMain',
             page: 1
           });
         });
@@ -88,9 +75,142 @@
         moveItemAfter(NEW_ITEM_SELECTOR, ITEM_TV_SELECTOR);
     }
 
-    var insert = {
-      animeSubmenu: animeSubmenu
-    };
+    function componentAnimeMain(object) {
+      var scroll = new Lampa.Scroll({
+        mask: true,
+        over: true,
+        step: 250,
+        end_ratio: 2
+      });
+      
+      var html = document.createElement('div');
+      var header = document.createElement('div');
+      var body = document.createElement('div');
+      
+      this.create = function () {
+        this.build();
+      };
+      
+      this.build = function () {
+        header.className = 'lme-catalog lme-header';
+        
+        var categories = [
+          {
+            title: Lampa.Lang.translate('anime_watching'),
+            action: 'trending',
+            icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>'
+          },
+          {
+            title: Lampa.Lang.translate('anime_top'),
+            action: 'top',
+            icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>'
+          },
+          {
+            title: Lampa.Lang.translate('anime_ongoing'),
+            action: 'ongoing',
+            icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>'
+          },
+          {
+            title: Lampa.Lang.translate('anime_new'),
+            action: 'new',
+            icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 14.67C9.5 15.96 8.46 17 7.17 17C5.88 17 4.83 15.96 4.83 14.67C4.83 13.38 5.88 12.33 7.17 12.33C8.46 12.33 9.5 13.38 9.5 14.67ZM12 17.5C10.33 17.5 8.86 16.64 8.04 15.33C7.22 14.02 7.22 12.48 8.04 11.17C8.86 9.86 10.33 9 12 9C13.67 9 15.14 9.86 15.96 11.17C16.78 12.48 16.78 14.02 15.96 15.33C15.14 16.64 13.67 17.5 12 17.5ZM16.83 17C15.54 17 14.5 15.96 14.5 14.67C14.5 13.38 15.54 12.33 16.83 12.33C18.12 12.33 19.17 13.38 19.17 14.67C19.17 15.96 18.12 17 16.83 17Z"/></svg>'
+          }
+        ];
+        
+        categories.forEach(function(category) {
+          var card = document.createElement('div');
+          card.className = 'anime-category selector';
+          card.innerHTML = `
+            <div class="anime-category__icon">${category.icon}</div>
+            <div class="anime-category__title">${category.title}</div>
+          `;
+          
+          card.on('hover:enter', function() {
+            var params = {
+              url: 'discover/tv',
+              title: category.title,
+              component: "category_full",
+              with_genres: '16', // Жанр аниме в TMDB
+              source: 'tmdb',
+              card_type: true,
+              page: 1
+            };
+
+            // Добавляем специфичные параметры для каждой категории
+            switch(category.action) {
+              case 'trending':
+                params.sort_by = 'popularity.desc';
+                break;
+              case 'top':
+                params.sort_by = 'vote_average.desc';
+                params['vote_count.gte'] = 100;
+                break;
+              case 'ongoing':
+                params.sort_by = 'first_air_date.desc';
+                params.with_status = 'returning';
+                break;
+              case 'new':
+                params.sort_by = 'first_air_date.desc';
+                params.first_air_date_year = new Date().getFullYear();
+                break;
+            }
+
+            Lampa.Activity.push(params);
+          });
+          
+          body.appendChild(card);
+        });
+        
+        scroll.append(body);
+        html.addClass('animeCatalog');
+        html.appendChild(header);
+        html.appendChild(scroll.render(true));
+        
+        this.activity.loader(false);
+        this.activity.toggle();
+      };
+      
+      this.start = function () {
+        Lampa.Controller.add('content', {
+          link: this,
+          toggle: function toggle() {
+            Lampa.Controller.collectionSet(header, scroll.render(true));
+          },
+          left: function left() {
+            Lampa.Controller.toggle('menu');
+          },
+          right: function right() {
+            Navigator.move('right');
+          },
+          up: function up() {
+            Navigator.move('up');
+          },
+          down: function down() {
+            Navigator.move('down');
+          },
+          back: function back() {
+            Lampa.Activity.backward();
+          }
+        });
+        
+        Lampa.Controller.toggle('content');
+      };
+      
+      this.render = function (js) {
+        return js ? html : $(html);
+      };
+      
+      this.destroy = function () {
+        scroll.destroy();
+        html.remove();
+        body.remove();
+      };
+
+      // Добавляем обязательные методы
+      this.pause = function() {};
+      this.stop = function() {};
+      this.refresh = function() {};
+    }
 
     function setting() {
       Lampa.SettingsApi.addComponent({
@@ -111,23 +231,20 @@
           description: ""
         },
         onChange: function onChange(value) {
-          if (value === 'true') insert.animeSubmenu();
+          if (value === 'true') animeSubmenu();
           else $('body').find('.menu [data-action="anime"]').remove();
           Lampa.Settings.update();
         }
       });
     }
 
-    var config = {
-      setting: setting
-    };
-
     // Инициализация плагина
-    lang.data();
-    config.setting();
+    data();
+    setting();
+    Lampa.Component.add('animeMain', componentAnimeMain);
     
     // Добавляем раздел Аниме, если он включен в настройках
     if (Lampa.Storage.get('anime_section') === 'true') {
-      insert.animeSubmenu();
+      animeSubmenu();
     }
 })();
