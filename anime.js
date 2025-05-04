@@ -47,7 +47,7 @@
     function openAnimeSection() {
         // ЗДЕСЬ УКАЖИТЕ ID ВАШЕГО СПИСКА АНИМЕ ИЗ TMDB
         // Например: 12345 - замените на ваш реальный ID списка
-        const tmdbListId = '12345';
+        const tmdbListId = '146567';
         
         // Параметры для запроса конкретного списка аниме с TMDB
         const params = {
