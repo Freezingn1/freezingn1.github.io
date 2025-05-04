@@ -1,6 +1,9 @@
 (function () {
     'use strict';
 
+    // Добавляем определение NEW_ITEM_SOURCES
+    var NEW_ITEM_SOURCES = ["tmdb", "cub"];
+
     function data() {
       Lampa.Lang.add({
         anime_title: {
