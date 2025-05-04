@@ -153,6 +153,14 @@
 				background-color: #1e1e1e;
 			}
 			
+			.head__time {
+				display: none;
+			}
+			.head__split {
+				display: none;
+			}
+			
+			
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
                 background: -webkit-linear-gradient(66.47deg, rgb(192, 254, 207) -15.94%, rgb(30, 213, 169) 62.41%);
