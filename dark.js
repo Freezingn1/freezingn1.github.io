@@ -136,6 +136,11 @@
 				opacity: 0.8;
 			}
 			
+			.online-prestige.focus::after {
+				border: solid .3em #c22222;
+				background-color: #871818;
+			}
+			
             
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
