@@ -42,16 +42,23 @@
 
     function moveItemAfter(item, after) {
       return setTimeout(function () {
-        return $(item).insertAfter($(after));
+        var $item = $(item);
+        var $after = $(after);
+        if ($item.length && $after.length) {
+          $item.insertAfter($after);
+        }
       }, ITEM_MOVE_TIMEOUT);
     }
 
     function animeSubmenu() {
         var NEW_ITEM_ATTR = 'data-action="anime"';
-        var NEW_ITEM_SELECTOR = "[".concat(NEW_ITEM_ATTR, "]");
+        var NEW_ITEM_SELECTOR = "[" + NEW_ITEM_ATTR + "]";
         var NEW_ITEM_TEXT = Lampa.Lang.translate('anime_title');
         
-        var field = $(/* html */`
+        // Удаляем существующий элемент, если он есть
+        $(NEW_ITEM_SELECTOR).remove();
+        
+        var field = $(`
           <li class="menu__item selector" ${NEW_ITEM_ATTR}>
              <div class="menu__ico">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -71,8 +78,11 @@
           });
         });
         
-        Lampa.Menu.render().find(ITEM_TV_SELECTOR).after(field);
-        moveItemAfter(NEW_ITEM_SELECTOR, ITEM_TV_SELECTOR);
+        var $tvItem = Lampa.Menu.render().find(ITEM_TV_SELECTOR);
+        if ($tvItem.length) {
+          $tvItem.after(field);
+          moveItemAfter(NEW_ITEM_SELECTOR, ITEM_TV_SELECTOR);
+        }
     }
 
     function componentAnimeMain(object) {
@@ -88,11 +98,13 @@
       var body = document.createElement('div');
       
       this.create = function () {
+        this.activity = object;
         this.build();
       };
       
       this.build = function () {
         header.className = 'lme-catalog lme-header';
+        body.className = 'anime-categories-container';
         
         var categories = [
           {
@@ -125,7 +137,7 @@
             <div class="anime-category__title">${category.title}</div>
           `;
           
-          card.on('hover:enter', function() {
+          card.addEventListener('hover:enter', function() {
             var params = {
               url: 'discover/tv',
               title: category.title,
@@ -162,33 +174,34 @@
         });
         
         scroll.append(body);
-        html.addClass('animeCatalog');
+        html.className = 'anime-catalog';
         html.appendChild(header);
         html.appendChild(scroll.render(true));
         
-        this.activity.loader(false);
-        this.activity.toggle();
+        if (this.activity) {
+          this.activity.loader(false);
+          this.activity.toggle();
+        }
       };
       
       this.start = function () {
         Lampa.Controller.add('content', {
-          link: this,
-          toggle: function toggle() {
-            Lampa.Controller.collectionSet(header, scroll.render(true));
+          toggle: function () {
+            Lampa.Controller.collectionSet(html, scroll.render(true));
           },
-          left: function left() {
+          left: function () {
             Lampa.Controller.toggle('menu');
           },
-          right: function right() {
-            Navigator.move('right');
+          right: function () {
+            Lampa.Controller.toggle('right');
           },
-          up: function up() {
-            Navigator.move('up');
+          up: function () {
+            Lampa.Controller.toggle('up');
           },
-          down: function down() {
-            Navigator.move('down');
+          down: function () {
+            Lampa.Controller.toggle('down');
           },
-          back: function back() {
+          back: function () {
             Lampa.Activity.backward();
           }
         });
@@ -202,11 +215,11 @@
       
       this.destroy = function () {
         scroll.destroy();
-        html.remove();
-        body.remove();
+        if (html.parentNode) {
+          html.parentNode.removeChild(html);
+        }
       };
 
-      // Добавляем обязательные методы
       this.pause = function() {};
       this.stop = function() {};
       this.refresh = function() {};
@@ -230,9 +243,12 @@
           name: Lampa.Lang.translate('anime_title'),
           description: ""
         },
-        onChange: function onChange(value) {
-          if (value === 'true') animeSubmenu();
-          else $('body').find('.menu [data-action="anime"]').remove();
+        onChange: function (value) {
+          if (value === 'true') {
+            animeSubmenu();
+          } else {
+            $('[data-action="anime"]').remove();
+          }
           Lampa.Settings.update();
         }
       });
@@ -244,7 +260,7 @@
     Lampa.Component.add('animeMain', componentAnimeMain);
     
     // Добавляем раздел Аниме, если он включен в настройках
-    if (Lampa.Storage.get('anime_section') === 'true') {
+    if (Lampa.Storage.get('anime_section', 'false') === 'true') {
       animeSubmenu();
     }
 })();
