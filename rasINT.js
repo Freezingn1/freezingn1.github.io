@@ -1,10 +1,8 @@
 (function() {
     'use strict';
 
-    // Инициализация платформы (TV)
     Lampa.Platform.tv();
 
-    // Основной класс для отрисовки информации о контенте
     function ContentRenderer() {
         var _this = this;
         var request = new Lampa.Request();
@@ -14,14 +12,11 @@
             this.container = $('<div class="new-interface"><img class="full-start__background"></div>');
         };
 
-        // Обновление информации о контенте
         this.update = function(item) {
             var container = this.container;
-            
-            // Установка заголовка
             container.find('.new-interface-info__title').text(item.name || item.title);
             
-            // Если включены логотипы вместо названий
+            // Исправленная проверка
             if (Lampa.Storage.get('logos') !== false) {
                 var type = item.first_air_date ? 'tv' : 'movie';
                 var lang = Lampa.Storage.get('language');
@@ -32,7 +27,7 @@
                         var logoPath = data.logos[0].file_path;
                         if (logoPath !== '') {
                             var logoUrl = 'http://tmdbimg.bylampa.online/t/p/w500' + logoPath.replace('.svg', '.png');
-                            if (Lampa.Storage.get('logo_card_style') {
+                            if (Lampa.Storage.get('logo_card_style')) {
                                 container.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em; max-width:6.8em;" src="' + logoUrl + '" />');
                             } else {
                                 container.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:2.8em; max-width:6.8em;" src="' + logoUrl + '" />');
@@ -42,15 +37,12 @@
                 });
             }
 
-            // Установка описания
+            // Исправленная проверка
             if (Lampa.Storage.get('desc') !== false) {
                 container.find('.new-interface-info__description').text(item.overview || Lampa.Lang.translate('Empty'));
             }
 
-            // Загрузка фона
             Lampa.Template.make(Lampa.Api.img(item.backdrop_path, 'w200'));
-            
-            // Отрисовка дополнительной информации
             this.draw(item);
         };
 
