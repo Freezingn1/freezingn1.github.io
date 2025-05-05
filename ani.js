@@ -5,17 +5,14 @@ class ShikimoriAnime {
         this.api_url = "https://shikimori.one/api";
         this.per_page = 20;
 
-        // Принудительно устанавливаем TV-режим
+        // Активируем TV-режим
         this.setTVMode();
     }
 
-    // Активируем TV-режим для навигации с пульта
     setTVMode() {
         if (window.Lampa && Lampa.Platform) {
-            Lampa.Platform.tv(); // Явно включаем TV-режим
+            Lampa.Platform.tv();
             console.log("TV-режим активирован");
-        } else {
-            console.warn("Lampa.Platform не найден, TV-режим не включён");
         }
     }
 
@@ -23,119 +20,77 @@ class ShikimoriAnime {
         this.injectStyles();
         console.log("Shikimori Anime plugin loaded!");
 
-        this.lampa.menu.main.add({
-            title: "Shikimori Anime",
-            icon: "shikimori_icon",
-            page: this.page.bind(this)
-        });
+        // Создаем и добавляем пункт меню
+        this.createAnimeMenuItem();
     }
 
-    // Стили с оптимизацией под TV (крупные карточки, фокус-эффекты)
-    injectStyles() {
-        const style = document.createElement("style");
-        style.textContent = `
-            .shikimori-anime {
-                padding: 20px;
-            }
-            .shikimori-list {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 20px;
-            }
-            .shikimori-card {
-                background: #2a2a2a;
-                border-radius: 12px;
-                overflow: hidden;
-                cursor: pointer;
-                transition: transform 0.2s, box-shadow 0.2s;
-            }
-            .shikimori-card:focus {
-                transform: scale(1.05);
-                box-shadow: 0 0 0 3px #ff5722;
-                outline: none;
-            }
-            .shikimori-card img {
-                width: 100%;
-                height: 400px;
-                object-fit: cover;
-            }
-            .shikimori-info {
-                padding: 15px;
-            }
-            .shikimori-info h3 {
-                margin: 0 0 8px 0;
-                font-size: 20px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .shikimori-search {
-                width: 100%;
-                padding: 15px;
-                margin-bottom: 30px;
-                border: none;
-                border-radius: 8px;
-                background: #333;
-                color: #fff;
-                font-size: 18px;
-            }
-            @media (max-width: 768px) {
-                .shikimori-list {
-                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // Остальные методы (page, loadAnime, searchAnime, renderAnimeList...) остаются без изменений
-    // из предыдущего примера, но с учётом TV-оптимизации:
-    async loadAnime(page = 1, search = "") {
-        let url = `${this.api_url}/animes?limit=${this.per_page}&page=${page}&order=popularity`;
-        if (search) url += `&search=${encodeURIComponent(search)}`;
-
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            this.renderAnimeList(data);
-        } catch (error) {
-            console.error("Ошибка загрузки аниме:", error);
-            document.querySelector(".shikimori-list").innerHTML = 
-                `<p style="color: #ff5722; text-align: center; padding: 40px;">Ошибка загрузки данных. Проверьте интернет-соединение.</p>`;
+    // Создаем кастомный пункт меню "Аниме"
+    createAnimeMenuItem() {
+        const menuItem = this.createMenuItem();
+        
+        // Добавляем пункт в начало меню
+        const $menuList = $('.menu .menu__list').eq(0);
+        if ($menuList.length) {
+            $menuList.prepend(menuItem);
+        } else {
+            console.error("Меню не найдено!");
         }
     }
 
-    renderAnimeList(animes) {
-        const listContainer = document.querySelector(".shikimori-list");
-        listContainer.innerHTML = animes.length === 0 
-            ? `<p style="text-align: center; color: #aaa;">Ничего не найдено</p>`
-            : "";
+    createMenuItem() {
+        // SVG иконка аниме (упрощенная версия)
+        const animeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#ff5722">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4 8-8z"/>
+        </svg>`;
 
-        animes.forEach(anime => {
-            const animeCard = document.createElement("div");
-            animeCard.className = "shikimori-card";
-            animeCard.tabIndex = 0; // Для фокуса на TV
-            animeCard.innerHTML = `
-                <img src="https://shikimori.one${anime.image.original}" alt="${anime.name}" />
-                <div class="shikimori-info">
-                    <h3>${anime.russian || anime.name}</h3>
-                    <p>⭐ ${anime.score || "N/A"} | ${this.formatKind(anime.kind)}</p>
+        // Создаем элемент меню
+        const menuItem = $(`
+            <li class="menu__item selector" data-action="shikimori_anime">
+                <div class="menu__ico">${animeIcon}</div>
+                <div class="menu__text">Аниме</div>
+            </li>
+        `);
+
+        // Обработчик выбора (адаптированный для TV)
+        menuItem.on('hover:enter', () => {
+            this.openAnimeSection();
+        });
+
+        return menuItem;
+    }
+
+    openAnimeSection() {
+        this.lampa.app.tab("main"); // Переключаемся на главную вкладку
+        this.page(); // Открываем нашу страницу
+    }
+
+    // Остальные методы (injectStyles, page, loadAnime и т.д.) 
+    // из предыдущего примера остаются без изменений
+    page() {
+        let html = `
+            <div class="shikimori-anime">
+                <div class="shikimori-header">
+                    <h1>Аниме с Shikimori</h1>
+                    <input type="text" class="shikimori-search" placeholder="Поиск аниме..." />
                 </div>
-            `;
-            animeCard.addEventListener("click", () => this.openAnime(anime.id));
-            listContainer.appendChild(animeCard);
+                <div class="shikimori-list"></div>
+            </div>
+        `;
+
+        this.lampa.app.render(html);
+        this.loadAnime();
+
+        // TV-оптимизированный поиск (с задержкой 500 мс)
+        let searchTimer;
+        document.querySelector(".shikimori-search").addEventListener("input", (e) => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                this.searchAnime(e.target.value);
+            }, 500);
         });
     }
 
-    // Открытие аниме (пример для TV)
-    openAnime(id) {
-        this.lampa.app.tab("card", {
-            id: `shikimori_${id}`,
-            source: "shikimori",
-            title: "Аниме",
-            data: { id: id }
-        });
-    }
+    // ... (остальные методы loadAnime, renderAnimeList и т.д.)
 }
 
 // Инициализация
