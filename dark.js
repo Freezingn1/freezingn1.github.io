@@ -151,14 +151,7 @@
 			
 			.modal__content {
 				background-color: #1e1e1e;
-			}
-			
-			.head__time {
-				display: none;
-			}
-			.head__split {
-				display: none ;
-			}
+			}			
 			
 			
             /* Градиентный текст для рейтинга */
@@ -167,13 +160,9 @@
                 -webkit-background-clip: text;
                 color: transparent;
                 font-weight: bold;
-            }
-            
-            /* Размер текста для прогресс-бара рейтинга */
-            .full-start-new__rate-line .full-start__pg {
-                font-size: 0.9em;
-            }
-            
+            }         
+ 
+ 
             /* Стили для рейтинга на карточке */
             .card__vote {
                 position: absolute;
