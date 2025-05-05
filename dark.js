@@ -141,9 +141,6 @@
 				background-color: #871818;
 			}
 			
-			.full-start__pg, .full-start__status {
-				font-size: 0.9em;
-			}
             
 			.full-episode.focus::after {
 				border: 0.3em solid #c22222;
