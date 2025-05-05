@@ -60,6 +60,10 @@
 				color: #fff;
 			}
 			
+			.torrent-serial.focus {
+				background-color: #c22222;
+			}
+			
 			.torrent-item.focus::after {
 				content: "";
 				position: absolute;
