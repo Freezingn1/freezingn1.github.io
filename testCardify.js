@@ -148,6 +148,31 @@
         e.object.activity.render().find('.full-start__background').addClass('cardify__background');
       }
     });
+	
+	Lampa.Listener.follow('full', function (e) {
+    if (e.type == 'complete') {
+        // Проверяем наличие русского логотипа
+        let hasRussianLogo = false;
+        let ruTitle = '';
+        
+        // Ищем русское название в информации о карточке
+        if (e.object.card && e.object.card.names && e.object.card.names.ru) {
+            ruTitle = e.object.card.names.ru;
+        }
+        
+        // Проверяем наличие русского логотипа
+        if (e.object.activity.render().find('.full-start__title').text() === ruTitle) {
+            hasRussianLogo = true;
+        }
+        
+        // Если русского логотипа нет, но есть русское название - выводим его
+        if (!hasRussianLogo && ruTitle) {
+            e.object.activity.render().find('.full-start__status')
+                .removeClass('hide')
+                .text('RU: ' + ruTitle);
+        }
+    }
+});
   }
 
   if (window.appready) startPlugin();else {
