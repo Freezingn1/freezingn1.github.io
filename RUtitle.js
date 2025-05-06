@@ -1,32 +1,21 @@
 (function() {
     "use strict";
 
-    // Конфигурация TMDB API
     const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
     const TMDB_API_URL = "https://api.themoviedb.org/3";
-    const TMDB_IMAGE_URL = "https://image.tmdb.org/t/p/";
-
-    // Кэш для хранения названий
     const titleCache = new Map();
 
-    // Получаем русское название через TMDB API
     async function fetchRussianTitle(card) {
         try {
-            // Проверяем кэш
             if (titleCache.has(card.id)) {
                 return titleCache.get(card.id);
             }
 
-            // Определяем тип контента (фильм или сериал)
             const mediaType = card.first_air_date ? 'tv' : 'movie';
             const url = `${TMDB_API_URL}/${mediaType}/${card.id}?language=ru-RU&api_key=${TMDB_API_KEY}`;
 
             const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "accept": "application/json",
-                    "Authorization": `Bearer ${TMDB_API_KEY}`
-                }
+                headers: { "accept": "application/json" }
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -44,7 +33,14 @@
         return null;
     }
 
-    // Отображаем русское название на карточке
+    function hasRussianLogo(cardData) {
+        // Проверяем logos в нескольких возможных местах
+        const logos = cardData.images?.logos || 
+                     cardData.data?.images?.logos || 
+                     cardData.movie?.images?.logos;
+        return logos?.some(logo => logo.iso_639_1 === 'ru');
+    }
+
     function displayRussianTitle(element, title) {
         if (!title || element.querySelector('.ru-title')) return;
 
@@ -65,70 +61,50 @@
             z-index: 10;
         `;
         titleElement.textContent = `RU: ${title}`;
-
         element.style.position = 'relative';
         element.appendChild(titleElement);
     }
 
-    // Обработчик для карточек в списках
     function handleCatalogCards() {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === 1 && node.classList?.contains('card')) {
                         const cardData = Lampa.Template.get('card', node);
-                        if (cardData?.data) {
-                            // Проверяем наличие русского логотипа
-                            const hasRussianLogo = cardData.data.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
-                            if (!hasRussianLogo) {
-                                fetchRussianTitle(cardData.data).then(title => {
-                                    if (title) displayRussianTitle(node, title);
-                                });
-                            }
+                        if (cardData?.data && !hasRussianLogo(cardData)) {
+                            fetchRussianTitle(cardData.data).then(title => {
+                                if (title) displayRussianTitle(node, title);
+                            });
                         }
                     }
                 });
             });
         });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
-        // Обрабатываем уже существующие карточки
         document.querySelectorAll('.card').forEach(card => {
             const cardData = Lampa.Template.get('card', card);
-            if (cardData?.data) {
-                const hasRussianLogo = cardData.data.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
-                if (!hasRussianLogo) {
-                    fetchRussianTitle(cardData.data).then(title => {
-                        if (title) displayRussianTitle(card, title);
-                    });
-                }
+            if (cardData?.data && !hasRussianLogo(cardData)) {
+                fetchRussianTitle(cardData.data).then(title => {
+                    if (title) displayRussianTitle(card, title);
+                });
             }
         });
     }
 
-    // Обработчик для полной страницы
     function handleFullPage() {
         Lampa.Listener.follow("full", (e) => {
             if (e.type === "complite") {
                 const render = e.object.activity?.render();
                 if (!render) return;
 
-                // Удаляем старые заголовки
                 $('.ru-title-full', render).remove();
 
-                // Проверяем наличие русского логотипа
-                const hasRussianLogo = e.data.movie.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
-                
-                // Если нет русского логотипа, показываем русское название
-                if (!hasRussianLogo) {
+                if (!hasRussianLogo(e)) {
                     fetchRussianTitle(e.data.movie).then(title => {
                         if (!title) return;
 
-                        // Размещаем над основным заголовком
                         const titleElement = $(".full-start-new__rate-line", render).first();
                         if (titleElement.length) {
                             titleElement.before(`
@@ -139,8 +115,6 @@
                                     margin-bottom: 10px;
                                     opacity: 0.80;
                                     max-width: 500px;
-                                    position: static;
-                                    transform: none;
                                 ">
                                     RU: ${title}
                                 </div>
@@ -152,24 +126,16 @@
         });
     }
 
-    // Запуск плагина
     if (!window.tmdbRussianTitlesPlugin) {
         window.tmdbRussianTitlesPlugin = true;
         handleCatalogCards();
         handleFullPage();
         
-        // Добавляем стили для лучшего отображения
         const style = document.createElement('style');
         style.textContent = `
             .ru-title:hover {
                 white-space: normal;
                 background: rgba(0,0,0,0.9) !important;
-            }
-            .ru-title-full {
-                transition: opacity 0.3s ease;
-            }
-            .ru-title-full:hover {
-                opacity: 1 !important;
             }
         `;
         document.head.appendChild(style);
