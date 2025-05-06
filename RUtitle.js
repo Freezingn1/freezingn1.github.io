@@ -72,24 +72,24 @@
 
     // Обработчик для карточек в списках
     function handleCatalogCards() {
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === 1 && node.classList?.contains('card')) {
-                    const cardData = Lampa.Template.get('card', node);
-                    if (cardData?.data) {
-                        // Проверяем наличие русского логотипа
-                        const hasRussianLogo = cardData.data.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
-                        if (!hasRussianLogo) {
-                            fetchRussianTitle(cardData.data).then(title => {
-                                if (title) displayRussianTitle(node, title);
-                            });
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList?.contains('card')) {
+                        const cardData = Lampa.Template.get('card', node);
+                        if (cardData?.data) {
+                            // Проверяем наличие русского логотипа
+                            const hasRussianLogo = cardData.data.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
+                            if (!hasRussianLogo) {
+                                fetchRussianTitle(cardData.data).then(title => {
+                                    if (title) displayRussianTitle(node, title);
+                                });
+                            }
                         }
                     }
-                }
+                });
             });
         });
-    });
 
         observer.observe(document.body, {
             childList: true,
@@ -100,9 +100,12 @@
         document.querySelectorAll('.card').forEach(card => {
             const cardData = Lampa.Template.get('card', card);
             if (cardData?.data) {
-                fetchRussianTitle(cardData.data).then(title => {
-                    if (title) displayRussianTitle(card, title);
-                });
+                const hasRussianLogo = cardData.data.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
+                if (!hasRussianLogo) {
+                    fetchRussianTitle(cardData.data).then(title => {
+                        if (title) displayRussianTitle(card, title);
+                    });
+                }
             }
         });
     }
@@ -117,28 +120,34 @@
                 // Удаляем старые заголовки
                 $('.ru-title-full', render).remove();
 
-                fetchRussianTitle(e.data.movie).then(title => {
-                    if (!title) return;
+                // Проверяем наличие русского логотипа
+                const hasRussianLogo = e.data.movie.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
+                
+                // Если нет русского логотипа, показываем русское название
+                if (!hasRussianLogo) {
+                    fetchRussianTitle(e.data.movie).then(title => {
+                        if (!title) return;
 
-                    // Размещаем над основным заголовком
-                    const titleElement = $(".full-start-new__rate-line", render).first();
-                    if (titleElement.length) {
-                        titleElement.before(`
-                            <div class="ru-title-full" style="
-                                color: #ffffff;
-								font-weight: 500;
-								text-align: right;
-								margin-bottom: 10px;
-								opacity: 0.80;
-								max-width: 500px;
-								position: static;
-								transform: none;
-                            ">
-                                RU: ${title}
-                            </div>
-                        `);
-                    }
-                });
+                        // Размещаем над основным заголовком
+                        const titleElement = $(".full-start-new__rate-line", render).first();
+                        if (titleElement.length) {
+                            titleElement.before(`
+                                <div class="ru-title-full" style="
+                                    color: #ffffff;
+                                    font-weight: 500;
+                                    text-align: right;
+                                    margin-bottom: 10px;
+                                    opacity: 0.80;
+                                    max-width: 500px;
+                                    position: static;
+                                    transform: none;
+                                ">
+                                    RU: ${title}
+                                </div>
+                            `);
+                        }
+                    });
+                }
             }
         });
     }
@@ -155,6 +164,12 @@
             .ru-title:hover {
                 white-space: normal;
                 background: rgba(0,0,0,0.9) !important;
+            }
+            .ru-title-full {
+                transition: opacity 0.3s ease;
+            }
+            .ru-title-full:hover {
+                opacity: 1 !important;
             }
         `;
         document.head.appendChild(style);
