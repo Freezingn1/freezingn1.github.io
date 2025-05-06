@@ -399,37 +399,46 @@
             return new use(object);
         };
 
-        Lampa.SettingsApi.addParam({
-            component: "interface",
-            param: {
-                name: "logo_glav2",
-                type: "select",
-                values: { 
-                    "show_all": "Все логотипы", 
-                    "ru_only": "Только русские", 
-                    "hide": "Скрыть логотипы"
-                },
-                default: "show_all"
-            },
-            field: {
-                name: "Настройки логотипов на главной",
-                description: "Управление отображением логотипов вместо названий"
-            }
-        }); 
+        Lampa.SettingsApi.addCategory({
+    name: "Стильный интерфейс",
+    component: "interface",
+    position: 3 // Третье место сверху
+});
 
+// Переносим настройки логотипов в новую категорию
+Lampa.SettingsApi.addParam({
+    component: "interface",
+    category: "Стильный интерфейс", // Указываем новую категорию
+    param: {
+        name: "logo_glav2",
+        type: "select",
+        values: { 
+            "show_all": "Все логотипы", 
+            "ru_only": "Только русские", 
+            "hide": "Скрыть логотипы"
+        },
+        default: "show_all"
+    },
+    field: {
+        name: "Настройки логотипов на главной",
+        description: "Управление отображением логотипов вместо названий"
+    }
+});
 
-        Lampa.SettingsApi.addParam({
-            component: 'interface',
-            param: {
-                name: 'new_interface_show_genres',
-                type: 'trigger',
-                default: true
-            },
-            field: {
-                name: 'Показывать жанры',
-                description: 'Отображать жанры фильмов/сериалов'
-            }
-        });
+// Переносим настройку жанров в новую категорию
+Lampa.SettingsApi.addParam({
+    component: 'interface',
+    category: "Стильный интерфейс", // Указываем новую категорию
+    param: {
+        name: 'new_interface_show_genres',
+        type: 'trigger',
+        default: true
+    },
+    field: {
+        name: 'Показывать жанры',
+        description: 'Отображать жанры фильмов/сериалов'
+    }
+});
 
         Lampa.Template.add('new_interface_style', `
             <style>
