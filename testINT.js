@@ -1,14 +1,39 @@
 (function () {
     'use strict';
 
+    // Глобальный кеш логотипов
+    const logoStorage = {
+        cache: {},
+        
+        get: function(key) {
+            // Сначала проверяем memory cache
+            if (this.cache[key]) return this.cache[key];
+            
+            // Затем проверяем localStorage
+            const cached = localStorage.getItem(`logo_${key}`);
+            if (cached) {
+                this.cache[key] = cached;
+                return cached;
+            }
+            return null;
+        },
+        
+        set: function(key, value) {
+            this.cache[key] = value;
+            try {
+                localStorage.setItem(`logo_${key}`, value);
+            } catch (e) {
+                // Если localStorage переполнен
+            }
+        }
+    };
+
     function create() {
-        var html = null; // Явно инициализируем как null
+        var html = null;
         var timer;
         var network = new Lampa.Reguest();
         var loaded = {};
-        var logoCache = {};
         var currentData = null;
-        var currentRequest = null;
 
         this.create = function () {
             html = $(`
@@ -24,71 +49,76 @@
         };
 
         this.update = function (data) {
-            // Проверяем, что html создан
             if (!html) this.create();
             
+            currentData = data;
+            const type = data.name ? 'tv' : 'movie';
+            const cacheKey = `${type}_${data.id}`;
             const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
-            
-            if (logoSetting !== 'hide') {
-                const type = data.name ? 'tv' : 'movie';
-                const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-                // Fetch all logos
-                network.silent(url, function(images) {
-                    let logoPath = null;
-                    
-                    if (images.logos && images.logos.length > 0) {
-                        // Try to find Russian logo with highest rating
-                        const ruLogos = images.logos.filter(logo => logo.iso_639_1 === 'ru');
-                        if (ruLogos.length > 0) {
-                            // Get logo with highest vote_average
-                            ruLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                            logoPath = ruLogos[0].file_path;
-                        }
-                        
-                        // If no Russian logo, try English with highest rating
-                        if (!logoPath) {
-                            const enLogos = images.logos.filter(logo => logo.iso_639_1 === 'en');
-                            if (enLogos.length > 0) {
-                                enLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                                logoPath = enLogos[0].file_path;
-                            }
-                        }
-                        
-                        // If still no logo and setting allows all logos, try any language with highest rating
-                        if (!logoPath && logoSetting === 'show_all') {
-                            images.logos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                            logoPath = images.logos[0].file_path;
-                        }
-                    }
-                    
-                    displayLogoOrTitle(logoPath, data);
-                }, function() {
-                    // Fallback to text title on error
-                    if (html) html.find('.new-interface-info__title').text(data.title);
-                });
+            // 1. Пытаемся сразу показать логотип из кеша
+            const cachedLogo = logoStorage.get(cacheKey);
+            if (cachedLogo && logoSetting !== 'hide') {
+                displayLogo(cachedLogo);
             } else {
-                // Display text title if logos are hidden
-                if (html) html.find('.new-interface-info__title').text(data.title);
+                // Fallback - показываем текст
+                html.find('.new-interface-info__title').text(data.title || data.name);
             }
 
-            function displayLogoOrTitle(logoPath, data) {
-                if (!html) return; // Защита от null
-                
-                if (logoPath) {
-                    const imageUrl = Lampa.TMDB.image("/t/p/w400" + logoPath.replace(".svg", ".png"));
-                    html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
-                } else {
-                    html.find('.new-interface-info__title').text(data.title);
-                }
-            }
-
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+            // 2. Параллельно загружаем данные и обновляем логотипы
             this.load(data);
+            
+            if (logoSetting !== 'hide' && !cachedLogo) {
+                loadLogo(type, data.id, logoSetting, cacheKey);
+            }
         };
 
-        // ... (rest of the methods remain unchanged)
+        function loadLogo(type, id, logoSetting, cacheKey) {
+            const url = Lampa.TMDB.api(`${type}/${id}/images?api_key=${Lampa.TMDB.key()}`);
+            
+            network.silent(url, (images) => {
+                if (!images?.logos?.length) return;
+                
+                // Быстрый выбор логотипа без сортировок
+                let logo = null;
+                
+                if (logoSetting === 'ru_only') {
+                    logo = images.logos.find(logo => logo.iso_639_1 === 'ru');
+                } else {
+                    logo = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                           images.logos.find(logo => logo.iso_639_1 === 'en') || 
+                           images.logos[0];
+                }
+                
+                if (logo?.file_path) {
+                    const logoUrl = Lampa.TMDB.image(`/t/p/w400${logo.file_path.replace(".svg", ".png")}`);
+                    logoStorage.set(cacheKey, logoUrl);
+                    
+                    // Если это текущий элемент - обновляем
+                    if (currentData?.id === id) {
+                        displayLogo(logoUrl);
+                    }
+                }
+            }, null, false);
+        }
+
+        function displayLogo(url) {
+            // Проверяем если изображение уже в DOM
+            const existingImg = html.find('.new-interface-info__title img');
+            if (existingImg.length && existingImg.attr('src') === url) return;
+            
+            // Создаем новое изображение
+            const img = new Image();
+            img.src = url;
+            img.style = "margin-top:0.3em; margin-bottom:0.3em; max-width:8em; max-height:4em;";
+            
+            // Заменяем содержимое
+            html.find('.new-interface-info__title').empty().append(img);
+        }
+
+        // ... (остальные методы draw, load, render и т.д. остаются без изменений)
         this.draw = function (data) {
+            currentData = data;
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
 
@@ -130,16 +160,14 @@
                 return;
             }
             
-            timer = setTimeout(function () {
-                network.clear();
-                network.timeout(5000);
-                network.silent(url, function (movie) {
-                    loaded[url] = movie;
-                    _this.draw(movie);
-                }, function() {
-                    _this.draw(data);
-                });
-            }, 500);
+            network.clear();
+            network.timeout(3000);
+            network.silent(url, function (movie) {
+                loaded[url] = movie;
+                _this.draw(movie);
+            }, function() {
+                _this.draw(data);
+            });
         };
 
         this.render = function () {
@@ -153,10 +181,9 @@
                 network.clear(currentRequest);
                 currentRequest = null;
             }
-            html.remove();
+            if (html) html.remove();
             loaded = {};
-            logoCache = {};
-            html = null;
+            currentData = null;
         };
     }
 
