@@ -12,45 +12,45 @@
       };
 
       this.update = function (data) {
-        // Check logo display setting
-        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
-        
-        if (logoSetting !== 'hide') {
-            const type = data.name ? 'tv' : 'movie';
-            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&include_image_language=' + (logoSetting === 'ru_only' ? 'ru,null' : 'ru,en,null') + '&language=' + Lampa.Storage.get('language');
+    // Check logo display setting
+    const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+    
+    if (logoSetting !== 'hide') {
+        const type = data.name ? 'tv' : 'movie';
+        const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&include_image_language=' + (logoSetting === 'ru_only' ? 'ru,null' : 'ru,en,null') + '&language=' + Lampa.Storage.get('language'));
 
-            // Fetch logos and display the best available one
-            network.silent(url, function(images) {
-                if (images.logos && images.logos.length > 0) {
-                    // Try to find Russian logo first
-                    let logo = images.logos.find(l => l.iso_639_1 === 'ru');
-                    if (!logo && logoSetting === 'ru_only') {
-                        // If only Russian logos are allowed but none found, fallback to text
-                        html.find('.new-interface-info__title').text(data.title);
-                        return;
-                    }
-                    // If no Russian logo found, take the first available
-                    logo = logo || images.logos[0];
-                    
-                    if (logo.file_path) {
-                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
-                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
-                    } else {
-                        html.find('.new-interface-info__title').text(data.title);
-                    }
+        // Fetch logos and display the best available one
+        network.silent(url, function(images) {
+            if (images.logos && images.logos.length > 0) {
+                // Try to find Russian logo first
+                let logo = images.logos.find(l => l.iso_639_1 === 'ru');
+                if (!logo && logoSetting === 'ru_only') {
+                    // If only Russian logos are allowed but none found, fallback to text
+                    html.find('.new-interface-info__title').text(data.title);
+                    return;
+                }
+                // If no Russian logo found, take the first available
+                logo = logo || images.logos[0];
+                
+                if (logo.file_path) {
+                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
+                    html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
                 } else {
                     html.find('.new-interface-info__title').text(data.title);
                 }
-            }, function() {
+            } else {
                 html.find('.new-interface-info__title').text(data.title);
-            });
-        } else {
+            }
+        }, function() {
             html.find('.new-interface-info__title').text(data.title);
-        }
+        });
+    } else {
+        html.find('.new-interface-info__title').text(data.title);
+    }
 
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.load(data);
-      };
+    Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+    this.load(data);
+};
 
       this.draw = function (data) {
         var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
