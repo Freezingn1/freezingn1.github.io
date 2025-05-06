@@ -12,48 +12,45 @@
       };
 
       this.update = function (data) {
-    // Check logo display setting
+    // Проверяем настройки отображения логотипов
     const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
     
     if (logoSetting !== 'hide') {
         const type = data.name ? 'tv' : 'movie';
-        // Запрашиваем все логотипы без ограничения по языку
+        // Запрашиваем все доступные логотипы
         const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-        // Fetch logos and display the best available one
         network.silent(url, function(images) {
             if (images.logos && images.logos.length > 0) {
-                // Сортируем логотипы по: 
+                // Сортируем логотипы по:
                 // 1. Приоритету русского языка
-                // 2. Рейтингу (vote_average)
+                // 2. Наивысшему рейтингу (vote_average)
                 // 3. Ширине изображения (width)
                 const sortedLogos = images.logos.sort((a, b) => {
-                    // Русские логотипы в приоритете
-                    const aIsRussian = a.iso_639_1 === 'ru';
-                    const bIsRussian = b.iso_639_1 === 'ru';
-                    if (aIsRussian && !bIsRussian) return -1;
-                    if (!aIsRussian && bIsRussian) return 1;
+                    // Русские логотипы всегда в приоритете
+                    if (a.iso_639_1 === 'ru' && b.iso_639_1 !== 'ru') return -1;
+                    if (a.iso_639_1 !== 'ru' && b.iso_639_1 === 'ru') return 1;
                     
-                    // Сортируем по рейтингу
-                    if (b.vote_average !== a.vote_average) {
-                        return b.vote_average - a.vote_average;
-                    }
+                    // Сортировка по рейтингу (от высокого к низкому)
+                    const ratingDiff = b.vote_average - a.vote_average;
+                    if (ratingDiff !== 0) return ratingDiff;
                     
                     // Если рейтинг одинаковый, берем более широкий логотип
                     return (b.width || 0) - (a.width || 0);
                 });
-                
-                // Если включен режим только русских логотипов - фильтруем
-                const filteredLogos = logoSetting === 'ru_only' 
-                    ? sortedLogos.filter(l => l.iso_639_1 === 'ru') 
-                    : sortedLogos;
-                
-                // Берем лучший логотип из отсортированного списка
-                const logo = filteredLogos[0];
-                
-                if (logo && logo.file_path) {
-                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
-                    html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
+
+                // Фильтруем по настройкам (только русские или все)
+                const bestLogo = logoSetting === 'ru_only' 
+                    ? sortedLogos.find(logo => logo.iso_639_1 === 'ru')
+                    : sortedLogos[0];
+
+                if (bestLogo && bestLogo.file_path) {
+                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + bestLogo.file_path.replace(".svg", ".png"));
+                    html.find('.new-interface-info__title').html(
+                        `<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" 
+                         src="${imageUrl}" 
+                         alt="${data.title}" />`
+                    );
                 } else {
                     html.find('.new-interface-info__title').text(data.title);
                 }
