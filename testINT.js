@@ -24,56 +24,40 @@
         };
 
         this.update = function (data) {
-            html.find('.new-interface-info__head,.new-interface-info__details').text('---');
+
 
             const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
             
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
                 const currentLanguage = Lampa.Storage.get('language');
-                
-                // Проверяем кеш логотипов
-                const cacheKey = `${type}_${data.id}_${currentLanguage}`;
-                if (logoCache[cacheKey] !== undefined) {
-                    displayLogoOrTitle(logoCache[cacheKey], data);
-                    return;
-                }
-
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + currentLanguage);
 
                 // Fetch logos
                 network.silent(url, function(images) {
                     let logoPath = null;
-                    let logoScore = 0;
                     
-                    // Ищем лучший логотип (с наибольшим score)
+                    // Try to find logo in current language
                     if (images.logos && images.logos.length > 0) {
-                        images.logos.forEach(logo => {
-                            if (logo.iso_639_1 === currentLanguage && logo.score > logoScore) {
-                                logoPath = logo.file_path;
-                                logoScore = logo.score;
-                            }
-                        });
-                        
-                        // Если не нашли на нужном языке, берем любой с максимальным score
-                        if (!logoPath && logoSetting === 'show_all') {
-                            let maxScore = 0;
-                            images.logos.forEach(logo => {
-                                if (logo.score > maxScore) {
-                                    logoPath = logo.file_path;
-                                    maxScore = logo.score;
-                                }
-                            });
-                        }
+                        logoPath = images.logos[0].file_path;
                     }
                     
-                    // Сохраняем в кеш
-                    logoCache[cacheKey] = logoPath || null;
-                    displayLogoOrTitle(logoPath, data);
-                    
+                    // If no logo in current language and setting allows all logos, try any language
+                    if (!logoPath && logoSetting === 'show_all') {
+                        const anyUrl = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+                        network.silent(anyUrl, function(anyImages) {
+                            if (anyImages.logos && anyImages.logos.length > 0) {
+                                logoPath = anyImages.logos[0].file_path;
+                            }
+                            displayLogoOrTitle(logoPath, data);
+                        }, function() {
+                            displayLogoOrTitle(null, data);
+                        });
+                    } else {
+                        displayLogoOrTitle(logoPath, data);
+                    }
                 }, function() {
                     // Fallback to text title on error
-                    logoCache[cacheKey] = null;
                     html.find('.new-interface-info__title').text(data.title);
                 });
             } else {
@@ -84,17 +68,7 @@
             function displayLogoOrTitle(logoPath, data) {
                 if (logoPath) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
-                    const img = new Image();
-                    img.src = imageUrl;
-                    
-                    img.onload = function() {
-                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
-                    };
-                    
-                    img.onerror = function() {
-                        // Если изображение не загрузилось, показываем текст
-                        html.find('.new-interface-info__title').text(data.title);
-                    };
+                    html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
                 } else {
                     html.find('.new-interface-info__title').text(data.title);
                 }
@@ -104,6 +78,7 @@
             this.load(data);
         };
 
+        // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
