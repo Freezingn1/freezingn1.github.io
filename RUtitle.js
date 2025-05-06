@@ -127,6 +127,9 @@
 								position: relative;
 								transform: translateY(-80px);
 								right: -394px;
+								max-width: 300;
+								opacity: 0.80;
+								top: -28px;
                             ">
                                 RU: ${title}
                             </div>
