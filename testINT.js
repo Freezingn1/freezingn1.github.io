@@ -26,7 +26,7 @@
         this.update = function (data) {
             html.find('.new-interface-info__head,.new-interface-info__details').text('---');
 
-            const logoSetting = Lampa.Storage.get('logo_glav', 'show_all');
+            const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
             
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
@@ -392,7 +392,7 @@
         Lampa.SettingsApi.addParam({
             component: "interface",
             param: {
-                name: "logo_glav",
+                name: "logo_glav2",
                 type: "select",
                 values: { 
                     "show_all": "Все логотипы", 
@@ -405,7 +405,7 @@
                 name: "Настройки логотипов на главной",
                 description: "Управление отображением логотипов вместо названий"
             }
-        });
+        }); 
 
         Lampa.SettingsApi.addParam({
             component: 'interface',
