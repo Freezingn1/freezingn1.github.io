@@ -24,10 +24,11 @@
         };
 
         this.update = function (data) {
-            
+            html.find('.new-interface-info__head,.new-interface-info__details').text('---');
 
-            // Check if logo display is enabled for the new interface
-            if (Lampa.Storage.get('new_interface_logo') === true) {
+            const logoSetting = Lampa.Storage.get('logo_glav', 'show_all');
+            
+            if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
                 const currentLanguage = Lampa.Storage.get('language');
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + currentLanguage);
@@ -36,17 +37,17 @@
                 network.silent(url, function(images) {
                     let logoPath = null;
                     
-                    // First try to find logo in current language
+                    // Try to find logo in current language
                     if (images.logos && images.logos.length > 0) {
                         logoPath = images.logos[0].file_path;
                     }
                     
-                    // If no logo in current language and fallback to English is enabled, try English
-                    if (!logoPath && Lampa.Storage.get('new_interface_logo_fallback') === true && currentLanguage !== 'en') {
-                        const enUrl = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=en');
-                        network.silent(enUrl, function(enImages) {
-                            if (enImages.logos && enImages.logos.length > 0) {
-                                logoPath = enImages.logos[0].file_path;
+                    // If no logo in current language and setting allows all logos, try any language
+                    if (!logoPath && logoSetting === 'show_all') {
+                        const anyUrl = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+                        network.silent(anyUrl, function(anyImages) {
+                            if (anyImages.logos && anyImages.logos.length > 0) {
+                                logoPath = anyImages.logos[0].file_path;
                             }
                             displayLogoOrTitle(logoPath, data);
                         }, function() {
@@ -60,7 +61,7 @@
                     html.find('.new-interface-info__title').text(data.title);
                 });
             } else {
-                // Display text title if logo display is disabled
+                // Display text title if logos are hidden
                 html.find('.new-interface-info__title').text(data.title);
             }
 
@@ -150,7 +151,7 @@
         };
     }
 
-   function component(object) {
+    function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
             mask: true,
@@ -371,7 +372,7 @@
         };
     }
 
-	function startPlugin() {
+    function startPlugin() {
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
@@ -389,28 +390,20 @@
         };
 
         Lampa.SettingsApi.addParam({
-            component: 'interface',
+            component: "interface",
             param: {
-                name: 'new_interface_logo',
-                type: 'trigger',
-                default: true
+                name: "logo_glav",
+                type: "select",
+                values: { 
+                    "show_all": "Все логотипы", 
+                    "ru_only": "Только русские", 
+                    "hide": "Скрыть логотипы"
+                },
+                default: "show_all"
             },
             field: {
-                name: 'Логотипы вместо названий на главной',
-                description: 'Отображать логотипы на главной'
-            }
-        });
-
-        Lampa.SettingsApi.addParam({
-            component: 'interface',
-            param: {
-                name: 'new_interface_logo_fallback',
-                type: 'trigger',
-                default: true
-            },
-            field: {
-                name: 'Английские логотипы если нет русских на главной',
-                description: 'Показывать английские логотипы, когда русские недоступны на главной'
+                name: "Настройки логотипов на главной",
+                description: "Управление отображением логотипов вместо названий"
             }
         });
 
