@@ -399,13 +399,19 @@
         return new use(object);
     };
 
-    // Добавляем параметры в новую категорию "Стильный интерфейс"
-    // Категория создастся автоматически при первом упоминании
-    
-    // Настройки логотипов
+    // Создаем новую категорию в основном объекте настроек
+    if (!Lampa.Settings.list.find(cat => cat.name === 'Стильный интерфейс')) {
+        Lampa.Settings.list.splice(2, 0, { // Вставляем на 3 позицию (индекс 2)
+            name: 'Стильный интерфейс',
+            component: 'interface',
+            params: []
+        });
+    }
+
+    // Добавляем параметры в новую категорию
     Lampa.SettingsApi.addParam({
         component: "interface",
-        category: "Стильный интерфейс", // Создаем новую категорию
+        category: "Стильный интерфейс",
         param: {
             name: "logo_glav2",
             type: "select",
@@ -422,10 +428,9 @@
         }
     });
 
-    // Настройка жанров
     Lampa.SettingsApi.addParam({
         component: 'interface',
-        category: "Стильный интерфейс", // Добавляем в ту же категорию
+        category: "Стильный интерфейс",
         param: {
             name: 'new_interface_show_genres',
             type: 'trigger',
