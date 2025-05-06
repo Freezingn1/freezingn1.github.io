@@ -41,13 +41,20 @@
         const TMDB_API_URL = "https://api.themoviedb.org/3";
         const titleCache = new Map();
 
-        // Функция для сортировки логотипов (русские в приоритете)
-        function sortLogos(logos) {
-            return logos.sort((a, b) => {
+        // Функция для получения всех логотипов с приоритетом русского
+        function getBestLogo(logos) {
+            if (!logos || !logos.length) return null;
+            
+            // Сортируем: сначала русские, потом английские, потом остальные
+            const sortedLogos = [...logos].sort((a, b) => {
                 if (a.iso_639_1 === 'ru') return -1;
                 if (b.iso_639_1 === 'ru') return 1;
+                if (a.iso_639_1 === 'en') return -1;
+                if (b.iso_639_1 === 'en') return 1;
                 return 0;
             });
+
+            return sortedLogos[0];
         }
 
         // Получение русского названия
@@ -119,17 +126,19 @@
             // Очищаем заголовок перед загрузкой
             titleElement.empty();
 
-            // Загружаем логотипы
-            const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}&include_image_language=ru,en,null`;
+            // Загружаем логотипы (включая все языки)
+            const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
 
             $.get(tmdbUrl, function(data) {
                 let logos = data.logos || [];
                 
-                // Сортируем логотипы (русские в начале)
-                logos = sortLogos(logos);
+                // Для режима "Только русские" фильтруем логотипы
+                if (logoSetting === "ru_only") {
+                    logos = logos.filter(l => l.iso_639_1 === 'ru');
+                }
                 
-                // Выбираем первый доступный логотип (русский будет в приоритете)
-                const logo = logos[0];
+                // Выбираем лучший логотип согласно приоритету
+                const logo = getBestLogo(logos);
 
                 if (logo?.file_path) {
                     // Показываем логотип
