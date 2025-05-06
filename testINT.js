@@ -24,6 +24,7 @@
         };
 
         this.update = function (data) {
+		html.find('.new-interface-info__head,.new-interface-info__details').text('---');
             // Отменяем предыдущий запрос, если он есть
             if (currentRequest) {
                 network.clear(currentRequest);
