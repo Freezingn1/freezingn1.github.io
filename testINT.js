@@ -402,7 +402,6 @@
         Lampa.SettingsApi.addCategory({
     name: "Стильный интерфейс",
     component: "interface",
-    position: 3 // Третье место сверху
 });
 
 // Переносим настройки логотипов в новую категорию
