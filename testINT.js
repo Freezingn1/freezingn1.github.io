@@ -12,37 +12,41 @@
       };
 
       this.update = function (data) {
-
-
-        // Check if logo display is enabled for the new interface
-        if (Lampa.Storage.get('new_interface_logo') === true) {
+        // Check logo display setting
+        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+        
+        if (logoSetting !== 'hide') {
             const type = data.name ? 'tv' : 'movie';
-            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language'));
+            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&include_image_language=' + (logoSetting === 'ru_only' ? 'ru,null' : 'ru,en,null') + '&language=' + Lampa.Storage.get('language');
 
-            // Fetch logos and display the first one if available
+            // Fetch logos and display the best available one
             network.silent(url, function(images) {
                 if (images.logos && images.logos.length > 0) {
-                    const logoPath = images.logos[0].file_path;
-                    if (logoPath) {
-                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
+                    // Try to find Russian logo first
+                    let logo = images.logos.find(l => l.iso_639_1 === 'ru');
+                    if (!logo && logoSetting === 'ru_only') {
+                        // If only Russian logos are allowed but none found, fallback to text
+                        html.find('.new-interface-info__title').text(data.title);
+                        return;
+                    }
+                    // If no Russian logo found, take the first available
+                    logo = logo || images.logos[0];
+                    
+                    if (logo.file_path) {
+                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
                         html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
                     } else {
-                         // Fallback to text title if no logo path
-                         html.find('.new-interface-info__title').text(data.title);
+                        html.find('.new-interface-info__title').text(data.title);
                     }
                 } else {
-                    // Fallback to text title if no logos found
                     html.find('.new-interface-info__title').text(data.title);
                 }
             }, function() {
-                 // Fallback to text title on error
-                 html.find('.new-interface-info__title').text(data.title);
+                html.find('.new-interface-info__title').text(data.title);
             });
         } else {
-             // Display text title if logo display is disabled
-             html.find('.new-interface-info__title').text(data.title);
+            html.find('.new-interface-info__title').text(data.title);
         }
-
 
         Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
         this.load(data);
@@ -55,14 +59,21 @@
         var details = [];
         var countries = Lampa.Api.sources.tmdb.parseCountries(data);
         var pg = Lampa.Api.sources.tmdb.parsePG(data);
+        
         if (create !== '0000') head.push('<span>' + create + '</span>');
         if (countries.length > 0) head.push(countries.join(', '));
         if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-        if (data.genres && data.genres.length > 0) details.push(data.genres.map(function (item) {
-          return Lampa.Utils.capitalizeFirstLetter(item.name);
-        }).join(' | '));
+        
+        // Check if genres should be shown
+        if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
+            details.push(data.genres.map(function (item) {
+                return Lampa.Utils.capitalizeFirstLetter(item.name);
+            }).join(' | '));
+        }
+        
         if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
         if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+        
         html.find('.new-interface-info__head').empty().append(head.join(', '));
         html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
       };
@@ -97,7 +108,6 @@
       };
     }
 
-    // ... (rest of the component and plugin initialization code remains the same)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -353,7 +363,6 @@
                 description: "Управление отображением логотипов вместо названий"
             }
         }); 
-
 
         Lampa.SettingsApi.addParam({
             component: 'interface',
