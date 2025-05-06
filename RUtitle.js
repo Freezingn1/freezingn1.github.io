@@ -117,14 +117,16 @@
                     if (!title) return;
 
                     // Размещаем над основным заголовком
-                    const titleElement = $(".full-start-new__title, .full-start-new__status", render).first();
+                    const titleElement = $(".cardify__right", render).first();
                     if (titleElement.length) {
                         titleElement.before(`
                             <div class="ru-title-full" style="
-                                font-size: 1.3em;
-                                margin-bottom: 8px;
                                 color: #ffffff;
-                                font-weight: 500;
+								font-weight: 500;
+								text-align: right;
+								position: relative;
+								transform: translateY(-80px);
+								right: -394px;
                             ">
                                 RU: ${title}
                             </div>
