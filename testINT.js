@@ -2,11 +2,11 @@
     'use strict';
 
     function create() {
-        var html = null; // Явно инициализируем как null
+        var html = null;
         var timer;
         var network = new Lampa.Reguest();
         var loaded = {};
-        var logoCache = {};
+        var logoCache = {}; // Добавляем кеш для логотипов
         var currentData = null;
         var currentRequest = null;
 
@@ -24,63 +24,72 @@
         };
 
         this.update = function (data) {
-            // Проверяем, что html создан
             if (!html) this.create();
             
             const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
+            const type = data.name ? 'tv' : 'movie';
+            const cacheKey = type + '_' + data.id; // Ключ для кеша
             
+            // Проверяем кеш перед запросом
+            if (logoCache[cacheKey]) {
+                displayLogo(logoCache[cacheKey], data);
+                return;
+            }
+
             if (logoSetting !== 'hide') {
-                const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-                // Fetch all logos
+                // Упрощаем запрос логотипов
                 network.silent(url, function(images) {
                     let logoPath = null;
                     
                     if (images.logos && images.logos.length > 0) {
-                        // Try to find Russian logo with highest rating
-                        const ruLogos = images.logos.filter(logo => logo.iso_639_1 === 'ru');
-                        if (ruLogos.length > 0) {
-                            // Get logo with highest vote_average
-                            ruLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                            logoPath = ruLogos[0].file_path;
-                        }
+                        // Сначала ищем русский логотип
+                        const ruLogo = images.logos.find(logo => logo.iso_639_1 === 'ru');
+                        if (ruLogo) logoPath = ruLogo.file_path;
                         
-                        // If no Russian logo, try English with highest rating
+                        // Если нет русского, ищем английский
                         if (!logoPath) {
-                            const enLogos = images.logos.filter(logo => logo.iso_639_1 === 'en');
-                            if (enLogos.length > 0) {
-                                enLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                                logoPath = enLogos[0].file_path;
-                            }
+                            const enLogo = images.logos.find(logo => logo.iso_639_1 === 'en');
+                            if (enLogo) logoPath = enLogo.file_path;
                         }
                         
-                        // If still no logo and setting allows all logos, try any language with highest rating
+                        // Если разрешены все и ничего не нашли, берем первый
                         if (!logoPath && logoSetting === 'show_all') {
-                            images.logos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
                             logoPath = images.logos[0].file_path;
                         }
                     }
                     
-                    displayLogoOrTitle(logoPath, data);
+                    if (logoPath) {
+                        logoCache[cacheKey] = logoPath; // Сохраняем в кеш
+                        displayLogo(logoPath, data);
+                    } else {
+                        html.find('.new-interface-info__title').text(data.title);
+                    }
                 }, function() {
-                    // Fallback to text title on error
-                    if (html) html.find('.new-interface-info__title').text(data.title);
-                });
+                    html.find('.new-interface-info__title').text(data.title);
+                }, false); // Отключаем кеширование запроса для свежих данных
             } else {
-                // Display text title if logos are hidden
-                if (html) html.find('.new-interface-info__title').text(data.title);
+                html.find('.new-interface-info__title').text(data.title);
             }
 
-            function displayLogoOrTitle(logoPath, data) {
-                if (!html) return; // Защита от null
+            function displayLogo(logoPath, data) {
+                if (!html) return;
                 
-                if (logoPath) {
-                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
-                    html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
-                } else {
-                    html.find('.new-interface-info__title').text(data.title);
-                }
+                const imageUrl = Lampa.TMDB.image("/t/p/w400" + logoPath.replace(".svg", ".png"));
+                // Создаем изображение заранее для предзагрузки
+                const img = new Image();
+                img.src = imageUrl;
+                img.onload = function() {
+                    if (html) {
+                        html.find('.new-interface-info__title').html(
+                            '<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />'
+                        );
+                    }
+                };
+                img.onerror = function() {
+                    if (html) html.find('.new-interface-info__title').text(data.title);
+                };
             }
 
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
