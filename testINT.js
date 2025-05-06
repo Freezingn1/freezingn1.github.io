@@ -24,126 +24,42 @@
         };
 
         this.update = function (data) {
-		html.find('.new-interface-info__head,.new-interface-info__details').text('---');
-            // Отменяем предыдущий запрос, если он есть
-            if (currentRequest) {
-                network.clear(currentRequest);
-                currentRequest = null;
-            }
+        html.find('.new-interface-info__head,.new-interface-info__details').text('---');
 
-            currentData = {
-                data: data,
-                timestamp: Date.now()
-            };
-            
-            this.draw(data);
+        // Check if logo display is enabled for the new interface
+        if (Lampa.Storage.get('new_interface_logo') === true) {
+            const type = data.name ? 'tv' : 'movie';
+            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language'));
 
-            if (Lampa.Storage.get('new_interface_logo') === true) {
-                const type = data.name ? 'tv' : 'movie';
-                const cacheKey = `${type}_${data.id}`;
-                const currentTimestamp = currentData.timestamp;
-
-                // Очищаем предыдущий заголовок перед загрузкой нового
-                html.find('.new-interface-info__title').empty();
-
-
-
-                if (logoCache[cacheKey]) {
-                    html.find('.new-interface-info__title').html(logoCache[cacheKey]);
-                } else {
-                    const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}&language=${Lampa.Storage.get('language')}&include_image_language=ru,en,null`);
-
-                    const loadLogo = (attempt = 1) => {
-                        currentRequest = network.silent(url, (images) => {
-                            currentRequest = null;
-                            if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                            
-                            let logoToUse = null;
-                            const safeTitle = (data.title || data.name).replace(/'/g, "\\'");
-                            
-                            if (images.logos?.length) {
-                                // 1. Приоритет русскому логотипу
-                                logoToUse = images.logos.find(logo => logo.iso_639_1 === 'ru');
-                                
-                                // 2. Английский как запасной вариант
-                                if (!logoToUse) {
-                                    logoToUse = images.logos.find(logo => logo.iso_639_1 === 'en');
-                                }
-                                
-                                // 3. Любой логотип если нет языковых
-                                if (!logoToUse) {
-                                    logoToUse = images.logos[0];
-                                }
-                                
-                                // 4. Выбираем логотип с лучшим качеством
-                                if (images.logos.length > 1 && !logoToUse) {
-                                    logoToUse = images.logos.reduce((prev, current) => 
-                                        (prev.width * prev.height > current.width * current.height) ? prev : current
-                                    );
-                                }
-                            }
-
-                            if (logoToUse?.file_path) {
-                                const imageUrl = Lampa.TMDB.image(`/t/p/w500${logoToUse.file_path}`);
-                                const img = new Image();
-                                
-                                img.onload = () => {
-                                    if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                                    
-                                    const logoHtml = `
-                                        <div style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;">
-                                            <img style="max-width:8em; max-height:2.8em; object-fit:contain;" 
-                                                 src="${imageUrl}" 
-                                                 alt="${safeTitle}"
-                                                 onerror="this.parentElement.innerHTML='${safeTitle}'" />
-                                        </div>
-                                    `;
-                                    logoCache[cacheKey] = logoHtml;
-                                    html.find('.new-interface-info__title').html(logoHtml);
-                                };
-                                
-                                img.onerror = () => {
-                                    if (attempt < 3) {
-                                        setTimeout(() => loadLogo(attempt + 1), 100 * attempt);
-                                    } else {
-                                        showTitleFallback();
-                                    }
-                                };
-                                
-                                img.src = imageUrl;
-                            } else {
-                                showTitleFallback();
-                            }
-                        }, () => {
-                            currentRequest = null;
-                            if (attempt < 3) {
-                                setTimeout(() => loadLogo(attempt + 1), 100 * attempt);
-                            } else {
-                                showTitleFallback();
-                            }
-                        });
-                    };
-
-                    function showTitleFallback() {
-                        if (!currentData || currentData.timestamp !== currentTimestamp) return;
-                        html.find('.new-interface-info__title').text(data.title || data.name);
+            // Fetch logos and display the first one if available
+            network.silent(url, function(images) {
+                if (images.logos && images.logos.length > 0) {
+                    const logoPath = images.logos[0].file_path;
+                    if (logoPath) {
+                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
+                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
+                    } else {
+                         // Fallback to text title if no logo path
+                         html.find('.new-interface-info__title').text(data.title);
                     }
-
-                    loadLogo();
+                } else {
+                    // Fallback to text title if no logos found
+                    html.find('.new-interface-info__title').text(data.title);
                 }
-            } else {
-                html.find('.new-interface-info__title').text(data.title || data.name);
-            }
+            }, function() {
+                 // Fallback to text title on error
+                 html.find('.new-interface-info__title').text(data.title);
+            });
+        } else {
+             // Display text title if logo display is disabled
+             html.find('.new-interface-info__title').text(data.title);
+        }
 
-            if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
-                html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
-            } else {
-                html.find('.new-interface-info__description').hide();
-            }
 
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
-        };
+        html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.load(data);
+      };
 
         // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
