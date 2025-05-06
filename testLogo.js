@@ -1,141 +1,192 @@
 !function() {
     "use strict";
 
-    // Настройки плагина
+    // Настройки логотипов
     Lampa.SettingsApi.addParam({
         component: "interface",
         param: {
-            name: "logo_priority",
+            name: "logo_glav",
             type: "select",
             values: { 
-                "all": "Все логотипы (русские в приоритете)", 
-                "ru_only": "Только русские логотипы", 
+                "show_all": "Все логотипы", 
+                "ru_only": "Только русские", 
                 "hide": "Скрыть логотипы"
             },
-            default: "all"
+            default: "show_all"
         },
         field: {
-            name: "Настройки отображения логотипов",
-            description: "Управление показом логотипов и названий"
+            name: "Настройки логотипов в карточке",
+            description: "Управление отображением логотипов вместо названий"
         }
     });
 
-    if (!window.logoAndTitlePlugin) {
-        window.logoAndTitlePlugin = true;
+    // Настройки русских названий
+    Lampa.SettingsApi.addParam({
+        component: "interface",
+        param: {
+            name: "russian_titles",
+            type: "switch",
+            default: true
+        },
+        field: {
+            name: "Показывать русские названия",
+            description: "Отображать русские названия когда нет русского логотипа"
+        }
+    });
+
+    if (!window.logoplugin) {
+        window.logoplugin = true;
 
         const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
         const TMDB_API_URL = "https://api.themoviedb.org/3";
         const titleCache = new Map();
 
-        // Получение русского названия
-        async function getRussianTitle(movie) {
-            try {
-                if (titleCache.has(movie.id)) return titleCache.get(movie.id);
-                
-                const type = movie.first_air_date ? 'tv' : 'movie';
-                const response = await fetch(`${TMDB_API_URL}/${type}/${movie.id}?language=ru-RU&api_key=${TMDB_API_KEY}`);
-                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                
-                const data = await response.json();
-                const title = data.title || data.name;
-                if (title) titleCache.set(movie.id, title);
-                return title;
-            } catch (e) {
-                console.error("Ошибка получения русского названия:", e);
-                return null;
-            }
+        // Функция для сортировки логотипов (русские в приоритете)
+        function sortLogos(logos) {
+            return logos.sort((a, b) => {
+                if (a.iso_639_1 === 'ru') return -1;
+                if (b.iso_639_1 === 'ru') return 1;
+                return 0;
+            });
         }
 
-        // Обработка главной страницы
-        Lampa.Listener.follow("full", function(e) {
-            if (e.type !== "complite") return;
+        // Получение русского названия
+        async function fetchRussianTitle(card) {
+            try {
+                if (titleCache.has(card.id)) {
+                    return titleCache.get(card.id);
+                }
 
-            const movie = e.data.movie;
-            const render = e.object.activity.render();
+                const mediaType = card.first_air_date ? 'tv' : 'movie';
+                const url = `${TMDB_API_URL}/${mediaType}/${card.id}?language=ru-RU&api_key=${TMDB_API_KEY}`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+                const russianTitle = data.title || data.name;
+
+                if (russianTitle) {
+                    titleCache.set(card.id, russianTitle);
+                    return russianTitle;
+                }
+            } catch (error) {
+                console.error("Ошибка при получении русского названия:", error);
+            }
+            return null;
+        }
+
+        // Обработка полной страницы
+        Lampa.Listener.follow("full", function(event) {
+            if (event.type !== "complite") return;
+
+            const movie = event.data.movie;
+            const render = event.object.activity.render();
             const titleElement = render.find(".full-start-new__title");
             const originalTitle = movie.title || movie.name;
-            const setting = Lampa.Storage.get("logo_priority") || "all";
+            const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
+                            || /аниме|anime/i.test(originalTitle);
+            const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
+            const showRussianTitles = Lampa.Storage.get("russian_titles") !== false;
 
             // Удаляем предыдущие русские названия
             render.find('.ru-title-full').remove();
 
-            // Режим "Скрыть логотипы"
-            if (setting === "hide") {
-                titleElement.text(originalTitle);
-                
-                // Показываем русское название
-                getRussianTitle(movie).then(title => {
-                    if (title && title !== originalTitle) {
-                        render.find(".full-start-new__rate-line").before(`
-                            <div class="ru-title-full" style="
-                                color: #fff;
-                                font-weight: 500;
-                                text-align: right;
-                                margin-bottom: 10px;
-                                opacity: 0.8;
-                                max-width: 500px;
-                            ">RU: ${title}</div>
-                        `);
-                    }
-                });
-                return;
-            }
-
-            // Загрузка логотипов
-            const url = Lampa.TMDB.api(movie.name ? "tv" : "movie") + 
-                       `/${movie.id}/images?api_key=${Lampa.TMDB.key()}&include_image_language=ru,en,null`;
-
-            $.get(url, function(data) {
-                const logos = data.logos || [];
-                let selectedLogo = null;
-
-                // Выбор логотипа по настройкам
-                if (setting === "ru_only") {
-                    selectedLogo = logos.find(l => l.iso_639_1 === "ru");
-                } else {
-                    // Приоритет русских логотипов
-                    selectedLogo = logos.find(l => l.iso_639_1 === "ru") || 
-                                 logos.find(l => l.iso_639_1 === "en") || 
-                                 logos[0];
-                }
-
-                // Отображение логотипа или оригинального названия
-                if (selectedLogo?.file_path) {
-                    titleElement.html(`
-                        <img style="margin-top: 0.2em; margin-bottom: 0.1em; 
-                             max-width: 9em; max-height: 4em;" 
-                             src="${Lampa.TMDB.image("/t/p/w500" + selectedLogo.file_path)}" />
-                    `);
-                } else {
-                    titleElement.text(originalTitle);
-                }
-
-                // Показываем русское название если нет русского логотипа
-                if (setting !== "ru_only" && !logos.some(l => l.iso_639_1 === "ru")) {
-                    getRussianTitle(movie).then(title => {
-                        if (title && title !== originalTitle) {
-                            render.find(".full-start-new__rate-line").before(`
+            // Если выбрано "Скрыть логотипы" - сразу показываем текст
+            if (logoSetting === "hide") {
+                showTextTitle();
+                if (showRussianTitles) {
+                    fetchRussianTitle(movie).then(title => {
+                        if (title) {
+                            render.find(".full-start-new__rate-line").first().before(`
                                 <div class="ru-title-full" style="
-                                    color: #fff;
+                                    color: #ffffff;
                                     font-weight: 500;
                                     text-align: right;
                                     margin-bottom: 10px;
-                                    opacity: 0.8;
+                                    opacity: 0.80;
                                     max-width: 500px;
-                                ">RU: ${title}</div>
+                                ">
+                                    RU: ${title}
+                                </div>
+                            `);
+                        }
+                    });
+                }
+                return;
+            }
+
+            // Очищаем заголовок перед загрузкой
+            titleElement.empty();
+
+            // Загружаем логотипы
+            const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}&include_image_language=ru,en,null`;
+
+            $.get(tmdbUrl, function(data) {
+                let logos = data.logos || [];
+                
+                // Сортируем логотипы (русские в начале)
+                logos = sortLogos(logos);
+                
+                // Выбираем первый доступный логотип (русский будет в приоритете)
+                const logo = logos[0];
+
+                if (logo?.file_path) {
+                    // Показываем логотип
+                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+                    titleElement.html(`<img style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em;" src="${imageUrl}" />`);
+                    
+                    // Не показываем русское название если есть русский логотип
+                    if (logo.iso_639_1 === "ru") {
+                        return;
+                    }
+                } else {
+                    showTextTitle();
+                }
+
+                // Показываем русское название если включено в настройках
+                if (showRussianTitles && !logos.some(l => l.iso_639_1 === 'ru')) {
+                    fetchRussianTitle(movie).then(title => {
+                        if (title) {
+                            render.find(".full-start-new__rate-line").first().before(`
+                                <div class="ru-title-full" style="
+                                    color: #ffffff;
+                                    font-weight: 500;
+                                    text-align: right;
+                                    margin-bottom: 10px;
+                                    opacity: 0.80;
+                                    max-width: 500px;
+                                ">
+                                    RU: ${title}
+                                </div>
                             `);
                         }
                     });
                 }
             }).fail(() => {
-                console.error("Ошибка загрузки логотипов");
-                titleElement.text(originalTitle);
+                console.error("Ошибка загрузки логотипов из TMDB");
+                showTextTitle();
             });
+
+            function showTextTitle() {
+                if (isAnime) {
+                    titleElement.html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${originalTitle}</span>`);
+                } else {
+                    titleElement.text(originalTitle);
+                }
+            }
         });
 
-        // Стили для русских названий
+        // Добавляем стили
         const style = document.createElement('style');
         style.textContent = `
+            .ru-title {
+                transition: all 0.3s ease;
+            }
+            .ru-title:hover {
+                white-space: normal;
+                background: rgba(0,0,0,0.9) !important;
+            }
             .ru-title-full {
                 transition: opacity 0.3s ease;
             }
