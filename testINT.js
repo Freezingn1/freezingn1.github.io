@@ -17,27 +17,41 @@
     
     if (logoSetting !== 'hide') {
         const type = data.name ? 'tv' : 'movie';
-        const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&include_image_language=ru,en,null' + '&language=' + Lampa.Storage.get('language'));
+        // Запрашиваем все логотипы без ограничения по языку
+        const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
         // Fetch logos and display the best available one
         network.silent(url, function(images) {
             if (images.logos && images.logos.length > 0) {
-                // Sort logos by vote_average (highest first)
-                const sortedLogos = images.logos.sort((a, b) => b.vote_average - a.vote_average);
+                // Сортируем логотипы по: 
+                // 1. Приоритету русского языка
+                // 2. Рейтингу (vote_average)
+                // 3. Ширине изображения (width)
+                const sortedLogos = images.logos.sort((a, b) => {
+                    // Русские логотипы в приоритете
+                    const aIsRussian = a.iso_639_1 === 'ru';
+                    const bIsRussian = b.iso_639_1 === 'ru';
+                    if (aIsRussian && !bIsRussian) return -1;
+                    if (!aIsRussian && bIsRussian) return 1;
+                    
+                    // Сортируем по рейтингу
+                    if (b.vote_average !== a.vote_average) {
+                        return b.vote_average - a.vote_average;
+                    }
+                    
+                    // Если рейтинг одинаковый, берем более широкий логотип
+                    return (b.width || 0) - (a.width || 0);
+                });
                 
-                // Try to find Russian logo with highest rating
-                let logo = sortedLogos.find(l => l.iso_639_1 === 'ru');
+                // Если включен режим только русских логотипов - фильтруем
+                const filteredLogos = logoSetting === 'ru_only' 
+                    ? sortedLogos.filter(l => l.iso_639_1 === 'ru') 
+                    : sortedLogos;
                 
-                // If only Russian logos are allowed but none found, fallback to text
-                if (!logo && logoSetting === 'ru_only') {
-                    html.find('.new-interface-info__title').text(data.title);
-                    return;
-                }
+                // Берем лучший логотип из отсортированного списка
+                const logo = filteredLogos[0];
                 
-                // If no Russian logo found, take the logo with highest rating
-                logo = logo || sortedLogos[0];
-                
-                if (logo.file_path) {
+                if (logo && logo.file_path) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
                     html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
                 } else {
