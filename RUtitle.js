@@ -5,6 +5,22 @@
     const TMDB_API_URL = "https://api.themoviedb.org/3";
     const titleCache = new Map();
 
+    // Функция проверки наличия русского логотипа
+    function hasRussianLogo(cardData) {
+        try {
+            // Проверяем разные варианты расположения логотипов в структуре данных
+            const logos = cardData.images?.logos || 
+                         cardData.data?.images?.logos || 
+                         cardData.movie?.images?.logos ||
+                         (cardData.id && Lampa.TMDB.cache(cardData.id)?.logos;
+            
+            return logos?.some(logo => logo.iso_639_1 === 'ru');
+        } catch (e) {
+            console.error("Error checking Russian logo:", e);
+            return false;
+        }
+    }
+
     async function fetchRussianTitle(card) {
         try {
             if (titleCache.has(card.id)) {
@@ -31,14 +47,6 @@
             console.error("Ошибка при получении русского названия:", error);
         }
         return null;
-    }
-
-    function hasRussianLogo(cardData) {
-        // Проверяем logos в нескольких возможных местах
-        const logos = cardData.images?.logos || 
-                     cardData.data?.images?.logos || 
-                     cardData.movie?.images?.logos;
-        return logos?.some(logo => logo.iso_639_1 === 'ru');
     }
 
     function displayRussianTitle(element, title) {
@@ -71,10 +79,15 @@
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === 1 && node.classList?.contains('card')) {
                         const cardData = Lampa.Template.get('card', node);
-                        if (cardData?.data && !hasRussianLogo(cardData)) {
-                            fetchRussianTitle(cardData.data).then(title => {
-                                if (title) displayRussianTitle(node, title);
-                            });
+                        if (cardData?.data) {
+                            // Ждем 100мс чтобы логотипы успели загрузиться
+                            setTimeout(() => {
+                                if (!hasRussianLogo(cardData)) {
+                                    fetchRussianTitle(cardData.data).then(title => {
+                                        if (title) displayRussianTitle(node, title);
+                                    });
+                                }
+                            }, 100);
                         }
                     }
                 });
@@ -85,10 +98,14 @@
 
         document.querySelectorAll('.card').forEach(card => {
             const cardData = Lampa.Template.get('card', card);
-            if (cardData?.data && !hasRussianLogo(cardData)) {
-                fetchRussianTitle(cardData.data).then(title => {
-                    if (title) displayRussianTitle(card, title);
-                });
+            if (cardData?.data) {
+                setTimeout(() => {
+                    if (!hasRussianLogo(cardData)) {
+                        fetchRussianTitle(cardData.data).then(title => {
+                            if (title) displayRussianTitle(card, title);
+                        });
+                    }
+                }, 100);
             }
         });
     }
@@ -101,27 +118,30 @@
 
                 $('.ru-title-full', render).remove();
 
-                if (!hasRussianLogo(e)) {
-                    fetchRussianTitle(e.data.movie).then(title => {
-                        if (!title) return;
+                // Ждем 300мс чтобы логотипы успели загрузиться
+                setTimeout(() => {
+                    if (!hasRussianLogo(e)) {
+                        fetchRussianTitle(e.data.movie).then(title => {
+                            if (!title) return;
 
-                        const titleElement = $(".full-start-new__rate-line", render).first();
-                        if (titleElement.length) {
-                            titleElement.before(`
-                                <div class="ru-title-full" style="
-                                    color: #ffffff;
-                                    font-weight: 500;
-                                    text-align: right;
-                                    margin-bottom: 10px;
-                                    opacity: 0.80;
-                                    max-width: 500px;
-                                ">
-                                    RU: ${title}
-                                </div>
-                            `);
-                        }
-                    });
-                }
+                            const titleElement = $(".full-start-new__rate-line", render).first();
+                            if (titleElement.length) {
+                                titleElement.before(`
+                                    <div class="ru-title-full" style="
+                                        color: #ffffff;
+                                        font-weight: 500;
+                                        text-align: right;
+                                        margin-bottom: 10px;
+                                        opacity: 0.80;
+                                        max-width: 500px;
+                                    ">
+                                        RU: ${title}
+                                    </div>
+                                `);
+                            }
+                        });
+                    }
+                }, 300);
             }
         });
     }
