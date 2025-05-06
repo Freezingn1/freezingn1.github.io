@@ -13,7 +13,6 @@
         var isPreloading = false;
         var cacheLimit = 50;
 
-        // Функция для добавления в кэш с ограничением размера
         function addToCache(id, logoPath) {
             if (Object.keys(logoCache).length >= cacheLimit) {
                 const oldestKey = Object.keys(logoCache)[0];
@@ -22,7 +21,6 @@
             logoCache[id] = logoPath;
         }
 
-        // Предзагрузка логотипов
         function preloadLogos() {
             if (isPreloading || preloadQueue.length === 0) return;
             
@@ -35,6 +33,12 @@
             network.silent(url, function(images) {
                 const logoPath = processLogos(images, nextItem.logoSetting);
                 addToCache(nextItem.data.id, logoPath);
+                
+                // Если это текущий элемент - обновляем его
+                if (currentData && currentData.id === nextItem.data.id) {
+                    displayLogoOrTitle(logoPath, currentData);
+                }
+                
                 isPreloading = false;
                 if (preloadQueue.length > 0) setTimeout(preloadLogos, 100);
             }, function() {
@@ -43,7 +47,6 @@
             });
         }
 
-        // Обработка логотипов
         function processLogos(images, logoSetting) {
             let logoPath = null;
             
@@ -71,25 +74,29 @@
             return logoPath;
         }
 
-        // Отображение логотипа или заголовка
         function displayLogoOrTitle(logoPath, data) {
             if (!html) return;
             
             const titleElement = html.find('.new-interface-info__title');
             
             if (logoPath) {
-                // Используем WebP для лучшего сжатия
                 const imageUrl = Lampa.TMDB.image("/t/p/w300" + logoPath.replace(".svg", ".webp?quality=80"));
                 
-                // Создаем изображение заранее
-                const img = new Image();
-                img.onload = function() {
-                    titleElement.html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
+                // Создаем временный элемент для проверки загрузки
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    // Если данные не изменились - отображаем логотип
+                    if (currentData && currentData.id === data.id) {
+                        titleElement.html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
+                    }
                 };
-                img.onerror = function() {
-                    titleElement.text(data.title);
+                tempImg.onerror = function() {
+                    // Если не удалось загрузить логотип - оставляем текст
+                    if (currentData && currentData.id === data.id) {
+                        titleElement.text(data.title);
+                    }
                 };
-                img.src = imageUrl;
+                tempImg.src = imageUrl;
             } else {
                 titleElement.text(data.title);
             }
@@ -114,9 +121,13 @@
             currentData = data;
             const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
             
+            // Сначала показываем текст (на случай, если логотип не загрузится)
+            html.find('.new-interface-info__title').text(data.title);
+            
             if (logoSetting !== 'hide') {
                 // Проверяем кэш
                 if (logoCache[data.id] !== undefined) {
+                    // Если есть в кэше - сразу показываем логотип
                     displayLogoOrTitle(logoCache[data.id], data);
                 } else {
                     // Добавляем в очередь предзагрузки
@@ -124,12 +135,8 @@
                         data: data,
                         logoSetting: logoSetting
                     });
-                    if (!isPreloading) setTimeout(preloadLogos, 0);
                     
-                    // Показываем заголовок, пока логотип загружается
-                    html.find('.new-interface-info__title').text(data.title);
-                    
-                    // Параллельно начинаем загрузку для текущего элемента
+                    // Начинаем загрузку для текущего элемента
                     const type = data.name ? 'tv' : 'movie';
                     const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
                     
@@ -138,17 +145,20 @@
                         addToCache(data.id, logoPath);
                         displayLogoOrTitle(logoPath, data);
                     }, function() {
+                        // Оставляем текст, если не удалось загрузить
                         html.find('.new-interface-info__title').text(data.title);
                     });
+                    
+                    // Запускаем предзагрузку для следующих элементов
+                    if (!isPreloading) setTimeout(preloadLogos, 0);
                 }
-            } else {
-                html.find('.new-interface-info__title').text(data.title);
             }
-
+            
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
             this.load(data);
         };
 
+        // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
