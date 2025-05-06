@@ -10,6 +10,13 @@
         var currentData = null;
         var currentRequest = null;
 
+        // Modified function to use proxy for TMDB images
+        function getProxyImageUrl(path, size) {
+            if (!path) return '';
+            const proxyBase = 'https://tmdbimg.bylampa.online';
+            return `${proxyBase}${size}${path}`;
+        }
+
         this.create = function () {
             html = $(`
                 <div class="new-interface-info">
@@ -71,18 +78,20 @@
 
             function displayLogoOrTitle(logoPath, data) {
                 if (logoPath) {
-                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
+                    const imageUrl = getProxyImageUrl("/t/p/w500" + logoPath.replace(".svg", ".png"));
                     html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
                 } else {
                     html.find('.new-interface-info__title').text(data.title);
                 }
             }
 
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+            // Use proxy for background image
+            const backgroundUrl = getProxyImageUrl(data.backdrop_path, '/w200');
+            Lampa.Background.change(backgroundUrl);
             this.load(data);
         };
 
-        // ... (rest of the methods remain unchanged)
+        // ... (rest of the methods remain the same)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
@@ -155,7 +164,6 @@
         };
     }
 
-    // ... (rest of the component and plugin initialization code remains the same)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -173,6 +181,13 @@
         var background_img = html.find('.full-start__background');
         var background_last = '';
         var background_timer;
+
+        // Modified function to use proxy for background images
+        function getProxyImageUrl(path, size) {
+            if (!path) return '';
+            const proxyBase = 'https://tmdbimg.bylampa.online';
+            return `${proxyBase}${size}${path}`;
+        }
 
         this.create = function () {};
 
@@ -240,7 +255,7 @@
         };
 
         this.background = function (elem) {
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+            var new_background = getProxyImageUrl(elem.backdrop_path, '/w1280');
             clearTimeout(background_timer);
             if (new_background == background_last) return;
             
