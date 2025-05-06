@@ -2,7 +2,7 @@
     'use strict';
 
     function create() {
-        var html;
+        var html = null; // Явно инициализируем как null
         var timer;
         var network = new Lampa.Reguest();
         var loaded = {};
@@ -24,6 +24,9 @@
         };
 
         this.update = function (data) {
+            // Проверяем, что html создан
+            if (!html) this.create();
+            
             const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
             
             if (logoSetting !== 'hide') {
@@ -62,14 +65,16 @@
                     displayLogoOrTitle(logoPath, data);
                 }, function() {
                     // Fallback to text title on error
-                    html.find('.new-interface-info__title').text(data.title);
+                    if (html) html.find('.new-interface-info__title').text(data.title);
                 });
             } else {
                 // Display text title if logos are hidden
-                html.find('.new-interface-info__title').text(data.title);
+                if (html) html.find('.new-interface-info__title').text(data.title);
             }
 
             function displayLogoOrTitle(logoPath, data) {
+                if (!html) return; // Защита от null
+                
                 if (logoPath) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
                     html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
