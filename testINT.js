@@ -89,35 +89,38 @@
 
         // ... (rest of the methods remain unchanged)
         this.draw = function (data) {
-            if (!data && currentData && currentData.data) data = currentData.data;
-            if (!data) return;
+    if (!data && currentData && currentData.data) data = currentData.data;
+    if (!data) return;
 
-            var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-            var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
-            var head = [];
-            var details = [];
-            var countries = Lampa.Api.sources.tmdb.parseCountries(data);
-            var pg = Lampa.Api.sources.tmdb.parsePG(data);
-            
-            if (create !== '0000') head.push('<span>' + create + '</span>');
-            if (countries.length > 0) head.push(countries.join(', '));
-            
-            if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-            
-            if (data.number_of_episodes && data.number_of_episodes > 0) {
-                details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
-            }
-            
-            if (Lampa.Storage.get('new_interface_show_genres', false) !== true && data.genres?.length > 0) {
-                details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
-            }
-            
-            if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-            if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-            
-            html.find('.new-interface-info__head').empty().append(head.join(', '));
-            html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-        };
+    var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+    var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+    var head = [];
+    var details = [];
+    var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+    var pg = Lampa.Api.sources.tmdb.parsePG(data);
+    
+    if (create !== '0000') head.push('<span>' + create + '</span>');
+    if (countries.length > 0) head.push(countries.join(', '));
+    
+    if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+    
+    if (data.number_of_episodes && data.number_of_episodes > 0) {
+        details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+    }
+    
+    // Изменено условие для отображения жанров
+    if (Lampa.Storage.get('new_interface_show_genres', false) !== false && data.genres?.length > 0) {
+        details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
+    }
+    
+    if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+    if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+    
+    if (html) {
+        html.find('.new-interface-info__head').empty().append(head.join(', '));
+        html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+    }
+};
 
         this.load = function (data) {
             var _this = this;
