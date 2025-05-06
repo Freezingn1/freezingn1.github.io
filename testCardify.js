@@ -148,35 +148,6 @@
         e.object.activity.render().find('.full-start__background').addClass('cardify__background');
       }
     });
-	
-	Lampa.Listener.follow('full', function (e) {
-    if (e.type == 'complete') {
-        // Даем небольшой таймаут для полной загрузки данных
-        setTimeout(() => {
-            const card = e.object.card;
-            const render = e.object.activity.render();
-            const statusElement = render.find('.full-start__status');
-            
-            // Проверяем наличие русского названия
-            if (card && card.names && card.names.ru) {
-                const ruTitle = card.names.ru;
-                const currentTitle = render.find('.full-start-new__title').text();
-                
-                // Если текущий заголовок НЕ совпадает с русским (значит нет русского логотипа)
-                if (currentTitle !== ruTitle) {
-                    statusElement.removeClass('hide')
-                               .text('RU: ' + ruTitle);
-                } else {
-                    // Если совпадает - скрываем статус (русский логотип есть)
-                    statusElement.addClass('hide');
-                }
-            } else {
-                // Если русского названия нет - скрываем статус
-                statusElement.addClass('hide');
-            }
-        }, 300); // Небольшая задержка для гарантии загрузки данных
-    }
-});
   }
 
   if (window.appready) startPlugin();else {
