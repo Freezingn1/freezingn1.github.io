@@ -13,7 +13,7 @@
         // Modified function to use proxy for TMDB images
         function getProxyImageUrl(path, size) {
             if (!path) return '';
-            const proxyBase = 'https://tmdbimg.bylampa.online';
+            const proxyBase = 'http://tmdbimg.bylampa.online';
             return `${proxyBase}${size}${path}`;
         }
 
@@ -185,7 +185,7 @@
         // Modified function to use proxy for background images
         function getProxyImageUrl(path, size) {
             if (!path) return '';
-            const proxyBase = 'https://tmdbimg.bylampa.online';
+            const proxyBase = 'http://tmdbimg.bylampa.online';
             return `${proxyBase}${size}${path}`;
         }
 
