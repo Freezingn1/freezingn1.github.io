@@ -42,7 +42,7 @@
           .find("> div")
           .eq(0)
           .after(
-            `<div id='titleru'><div><div style='font-size: 1.3em; height: auto;'>${data}</div></div></div>`
+            `<div id='titleru'><div><div style='font-size: 1.3em; height: auto;'>RU: ${data}</div></div></div>`
           );
       }
     }
