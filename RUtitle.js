@@ -1,70 +1,125 @@
 (function () {
-  //BDVBurik 2024
   "use strict";
 
-  async function titleOrigin(card) {
-    var params = {
-      id: card.id,
-      url: "https://worker-patient-dream-26d7.bdvburik.workers.dev:8443/https://api.themoviedb.org/3/movie/",
-      urlEnd: "&api_key=4ef0d7355d9ffb5151e987764708ce96",
-    };
+  // Кэш для хранения уже полученных названий
+  const titleCache = new Map();
 
-    if (card.first_air_date) {
-      params.url = "https://worker-patient-dream-26d7.bdvburik.workers.dev:8443/https://api.themoviedb.org/3/tv/";
-      params.urlEnd = "&api_key=4ef0d7355d9ffb5151e987764708ce96";
+  async function getRuTitle(card) {
+    if (titleCache.has(card.id)) {
+      return titleCache.get(card.id);
     }
 
-    var getOptions = {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-      },
-    };
+    const isTV = card.first_air_date ? 'tv' : 'movie';
+    const url = `https://worker-patient-dream-26d7.bdvburik.workers.dev:8443/https://api.themoviedb.org/3/${isTV}/${card.id}?language=ru-RU&api_key=4ef0d7355d9ffb5151e987764708ce96`;
 
-    async function getRuTitle() {
-      var title;
-      var ftc = await fetch(
-        params.url + params.id + "?language=ru-RU" + params.urlEnd,
-        getOptions
-      )
-        .then((response) => response.json())
-        .then((e) => (title = e.title || e.name));
-      return title;
-    }
-
-    var etRuTitle = await getRuTitle();
-    _showRuTitle(etRuTitle);
-
-    function _showRuTitle(data) {
-      if (data) {
-        var render = Lampa.Activity.active().activity.render();
-        
-        // Ищем элемент с "онгоинг" или аналогичный
-        var ongoingElement = $(".full-start-new__title, .full-start-new__status", render);
-        
-        if (ongoingElement.length) {
-          ongoingElement.before(
-            `<div class="russian-title" style="font-size: 1.3em; margin-bottom: 5px; color: #ffffff; text-align: left;">RU: ${data}</div>`
-          );
-        } else {
-          // Если не нашли элемент, добавляем в начало
-          $(".full-start-new__title", render).before(
-            `<div class="russian-title" style="font-size: 1.3em; margin-bottom: 5px; color: #ffffff; text-align: left;">RU: ${data}</div>`
-          );
-        }
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { accept: "application/json" }
+      });
+      const data = await response.json();
+      const title = data.title || data.name;
+      
+      if (title) {
+        titleCache.set(card.id, title);
+        return title;
       }
+    } catch (e) {
+      console.error('Error fetching RU title:', e);
     }
+
+    return null;
   }
 
-  function startPlugin() {
-    window.title_plugin = true;
-    Lampa.Listener.follow("full", function (e) {
-      if (e.type == "complite") {
-        var render = e.object.activity.render();
-        $(".russian-title", render).remove(); // Удаляем предыдущие заголовки
-        titleOrigin(e.data.movie);
+  // Для карточек в списках
+  function processCardElement(element, card) {
+    if (!card || !card.id) return;
+
+    getRuTitle(card).then(ruTitle => {
+      if (!ruTitle) return;
+
+      const existing = element.querySelector('.ru-title-overlay');
+      if (existing) return;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'ru-title-overlay';
+      overlay.style = `
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        padding: 10px 5px 5px;
+        color: white;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      `;
+      overlay.textContent = `RU: ${ruTitle}`;
+
+      element.style.position = 'relative';
+      element.appendChild(overlay);
+    });
+  }
+
+  // Для полной страницы
+  function processFullPage(card) {
+    getRuTitle(card).then(ruTitle => {
+      if (!ruTitle) return;
+
+      const render = Lampa.Activity.active()?.activity?.render();
+      if (!render) return;
+
+      const existing = $('.ru-title-full', render);
+      if (existing.length) return;
+
+      const titleElement = $(".full-start-new__title, .full-start-new__status", render).first();
+      if (titleElement.length) {
+        titleElement.before(
+          `<div class="ru-title-full" style="font-size: 1.3em; margin-bottom: 5px; color: #ffffff;">RU: ${ruTitle}</div>`
+        );
       }
     });
   }
-  if (!window.title_plugin) startPlugin();
+
+  // Обработчик для карточек в списках
+  function setupCardObserver() {
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === 1 && node.classList?.contains('card')) {
+            const cardData = Lampa.Template.get('card', node);
+            if (cardData) {
+              Lampa.Utils.delay(() => processCardElement(node, cardData.data), 100);
+            }
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  // Обработчик для полной страницы
+  function setupFullPageListener() {
+    Lampa.Listener.follow("full", e => {
+      if (e.type === "complite") {
+        processFullPage(e.data.movie);
+      }
+    });
+  }
+
+  function startPlugin() {
+    if (!window.title_plugin_ru) {
+      window.title_plugin_ru = true;
+      setupCardObserver();
+      setupFullPageListener();
+    }
+  }
+
+  startPlugin();
 })();
