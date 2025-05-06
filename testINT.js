@@ -6,7 +6,7 @@
         var timer;
         var network = new Lampa.Reguest();
         var loaded = {};
-        var logoCache = {}; // Добавляем кеш для логотипов
+        var logoCache = {};
         var currentData = null;
         var currentRequest = null;
 
@@ -26,77 +26,61 @@
         this.update = function (data) {
             if (!html) this.create();
             
-            const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
-            const type = data.name ? 'tv' : 'movie';
-            const cacheKey = type + '_' + data.id; // Ключ для кеша
+            // Сразу показываем текст названия
+            html.find('.new-interface-info__title').text(data.title || data.name);
             
-            // Проверяем кеш перед запросом
-            if (logoCache[cacheKey]) {
-                displayLogo(logoCache[cacheKey], data);
+            const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
+            if (logoSetting === 'hide') {
+                this.load(data);
                 return;
             }
 
-            if (logoSetting !== 'hide') {
-                const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+            const type = data.name ? 'tv' : 'movie';
+            const cacheKey = `${type}_${data.id}`;
 
-                // Упрощаем запрос логотипов
-                network.silent(url, function(images) {
-                    let logoPath = null;
-                    
-                    if (images.logos && images.logos.length > 0) {
-                        // Сначала ищем русский логотип
-                        const ruLogo = images.logos.find(logo => logo.iso_639_1 === 'ru');
-                        if (ruLogo) logoPath = ruLogo.file_path;
-                        
-                        // Если нет русского, ищем английский
-                        if (!logoPath) {
-                            const enLogo = images.logos.find(logo => logo.iso_639_1 === 'en');
-                            if (enLogo) logoPath = enLogo.file_path;
-                        }
-                        
-                        // Если разрешены все и ничего не нашли, берем первый
-                        if (!logoPath && logoSetting === 'show_all') {
-                            logoPath = images.logos[0].file_path;
-                        }
-                    }
-                    
-                    if (logoPath) {
-                        logoCache[cacheKey] = logoPath; // Сохраняем в кеш
-                        displayLogo(logoPath, data);
-                    } else {
-                        html.find('.new-interface-info__title').text(data.title);
-                    }
-                }, function() {
-                    html.find('.new-interface-info__title').text(data.title);
-                }, false); // Отключаем кеширование запроса для свежих данных
-            } else {
-                html.find('.new-interface-info__title').text(data.title);
+            // Используем кешированный логотип если есть
+            if (logoCache[cacheKey]) {
+                displayLogo(logoCache[cacheKey]);
+                this.load(data);
+                return;
             }
 
-            function displayLogo(logoPath, data) {
-                if (!html) return;
+            // Параллельно загружаем данные и логотипы
+            this.load(data);
+            
+            const url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}`);
+            
+            // Упрощенный запрос логотипов
+            network.silent(url, (images) => {
+                if (!images?.logos?.length) return;
                 
-                const imageUrl = Lampa.TMDB.image("/t/p/w400" + logoPath.replace(".svg", ".png"));
-                // Создаем изображение заранее для предзагрузки
+                // Оптимизированный выбор логотипа
+                const logo = images.logos.find(logo => logo.iso_639_1 === 'ru') || 
+                            images.logos.find(logo => logo.iso_639_1 === 'en') || 
+                            (logoSetting === 'show_all' && images.logos[0]);
+                
+                if (logo?.file_path) {
+                    logoCache[cacheKey] = logo.file_path;
+                    displayLogo(logo.file_path);
+                }
+            }, null, false);
+
+            function displayLogo(path) {
+                const imageUrl = Lampa.TMDB.image(`/t/p/w400${path.replace(".svg", ".png")}`);
                 const img = new Image();
                 img.src = imageUrl;
-                img.onload = function() {
+                img.onload = () => {
                     if (html) {
                         html.find('.new-interface-info__title').html(
-                            '<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />'
+                            `<img style="margin-top:0.3em;margin-bottom:0.3em;max-width:8em;max-height:4em;" src="${imageUrl}"/>`
                         );
                     }
-                };
-                img.onerror = function() {
-                    if (html) html.find('.new-interface-info__title').text(data.title);
                 };
             }
 
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
         };
 
-        // ... (rest of the methods remain unchanged)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
@@ -148,7 +132,7 @@
                 }, function() {
                     _this.draw(data);
                 });
-            }, 400);
+            }, 100); // Уменьшил задержку с 400ms до 100ms
         };
 
         this.render = function () {
@@ -162,14 +146,14 @@
                 network.clear(currentRequest);
                 currentRequest = null;
             }
-            html.remove();
+            if (html) html.remove();
             loaded = {};
             logoCache = {};
             html = null;
         };
     }
 
-    // ... (rest of the component and plugin initialization code remains the same)
+    // Остальная часть кода остается без изменений
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -424,8 +408,7 @@
                 name: "Настройки логотипов на главной",
                 description: "Управление отображением логотипов вместо названий"
             }
-        }); 
-
+        });
 
         Lampa.SettingsApi.addParam({
             component: 'interface',
