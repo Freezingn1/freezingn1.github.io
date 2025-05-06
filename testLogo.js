@@ -10,8 +10,22 @@
             default: "0"
         },
         field: {
-            name: "Логотипы вместо названий",
-            description: "Сначала русские логотипы, если нет — английские/другие"
+            name: "Логотипы вместо названий в карточках",
+            description: "Показывать логотипы в карточках"
+        }
+    });
+
+    Lampa.SettingsApi.addParam({
+        component: "interface",
+        param: {
+            name: "disable_english_logos",
+            type: "select",
+            values: { 1: "Да", 0: "Нет" },
+            default: "0"
+        },
+        field: {
+            name: "Отключить английские логотипы в карточках",
+            description: "Показывать только русские логотипы или названия"
         }
     });
 
@@ -26,6 +40,7 @@
             const originalTitle = movie.title || movie.name;
             const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                             || /аниме|anime/i.test(originalTitle);
+            const disableEnglishLogos = Lampa.Storage.get("disable_english_logos") === "1";
 
             // Сначала очищаем заголовок
             titleElement.empty();
@@ -39,11 +54,11 @@
                 // 1. Ищем русский логотип (language = "ru")
                 let logo = logos.find(l => l.iso_639_1 === "ru");
                 
-                // 2. Если нет русского — ищем английский ("en")
-                if (!logo) logo = logos.find(l => l.iso_639_1 === "en");
+                // 2. Если нет русского и английские не отключены — ищем английский ("en")
+                if (!logo && !disableEnglishLogos) logo = logos.find(l => l.iso_639_1 === "en");
                 
-                // 3. Если нет английского — берём первый доступный
-                if (!logo) logo = logos[0];
+                // 3. Если английские отключены или не нашли нужный — берём первый доступный (только если английские не отключены)
+                if (!logo && !disableEnglishLogos) logo = logos[0];
                 
                 if (logo?.file_path) {
                     // Если логотип найден — показываем его
