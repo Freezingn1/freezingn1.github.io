@@ -38,12 +38,20 @@
     function _showRuTitle(data) {
       if (data) {
         var render = Lampa.Activity.active().activity.render();
-        $(".original_title", render)
-          .find("> div")
-          .eq(0)
-          .after(
-            `<div id='titleru'><div><div style='font-size: 1.3em; height: auto;'>RU: ${data}</div></div></div>`
+        
+        // Ищем элемент с "онгоинг" или аналогичный
+        var ongoingElement = $(".full-start-new__title, .full-start-new__status", render);
+        
+        if (ongoingElement.length) {
+          ongoingElement.before(
+            `<div class="russian-title" style="font-size: 1.3em; margin-bottom: 5px; color: #ffffff; text-align: left;">RU: ${data}</div>`
           );
+        } else {
+          // Если не нашли элемент, добавляем в начало
+          $(".full-start-new__title", render).before(
+            `<div class="russian-title" style="font-size: 1.3em; margin-bottom: 5px; color: #ffffff; text-align: left;">RU: ${data}</div>`
+          );
+        }
       }
     }
   }
@@ -53,14 +61,8 @@
     Lampa.Listener.follow("full", function (e) {
       if (e.type == "complite") {
         var render = e.object.activity.render();
-        $(".original_title", render).remove();
-        $(".full-start-new__title", render).after(
-          '<div class="original_title" style="margin-top:-0.8em; text-align: right;"><div>'
-        );
+        $(".russian-title", render).remove(); // Удаляем предыдущие заголовки
         titleOrigin(e.data.movie);
-        $(".full-start-new__rate-line").css("margin-bottom", "0.8em");
-        $(".full-start-new__details").css("margin-bottom", "0.8em");
-        $(".full-start-new__tagline").css("margin-bottom", "0.4em");
       }
     });
   }
