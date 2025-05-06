@@ -126,7 +126,7 @@
 								text-align: right;
 								margin-bottom: 10px;
 								opacity: 0.80;
-								max-width: 300px;
+								max-width: 500px;
 								position: static;
 								transform: none;
                             ">
