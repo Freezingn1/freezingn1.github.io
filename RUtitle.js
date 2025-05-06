@@ -60,16 +60,15 @@
             "</div >";
         } else ru = "";
       }
-      $(".original_title", render)
-        .find("> div")
-        .eq(0)
-        .after(
-          `<div id='titleen'><div><div style='font-size: 1.3em; height: auto; '>En: 
-              ${data} </div>${ru}
-              <div style='font-size: 1.3em; height: auto; '> Orig: 
-                ${card.original_title || card.original_name} 
-              </div></div></div>`
-        );
+      
+      // Create titleen element and place it above full-start__status on the right
+      $(".full-start__status", render).before(
+        `<div id='titleen' style="text-align: right; margin-bottom: 10px;">
+          <div style='font-size: 1.3em; height: auto;'>En: ${data}</div>
+          ${ru}
+          <div style='font-size: 1.3em; height: auto;'>Orig: ${card.original_title || card.original_name}</div>
+        </div>`
+      );
     }
   }
 
@@ -78,14 +77,14 @@
     Lampa.Listener.follow("full", function (e) {
       if (e.type == "complite") {
         var render = e.object.activity.render();
-        $(".original_title", render).remove();
-        $(".full-start-new__title", render).after(
-          '<div class="original_title" style="  margin-top:-0.8em ; text-align: right;"><div>'
-        );
-        titleOrigin(e.data.movie);
+        $("#titleen", render).remove(); // Remove existing titleen if any
+        
+        // No need to create original_title div anymore
         $(".full-start-new__rate-line").css("margin-bottom", "0.8em");
         $(".full-start-new__details").css("margin-bottom", "0.8em");
         $(".full-start-new__tagline").css("margin-bottom", "0.4em");
+        
+        titleOrigin(e.data.movie);
       }
     });
   }
