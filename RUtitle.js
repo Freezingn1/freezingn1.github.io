@@ -12,7 +12,7 @@
             const logos = cardData.images?.logos || 
                          cardData.data?.images?.logos || 
                          cardData.movie?.images?.logos ||
-                         (cardData.id && Lampa.TMDB.cache(cardData.id)?.logos;
+                         (cardData.id ? Lampa.TMDB.cache(cardData.id)?.logos : []);
             
             return logos?.some(logo => logo.iso_639_1 === 'ru');
         } catch (e) {
@@ -129,11 +129,13 @@
                                 titleElement.before(`
                                     <div class="ru-title-full" style="
                                         color: #ffffff;
-                                        font-weight: 500;
-                                        text-align: right;
-                                        margin-bottom: 10px;
-                                        opacity: 0.80;
-                                        max-width: 500px;
+										font-weight: 500;
+										text-align: right;
+										margin-bottom: 10px;
+										opacity: 0.80;
+										max-width: 500px;
+										position: static;
+										transform: none;
                                     ">
                                         RU: ${title}
                                     </div>
