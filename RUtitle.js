@@ -4,19 +4,28 @@
     const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
     const TMDB_API_URL = "https://api.themoviedb.org/3";
     const titleCache = new Map();
+    const logoCheckCache = new Map();
 
-    // Функция проверки наличия русского логотипа
-    function hasRussianLogo(cardData) {
+    // Улучшенная проверка русского логотипа
+    function hasRussianLogo(card) {
+        const cacheKey = card.id || JSON.stringify(card);
+        if (logoCheckCache.has(cacheKey)) {
+            return logoCheckCache.get(cacheKey);
+        }
+
         try {
-            // Проверяем разные варианты расположения логотипов в структуре данных
-            const logos = cardData.images?.logos || 
-                         cardData.data?.images?.logos || 
-                         cardData.movie?.images?.logos ||
-                         (cardData.id ? Lampa.TMDB.cache(cardData.id)?.logos : []);
-            
-            return logos?.some(logo => logo.iso_639_1 === 'ru');
+            // Проверяем все возможные места, где могут быть логотипы
+            const logos = card.images?.logos || 
+                        card.data?.images?.logos || 
+                        card.movie?.images?.logos ||
+                        (card.id && Lampa.TMDB.cache(card.id)?.logos) || 
+                        [];
+
+            const hasLogo = logos.some(logo => logo.iso_639_1 === 'ru');
+            logoCheckCache.set(cacheKey, hasLogo);
+            return hasLogo;
         } catch (e) {
-            console.error("Error checking Russian logo:", e);
+            console.error("Logo check error:", e);
             return false;
         }
     }
@@ -30,10 +39,7 @@
             const mediaType = card.first_air_date ? 'tv' : 'movie';
             const url = `${TMDB_API_URL}/${mediaType}/${card.id}?language=ru-RU&api_key=${TMDB_API_KEY}`;
 
-            const response = await fetch(url, {
-                headers: { "accept": "application/json" }
-            });
-
+            const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
@@ -80,14 +86,18 @@
                     if (node.nodeType === 1 && node.classList?.contains('card')) {
                         const cardData = Lampa.Template.get('card', node);
                         if (cardData?.data) {
-                            // Ждем 100мс чтобы логотипы успели загрузиться
+                            // Даем время для загрузки логотипов
                             setTimeout(() => {
                                 if (!hasRussianLogo(cardData)) {
                                     fetchRussianTitle(cardData.data).then(title => {
                                         if (title) displayRussianTitle(node, title);
                                     });
+                                } else {
+                                    // Удаляем русское название, если есть логотип
+                                    const existingTitle = node.querySelector('.ru-title');
+                                    if (existingTitle) existingTitle.remove();
                                 }
-                            }, 100);
+                            }, 300);
                         }
                     }
                 });
@@ -96,6 +106,7 @@
 
         observer.observe(document.body, { childList: true, subtree: true });
 
+        // Обработка уже существующих карточек
         document.querySelectorAll('.card').forEach(card => {
             const cardData = Lampa.Template.get('card', card);
             if (cardData?.data) {
@@ -104,8 +115,11 @@
                         fetchRussianTitle(cardData.data).then(title => {
                             if (title) displayRussianTitle(card, title);
                         });
+                    } else {
+                        const existingTitle = card.querySelector('.ru-title');
+                        if (existingTitle) existingTitle.remove();
                     }
-                }, 100);
+                }, 300);
             }
         });
     }
@@ -118,9 +132,8 @@
 
                 $('.ru-title-full', render).remove();
 
-                // Ждем 300мс чтобы логотипы успели загрузиться
                 setTimeout(() => {
-                    if (!hasRussianLogo(e)) {
+                    if (!hasRussianLogo(e.data)) {
                         fetchRussianTitle(e.data.movie).then(title => {
                             if (!title) return;
 
@@ -129,13 +142,11 @@
                                 titleElement.before(`
                                     <div class="ru-title-full" style="
                                         color: #ffffff;
-										font-weight: 500;
-										text-align: right;
-										margin-bottom: 10px;
-										opacity: 0.80;
-										max-width: 500px;
-										position: static;
-										transform: none;
+                                        font-weight: 500;
+                                        text-align: right;
+                                        margin-bottom: 10px;
+                                        opacity: 0.80;
+                                        max-width: 500px;
                                     ">
                                         RU: ${title}
                                     </div>
@@ -143,7 +154,7 @@
                             }
                         });
                     }
-                }, 300);
+                }, 500);
             }
         });
     }
@@ -155,6 +166,9 @@
         
         const style = document.createElement('style');
         style.textContent = `
+            .ru-title {
+                transition: all 0.3s ease;
+            }
             .ru-title:hover {
                 white-space: normal;
                 background: rgba(0,0,0,0.9) !important;
