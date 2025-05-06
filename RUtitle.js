@@ -72,20 +72,24 @@
 
     // Обработчик для карточек в списках
     function handleCatalogCards() {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1 && node.classList?.contains('card')) {
-                        const cardData = Lampa.Template.get('card', node);
-                        if (cardData?.data) {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.classList?.contains('card')) {
+                    const cardData = Lampa.Template.get('card', node);
+                    if (cardData?.data) {
+                        // Проверяем наличие русского логотипа
+                        const hasRussianLogo = cardData.data.images?.logos?.some(logo => logo.iso_639_1 === 'ru');
+                        if (!hasRussianLogo) {
                             fetchRussianTitle(cardData.data).then(title => {
                                 if (title) displayRussianTitle(node, title);
                             });
                         }
                     }
-                });
+                }
             });
         });
+    });
 
         observer.observe(document.body, {
             childList: true,
