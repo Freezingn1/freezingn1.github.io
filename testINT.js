@@ -399,13 +399,24 @@
         return new use(object);
     };
 
-    // Создаем новую категорию в основном объекте настроек
-    if (!Lampa.Settings.list.find(cat => cat.name === 'Стильный интерфейс')) {
-        Lampa.Settings.list.splice(2, 0, { // Вставляем на 3 позицию (индекс 2)
-            name: 'Стильный интерфейс',
-            component: 'interface',
-            params: []
+    // Создаем новую категорию безопасным способом
+    if (Lampa.Settings && Lampa.Settings.list && Array.isArray(Lampa.Settings.list)) {
+        // Проверяем, нет ли уже такой категории
+        var categoryExists = Lampa.Settings.list.some(function(cat) {
+            return cat.name === 'Стильный интерфейс';
         });
+        
+        if (!categoryExists) {
+            // Создаем новую категорию
+            var newCategory = {
+                name: 'Стильный интерфейс',
+                component: 'interface',
+                params: []
+            };
+            
+            // Вставляем на третью позицию (индекс 2)
+            Lampa.Settings.list.splice(2, 0, newCategory);
+        }
     }
 
     // Добавляем параметры в новую категорию
