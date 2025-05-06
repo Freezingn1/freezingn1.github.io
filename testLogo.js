@@ -161,12 +161,14 @@
                     if (title) {
                         render.find(".full-start-new__rate-line").first().before(`
                             <div class="ru-title-full" style="
-                                color: #ffffff;
-                                font-weight: 500;
-                                text-align: right;
-                                margin-bottom: 10px;
-                                opacity: 0.80;
-                                max-width: 500px;
+                                position: absolute;
+								top: -30px;
+								right: 0;
+								color: #ffffff;
+								font-weight: 500;
+								opacity: 0.80;
+								max-width: 300px;
+								text-align: right;
                             ">
                                 RU: ${title}
                             </div>
