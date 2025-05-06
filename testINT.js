@@ -24,7 +24,6 @@
         };
 
         this.update = function (data) {
-            html.find('.new-interface-info__head,.new-interface-info__details').text('---');
 
             const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
             
