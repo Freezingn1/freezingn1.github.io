@@ -139,7 +139,7 @@
                 }, function() {
                     _this.draw(data);
                 });
-            }, 100);
+            }, 500);
         };
 
         this.render = function () {
