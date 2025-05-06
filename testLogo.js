@@ -24,13 +24,18 @@
     Lampa.SettingsApi.addParam({
         component: "interface",
         param: {
-            name: "russian_titles",
-            type: "switch",
-            default: true
+            name: "russian_titles_settings",
+            type: "select",
+            values: {
+                "show_when_no_ru_logo": "Показывать, если нет русского логотипа",
+                "show_never": "Никогда не показывать",
+                "show_always": "Показывать всегда (если доступно)"
+            },
+            default: "show_when_no_ru_logo"
         },
         field: {
-            name: "Показывать русские названия",
-            description: "Отображать русские названия когда нет русского логотипа, но есть другие логотипы"
+            name: "Настройки русских названий",
+            description: "Управление отображением русских названий"
         }
     });
 
@@ -105,7 +110,7 @@
             const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                             || /аниме|anime/i.test(originalTitle);
             const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
-            const showRussianTitles = Lampa.Storage.get("russian_titles") !== false;
+            const russianTitleSetting = Lampa.Storage.get("russian_titles_settings") || "show_when_no_ru_logo";
 
             // Удаляем предыдущие русские названия
             render.find('.ru-title-full').remove();
@@ -113,6 +118,9 @@
             // Режим "Скрыть логотипы" - показываем только оригинальное название
             if (logoSetting === "hide") {
                 showTextTitle();
+                if (russianTitleSetting === "show_always") {
+                    showRussianTitle();
+                }
                 return;
             }
 
@@ -131,16 +139,17 @@
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
                     titleElement.html(`<img style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em;" src="${imageUrl}" />`);
                     
-                    // Показываем русское название только если:
-                    // 1. Включено в настройках
-                    // 2. Нет русского логотипа
-                    // 3. Есть другие логотипы
-                    if (showRussianTitles && logo.iso_639_1 !== "ru" && logos.length > 0) {
+                    // Показываем русское название в зависимости от настроек
+                    if (russianTitleSetting === "show_always" || 
+                        (russianTitleSetting === "show_when_no_ru_logo" && logo.iso_639_1 !== "ru")) {
                         showRussianTitle();
                     }
                 } else {
-                    // Если логотипов нет вообще - показываем оригинальное название
+                    // Если логотипов нет вообще
                     showTextTitle();
+                    if (russianTitleSetting === "show_always") {
+                        showRussianTitle();
+                    }
                 }
             }).fail(() => {
                 console.error("Ошибка загрузки логотипов из TMDB");
