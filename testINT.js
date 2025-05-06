@@ -24,41 +24,58 @@
         };
 
         this.update = function (data) {
-        html.find('.new-interface-info__head,.new-interface-info__details').text('---');
+            html.find('.new-interface-info__head,.new-interface-info__details').text('---');
 
-        // Check if logo display is enabled for the new interface
-        if (Lampa.Storage.get('new_interface_logo') === true) {
-            const type = data.name ? 'tv' : 'movie';
-            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language'));
+            // Check if logo display is enabled for the new interface
+            if (Lampa.Storage.get('new_interface_logo') === true) {
+                const type = data.name ? 'tv' : 'movie';
+                const currentLanguage = Lampa.Storage.get('language');
+                const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + currentLanguage);
 
-            // Fetch logos and display the first one if available
-            network.silent(url, function(images) {
-                if (images.logos && images.logos.length > 0) {
-                    const logoPath = images.logos[0].file_path;
-                    if (logoPath) {
-                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
-                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
-                    } else {
-                         // Fallback to text title if no logo path
-                         html.find('.new-interface-info__title').text(data.title);
+                // Fetch logos
+                network.silent(url, function(images) {
+                    let logoPath = null;
+                    
+                    // First try to find logo in current language
+                    if (images.logos && images.logos.length > 0) {
+                        logoPath = images.logos[0].file_path;
                     }
+                    
+                    // If no logo in current language and fallback to English is enabled, try English
+                    if (!logoPath && Lampa.Storage.get('new_interface_logo_fallback') === true && currentLanguage !== 'en') {
+                        const enUrl = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=en');
+                        network.silent(enUrl, function(enImages) {
+                            if (enImages.logos && enImages.logos.length > 0) {
+                                logoPath = enImages.logos[0].file_path;
+                            }
+                            displayLogoOrTitle(logoPath, data);
+                        }, function() {
+                            displayLogoOrTitle(null, data);
+                        });
+                    } else {
+                        displayLogoOrTitle(logoPath, data);
+                    }
+                }, function() {
+                    // Fallback to text title on error
+                    html.find('.new-interface-info__title').text(data.title);
+                });
+            } else {
+                // Display text title if logo display is disabled
+                html.find('.new-interface-info__title').text(data.title);
+            }
+
+            function displayLogoOrTitle(logoPath, data) {
+                if (logoPath) {
+                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
+                    html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
                 } else {
-                    // Fallback to text title if no logos found
                     html.find('.new-interface-info__title').text(data.title);
                 }
-            }, function() {
-                 // Fallback to text title on error
-                 html.find('.new-interface-info__title').text(data.title);
-            });
-        } else {
-             // Display text title if logo display is disabled
-             html.find('.new-interface-info__title').text(data.title);
-        }
+            }
 
-
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.load(data);
-      };
+            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+            this.load(data);
+        };
 
         // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
@@ -133,8 +150,7 @@
         };
     }
 
-    // ... (остальная часть кода компонента остается без изменений)
-    function component(object) {
+   function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
             mask: true,
@@ -355,7 +371,7 @@
         };
     }
 
-    function startPlugin() {
+	function startPlugin() {
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
@@ -382,6 +398,19 @@
             field: {
                 name: 'Логотипы вместо названий',
                 description: 'Отображать логотипы (русские → английские → любые)'
+            }
+        });
+
+        Lampa.SettingsApi.addParam({
+            component: 'interface',
+            param: {
+                name: 'new_interface_logo_fallback',
+                type: 'trigger',
+                default: true
+            },
+            field: {
+                name: 'Английские логотипы если нет русских',
+                description: 'Показывать английские логотипы, когда русские недоступны'
             }
         });
 
@@ -490,10 +519,10 @@
                 width: 70%;
             }
             
-			.new-interface .full-start__background {
-				opacity: 0.7 !important;
-			}
-			
+            .new-interface .full-start__background {
+                opacity: 0.7 !important;
+            }
+            
             .new-interface .full-start__background {
                 height: 108%;
                 left: 30px;
