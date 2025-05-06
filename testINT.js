@@ -2,162 +2,100 @@
     'use strict';
 
     function create() {
-        var html = null; // Явно инициализируем как null
-        var timer;
-        var network = new Lampa.Reguest();
-        var loaded = {};
-        var logoCache = {};
-        var currentData = null;
-        var currentRequest = null;
+      var html;
+      var timer;
+      var network = new Lampa.Reguest();
+      var loaded = {};
 
-        this.create = function () {
-            html = $(`
-                <div class="new-interface-info">
-                    <div class="new-interface-info__body">
-                        <div class="new-interface-info__head"></div>
-                        <div class="new-interface-info__title"></div>
-                        <div class="new-interface-info__details"></div>
-                        <div class="new-interface-info__description"></div>
-                    </div>
-                </div>
-            `);
-        };
+      this.create = function () {
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+      };
 
-        this.update = function (data) {
-            // Проверяем, что html создан
-            if (!html) this.create();
-            
-            const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
-            
-            if (logoSetting !== 'hide') {
-                const type = data.name ? 'tv' : 'movie';
-                const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+      this.update = function (data) {
 
-                // Fetch all logos
-                network.silent(url, function(images) {
-                    let logoPath = null;
-                    
-                    if (images.logos && images.logos.length > 0) {
-                        // Try to find Russian logo with highest rating
-                        const ruLogos = images.logos.filter(logo => logo.iso_639_1 === 'ru');
-                        if (ruLogos.length > 0) {
-                            // Get logo with highest vote_average
-                            ruLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                            logoPath = ruLogos[0].file_path;
-                        }
-                        
-                        // If no Russian logo, try English with highest rating
-                        if (!logoPath) {
-                            const enLogos = images.logos.filter(logo => logo.iso_639_1 === 'en');
-                            if (enLogos.length > 0) {
-                                enLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                                logoPath = enLogos[0].file_path;
-                            }
-                        }
-                        
-                        // If still no logo and setting allows all logos, try any language with highest rating
-                        if (!logoPath && logoSetting === 'show_all') {
-                            images.logos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                            logoPath = images.logos[0].file_path;
-                        }
+
+        // Check if logo display is enabled for the new interface
+        if (Lampa.Storage.get('new_interface_logo') === true) {
+            const type = data.name ? 'tv' : 'movie';
+            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language'));
+
+            // Fetch logos and display the first one if available
+            network.silent(url, function(images) {
+                if (images.logos && images.logos.length > 0) {
+                    const logoPath = images.logos[0].file_path;
+                    if (logoPath) {
+                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logoPath.replace(".svg", ".png"));
+                        html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" src="' + imageUrl + '" />');
+                    } else {
+                         // Fallback to text title if no logo path
+                         html.find('.new-interface-info__title').text(data.title);
                     }
-                    
-                    displayLogoOrTitle(logoPath, data);
-                }, function() {
-                    // Fallback to text title on error
-                    if (html) html.find('.new-interface-info__title').text(data.title);
-                });
-            } else {
-                // Display text title if logos are hidden
-                if (html) html.find('.new-interface-info__title').text(data.title);
-            }
-
-            function displayLogoOrTitle(logoPath, data) {
-                if (!html) return; // Защита от null
-                
-                if (logoPath) {
-                    const imageUrl = Lampa.TMDB.image("/t/p/w400" + logoPath.replace(".svg", ".png"));
-                    html.find('.new-interface-info__title').html('<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:4em;" src="' + imageUrl + '" />');
                 } else {
+                    // Fallback to text title if no logos found
                     html.find('.new-interface-info__title').text(data.title);
                 }
-            }
+            }, function() {
+                 // Fallback to text title on error
+                 html.find('.new-interface-info__title').text(data.title);
+            });
+        } else {
+             // Display text title if logo display is disabled
+             html.find('.new-interface-info__title').text(data.title);
+        }
 
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
-        };
 
-        // ... (rest of the methods remain unchanged)
-        this.draw = function (data) {
-            if (!data && currentData && currentData.data) data = currentData.data;
-            if (!data) return;
+        html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.load(data);
+      };
 
-            var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-            var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
-            var head = [];
-            var details = [];
-            var countries = Lampa.Api.sources.tmdb.parseCountries(data);
-            var pg = Lampa.Api.sources.tmdb.parsePG(data);
-            
-            if (create !== '0000') head.push('<span>' + create + '</span>');
-            if (countries.length > 0) head.push(countries.join(', '));
-            
-            if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-            
-            if (data.number_of_episodes && data.number_of_episodes > 0) {
-                details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
-            }
-            
-            if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
-                details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
-            }
-            
-            if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-            if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-            
-            html.find('.new-interface-info__head').empty().append(head.join(', '));
-            html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-        };
+      this.draw = function (data) {
+        var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+        var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+        var head = [];
+        var details = [];
+        var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+        var pg = Lampa.Api.sources.tmdb.parsePG(data);
+        if (create !== '0000') head.push('<span>' + create + '</span>');
+        if (countries.length > 0) head.push(countries.join(', '));
+        if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+        if (data.genres && data.genres.length > 0) details.push(data.genres.map(function (item) {
+          return Lampa.Utils.capitalizeFirstLetter(item.name);
+        }).join(' | '));
+        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+        html.find('.new-interface-info__head').empty().append(head.join(', '));
+        html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+      };
 
-        this.load = function (data) {
-            var _this = this;
-            clearTimeout(timer);
-            
-            var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-            
-            if (loaded[url]) {
-                this.draw(loaded[url]);
-                return;
-            }
-            
-            timer = setTimeout(function () {
-                network.clear();
-                network.timeout(5000);
-                network.silent(url, function (movie) {
-                    loaded[url] = movie;
-                    _this.draw(movie);
-                }, function() {
-                    _this.draw(data);
-                });
-            }, );
-        };
+      this.load = function (data) {
+        var _this = this;
 
-        this.render = function () {
-            return html;
-        };
+        clearTimeout(timer);
+        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
+        if (loaded[url]) return this.draw(loaded[url]);
+        timer = setTimeout(function () {
+          network.clear();
+          network.timeout(5000);
+          network.silent(url, function (movie) {
+            loaded[url] = movie;
 
-        this.empty = function () {};
+            _this.draw(movie);
+          });
+        }, 400);
+      };
 
-        this.destroy = function () {
-            if (currentRequest) {
-                network.clear(currentRequest);
-                currentRequest = null;
-            }
-            html.remove();
-            loaded = {};
-            logoCache = {};
-            html = null;
-        };
+      this.render = function () {
+        return html;
+      };
+
+      this.empty = function () {};
+
+      this.destroy = function () {
+        html.remove();
+        loaded = {};
+        html = null;
+      };
     }
 
     // ... (rest of the component and plugin initialization code remains the same)
