@@ -41,20 +41,40 @@
         const TMDB_API_URL = "https://api.themoviedb.org/3";
         const titleCache = new Map();
 
-        // Функция для получения всех логотипов с приоритетом русского
+        // Функция для выбора лучшего логотипа по рейтингу с приоритетом русского языка
         function getBestLogo(logos) {
             if (!logos || !logos.length) return null;
-            
-            // Сортируем: сначала русские, потом английские, потом остальные
-            const sortedLogos = [...logos].sort((a, b) => {
-                if (a.iso_639_1 === 'ru') return -1;
-                if (b.iso_639_1 === 'ru') return 1;
-                if (a.iso_639_1 === 'en') return -1;
-                if (b.iso_639_1 === 'en') return 1;
-                return 0;
-            });
 
-            return sortedLogos[0];
+            // Сначала фильтруем по настройкам
+            const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
+            let filteredLogos = [...logos];
+            
+            if (logoSetting === "ru_only") {
+                filteredLogos = filteredLogos.filter(l => l.iso_639_1 === 'ru');
+            }
+
+            if (!filteredLogos.length) return null;
+
+            // Сортируем по приоритету: русские -> английские -> другие, затем по рейтингу
+            return filteredLogos.sort((a, b) => {
+                // Приоритет языка
+                const langPriority = {
+                    'ru': 3,
+                    'en': 2,
+                    'null': 1,
+                    'undefined': 0
+                };
+                
+                const aPriority = langPriority[a.iso_639_1] || 0;
+                const bPriority = langPriority[b.iso_639_1] || 0;
+                
+                if (aPriority !== bPriority) {
+                    return bPriority - aPriority;
+                }
+                
+                // Если приоритет языка одинаковый, сортируем по рейтингу
+                return (b.vote_average || 0) - (a.vote_average || 0);
+            })[0];
         }
 
         // Получение русского названия
@@ -93,14 +113,13 @@
             const originalTitle = movie.title || movie.name;
             const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                             || /аниме|anime/i.test(originalTitle);
-            const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
             const showRussianTitles = Lampa.Storage.get("russian_titles") !== false;
 
             // Удаляем предыдущие русские названия
             render.find('.ru-title-full').remove();
 
             // Если выбрано "Скрыть логотипы" - сразу показываем текст
-            if (logoSetting === "hide") {
+            if (Lampa.Storage.get("logo_glav") === "hide") {
                 showTextTitle();
                 if (showRussianTitles) {
                     fetchRussianTitle(movie).then(title => {
@@ -126,18 +145,11 @@
             // Очищаем заголовок перед загрузкой
             titleElement.empty();
 
-            // Загружаем логотипы (включая все языки)
+            // Загружаем все логотипы
             const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
 
             $.get(tmdbUrl, function(data) {
-                let logos = data.logos || [];
-                
-                // Для режима "Только русские" фильтруем логотипы
-                if (logoSetting === "ru_only") {
-                    logos = logos.filter(l => l.iso_639_1 === 'ru');
-                }
-                
-                // Выбираем лучший логотип согласно приоритету
+                const logos = data.logos || [];
                 const logo = getBestLogo(logos);
 
                 if (logo?.file_path) {
