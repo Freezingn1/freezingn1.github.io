@@ -151,26 +151,30 @@
 	
 	Lampa.Listener.follow('full', function (e) {
     if (e.type == 'complete') {
-        // Проверяем наличие русского логотипа
-        let hasRussianLogo = false;
-        let ruTitle = '';
-        
-        // Ищем русское название в информации о карточке
-        if (e.object.card && e.object.card.names && e.object.card.names.ru) {
-            ruTitle = e.object.card.names.ru;
-        }
-        
-        // Проверяем наличие русского логотипа
-        if (e.object.activity.render().find('.full-start__title').text() === ruTitle) {
-            hasRussianLogo = true;
-        }
-        
-        // Если русского логотипа нет, но есть русское название - выводим его
-        if (!hasRussianLogo && ruTitle) {
-            e.object.activity.render().find('.full-start__status')
-                .removeClass('hide')
-                .text('RU: ' + ruTitle);
-        }
+        // Даем небольшой таймаут для полной загрузки данных
+        setTimeout(() => {
+            const card = e.object.card;
+            const render = e.object.activity.render();
+            const statusElement = render.find('.full-start__status');
+            
+            // Проверяем наличие русского названия
+            if (card && card.names && card.names.ru) {
+                const ruTitle = card.names.ru;
+                const currentTitle = render.find('.full-start-new__title').text();
+                
+                // Если текущий заголовок НЕ совпадает с русским (значит нет русского логотипа)
+                if (currentTitle !== ruTitle) {
+                    statusElement.removeClass('hide')
+                               .text('RU: ' + ruTitle);
+                } else {
+                    // Если совпадает - скрываем статус (русский логотип есть)
+                    statusElement.addClass('hide');
+                }
+            } else {
+                // Если русского названия нет - скрываем статус
+                statusElement.addClass('hide');
+            }
+        }, 300); // Небольшая задержка для гарантии загрузки данных
     }
 });
   }
