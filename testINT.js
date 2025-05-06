@@ -108,7 +108,7 @@
                 details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
             }
             
-            if (Lampa.Storage.get('new_interface_show_genres', true) !== false && data.genres?.length > 0) {
+            if (Lampa.Storage.get('new_interface_show_genres', false) !== false && data.genres?.length > 0) {
                 details.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(' | '));
             }
             
@@ -423,7 +423,7 @@
             param: {
                 name: 'new_interface_show_genres',
                 type: 'trigger',
-                default: true
+                default: false
             },
             field: {
                 name: 'Показывать жанры',
