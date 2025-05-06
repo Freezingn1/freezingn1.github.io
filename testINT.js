@@ -383,61 +383,59 @@
     }
 
     function startPlugin() {
-        window.plugin_interface_ready = true;
-        var old_interface = Lampa.InteractionMain;
-        var new_interface = component;
+    window.plugin_interface_ready = true;
+    var old_interface = Lampa.InteractionMain;
+    var new_interface = component;
 
-        Lampa.InteractionMain = function (object) {
-            var use = new_interface;
+    Lampa.InteractionMain = function (object) {
+        var use = new_interface;
 
-            if (window.innerWidth < 767) use = old_interface;
-            if (Lampa.Manifest.app_digital < 153) use = old_interface;
-            if (object.title === 'Избранное') {
-                use = old_interface;
-            }
+        if (window.innerWidth < 767) use = old_interface;
+        if (Lampa.Manifest.app_digital < 153) use = old_interface;
+        if (object.title === 'Избранное') {
+            use = old_interface;
+        }
 
-            return new use(object);
-        };
+        return new use(object);
+    };
 
-        Lampa.SettingsApi.addCategory({
-    name: "Стильный интерфейс",
-    component: "interface",
-});
-
-// Переносим настройки логотипов в новую категорию
-Lampa.SettingsApi.addParam({
-    component: "interface",
-    category: "Стильный интерфейс", // Указываем новую категорию
-    param: {
-        name: "logo_glav2",
-        type: "select",
-        values: { 
-            "show_all": "Все логотипы", 
-            "ru_only": "Только русские", 
-            "hide": "Скрыть логотипы"
+    // Добавляем параметры в новую категорию "Стильный интерфейс"
+    // Категория создастся автоматически при первом упоминании
+    
+    // Настройки логотипов
+    Lampa.SettingsApi.addParam({
+        component: "interface",
+        category: "Стильный интерфейс", // Создаем новую категорию
+        param: {
+            name: "logo_glav2",
+            type: "select",
+            values: { 
+                "show_all": "Все логотипы", 
+                "ru_only": "Только русские", 
+                "hide": "Скрыть логотипы"
+            },
+            default: "show_all"
         },
-        default: "show_all"
-    },
-    field: {
-        name: "Настройки логотипов на главной",
-        description: "Управление отображением логотипов вместо названий"
-    }
-});
+        field: {
+            name: "Настройки логотипов на главной",
+            description: "Управление отображением логотипов вместо названий"
+        }
+    });
 
-// Переносим настройку жанров в новую категорию
-Lampa.SettingsApi.addParam({
-    component: 'interface',
-    category: "Стильный интерфейс", // Указываем новую категорию
-    param: {
-        name: 'new_interface_show_genres',
-        type: 'trigger',
-        default: true
-    },
-    field: {
-        name: 'Показывать жанры',
-        description: 'Отображать жанры фильмов/сериалов'
-    }
-});
+    // Настройка жанров
+    Lampa.SettingsApi.addParam({
+        component: 'interface',
+        category: "Стильный интерфейс", // Добавляем в ту же категорию
+        param: {
+            name: 'new_interface_show_genres',
+            type: 'trigger',
+            default: true
+        },
+        field: {
+            name: 'Показывать жанры',
+            description: 'Отображать жанры фильмов/сериалов'
+        }
+    });
 
         Lampa.Template.add('new_interface_style', `
             <style>
