@@ -24,7 +24,7 @@
         };
 
         this.update = function (data) {
-            html.find('.new-interface-info__head,.new-interface-info__details').text('---');
+            
 
             // Check if logo display is enabled for the new interface
             if (Lampa.Storage.get('new_interface_logo') === true) {
