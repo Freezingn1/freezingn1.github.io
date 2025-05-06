@@ -24,42 +24,38 @@
         };
 
         this.update = function (data) {
+
+
             const logoSetting = Lampa.Storage.get('logo_glav2', 'show_all');
             
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
-                const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+                const currentLanguage = Lampa.Storage.get('language');
+                const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key() + '&language=' + currentLanguage);
 
-                // Fetch all logos
+                // Fetch logos
                 network.silent(url, function(images) {
                     let logoPath = null;
                     
+                    // Try to find logo in current language
                     if (images.logos && images.logos.length > 0) {
-                        // Try to find Russian logo with highest rating
-                        const ruLogos = images.logos.filter(logo => logo.iso_639_1 === 'ru');
-                        if (ruLogos.length > 0) {
-                            // Get logo with highest vote_average
-                            ruLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                            logoPath = ruLogos[0].file_path;
-                        }
-                        
-                        // If no Russian logo, try English with highest rating
-                        if (!logoPath) {
-                            const enLogos = images.logos.filter(logo => logo.iso_639_1 === 'en');
-                            if (enLogos.length > 0) {
-                                enLogos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                                logoPath = enLogos[0].file_path;
-                            }
-                        }
-                        
-                        // If still no logo and setting allows all logos, try any language with highest rating
-                        if (!logoPath && logoSetting === 'show_all') {
-                            images.logos.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-                            logoPath = images.logos[0].file_path;
-                        }
+                        logoPath = images.logos[0].file_path;
                     }
                     
-                    displayLogoOrTitle(logoPath, data);
+                    // If no logo in current language and setting allows all logos, try any language
+                    if (!logoPath && logoSetting === 'show_all') {
+                        const anyUrl = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+                        network.silent(anyUrl, function(anyImages) {
+                            if (anyImages.logos && anyImages.logos.length > 0) {
+                                logoPath = anyImages.logos[0].file_path;
+                            }
+                            displayLogoOrTitle(logoPath, data);
+                        }, function() {
+                            displayLogoOrTitle(null, data);
+                        });
+                    } else {
+                        displayLogoOrTitle(logoPath, data);
+                    }
                 }, function() {
                     // Fallback to text title on error
                     html.find('.new-interface-info__title').text(data.title);
@@ -77,19 +73,12 @@
                     html.find('.new-interface-info__title').text(data.title);
                 }
             }
-			
-			if (Lampa.Storage.get('new_interface_show_description', true) !== false) {
-                html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext')).show();
-            } else {
-                html.find('.new-interface-info__description').hide();
-            }
-			
 
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
             this.load(data);
         };
 
-        // ... (rest of the methods remain unchanged)
+        // ... (остальные методы остаются без изменений)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
@@ -162,7 +151,6 @@
         };
     }
 
-    // ... (rest of the component and plugin initialization code remains the same)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
