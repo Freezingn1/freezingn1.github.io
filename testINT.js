@@ -87,6 +87,7 @@
             this.load(data);
         };
 
+        // ... (rest of the methods remain unchanged)
         this.draw = function (data) {
             if (!data && currentData && currentData.data) data = currentData.data;
             if (!data) return;
@@ -159,6 +160,7 @@
         };
     }
 
+    // ... (rest of the component and plugin initialization code remains the same)
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -380,341 +382,17 @@
         };
     }
 
-    function stylishComponent(object) {
-        var network = new Lampa.Reguest();
-        var scroll = new Lampa.Scroll({
-            mask: true,
-            over: true,
-            scroll_by_item: true
-        });
-        var items = [];
-        var html = $('<div class="stylish-interface"><div class="stylish-interface__background"></div></div>');
-        var active = 0;
-        var info;
-        var lezydata;
-        var viewall = Lampa.Storage.field('card_views_type') == 'view' || Lampa.Storage.field('navigation_type') == 'mouse';
-        var background = html.find('.stylish-interface__background');
-        var background_last = '';
-
-        this.create = function () {};
-
-        this.empty = function () {
-            var empty = new Lampa.Empty();
-            html.append(empty.render());
-            this.start = empty.start;
-            this.activity.loader(false);
-            this.activity.toggle();
-        };
-
-        this.loadNext = function () {
-            var _this = this;
-
-            if (this.next && !this.next_wait && items.length) {
-                this.next_wait = true;
-                this.next(function (new_data) {
-                    _this.next_wait = false;
-                    new_data.forEach(_this.append.bind(_this));
-                    Lampa.Layer.visible(items[active + 1].render(true));
-                }, function () {
-                    _this.next_wait = false;
-                });
-            }
-        };
-
-        this.push = function () {};
-
-        this.build = function (data) {
-            var _this2 = this;
-
-            lezydata = data;
-            info = new stylishInfo(object);
-            info.create();
-            scroll.minus(info.render());
-            data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
-            html.append(info.render());
-            html.append(scroll.render());
-
-            Lampa.Layer.update(html);
-            Lampa.Layer.visible(scroll.render(true));
-            scroll.onEnd = this.loadNext.bind(this);
-
-            scroll.onWheel = function (step) {
-                if (!Lampa.Controller.own(_this2)) _this2.start();
-                if (step > 0) _this2.down();else if (active > 0) _this2.up();
-            };
-
-            this.activity.loader(false);
-            this.activity.toggle();
-        };
-
-        this.background = function (elem) {
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            if (new_background == background_last) return;
-            
-            background_last = new_background;
-            background.css('background-image', 'url(' + new_background + ')');
-        };
-
-        this.append = function (element) {
-            var _this3 = this;
-
-            if (element.ready) return;
-            element.ready = true;
-            var item = new Lampa.InteractionLine(element, {
-                url: element.url,
-                card_small: true,
-                cardClass: element.cardClass,
-                genres: object.genres,
-                object: object,
-                card_wide: true,
-                nomore: element.nomore
-            });
-            item.create();
-            item.onDown = this.down.bind(this);
-            item.onUp = this.up.bind(this);
-            item.onBack = this.back.bind(this);
-
-            item.onToggle = function () {
-                active = items.indexOf(item);
-            };
-
-            if (this.onMore) item.onMore = this.onMore.bind(this);
-
-            item.onFocus = function (elem) {
-                info.update(elem);
-                _this3.background(elem);
-            };
-
-            item.onHover = function (elem) {
-                info.update(elem);
-                _this3.background(elem);
-            };
-
-            item.onFocusMore = info.empty.bind(info);
-            scroll.append(item.render());
-            items.push(item);
-        };
-
-        this.back = function () {
-            Lampa.Activity.backward();
-        };
-
-        this.down = function () {
-            active++;
-            active = Math.min(active, items.length - 1);
-            if (!viewall) lezydata.slice(0, active + 2).forEach(this.append.bind(this));
-            items[active].toggle();
-            scroll.update(items[active].render());
-        };
-
-        this.up = function () {
-            active--;
-
-            if (active < 0) {
-                active = 0;
-                Lampa.Controller.toggle('head');
-            } else {
-                items[active].toggle();
-                scroll.update(items[active].render());
-            }
-        };
-
-        this.start = function () {
-            var _this4 = this;
-
-            Lampa.Controller.add('content', {
-                link: this,
-                toggle: function toggle() {
-                    if (_this4.activity.canRefresh()) return false;
-
-                    if (items.length) {
-                        items[active].toggle();
-                    }
-                },
-                update: function update() {},
-                left: function left() {
-                    if (Navigator.canmove('left')) Navigator.move('left');else Lampa.Controller.toggle('menu');
-                },
-                right: function right() {
-                    Navigator.move('right');
-                },
-                up: function up() {
-                    if (Navigator.canmove('up')) Navigator.move('up');else Lampa.Controller.toggle('head');
-                },
-                down: function down() {
-                    if (Navigator.canmove('down')) Navigator.move('down');
-                },
-                back: this.back
-            });
-            Lampa.Controller.toggle('content');
-        };
-
-        this.refresh = function () {
-            this.activity.loader(true);
-            this.activity.need_refresh = true;
-        };
-
-        this.pause = function () {};
-
-        this.stop = function () {};
-
-        this.render = function () {
-            return html;
-        };
-
-        this.destroy = function () {
-            network.clear();
-            Lampa.Arrays.destroy(items);
-            scroll.destroy();
-            if (info) info.destroy();
-            html.remove();
-            items = null;
-            network = null;
-            lezydata = null;
-        };
-    }
-
-    function stylishInfo(object) {
-        var html = null;
-        var timer;
-        var network = new Lampa.Reguest();
-        var loaded = {};
-        var logoCache = {};
-        var currentData = null;
-        var currentRequest = null;
-
-        this.create = function () {
-            html = $(`
-                <div class="stylish-interface-info">
-                    <div class="stylish-interface-info__poster"></div>
-                    <div class="stylish-interface-info__content">
-                        <div class="stylish-interface-info__title"></div>
-                        <div class="stylish-interface-info__meta"></div>
-                        <div class="stylish-interface-info__description"></div>
-                        <div class="stylish-interface-info__actions">
-                            <div class="stylish-interface-info__action stylish-interface-info__action--play">
-                                <i class="fas fa-play"></i>
-                                <span>Смотреть</span>
-                            </div>
-                            <div class="stylish-interface-info__action stylish-interface-info__action--trailer">
-                                <i class="fas fa-film"></i>
-                                <span>Трейлер</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `);
-        };
-
-        this.update = function (data) {
-            if (!html) this.create();
-            
-            // Update poster
-            if (data.poster_path) {
-                html.find('.stylish-interface-info__poster').css('background-image', 'url(' + Lampa.Api.img(data.poster_path, 'w500') + ')');
-            }
-            
-            // Update title
-            html.find('.stylish-interface-info__title').text(data.title || data.name);
-            
-            // Update description
-            html.find('.stylish-interface-info__description').text(data.overview || 'Описание отсутствует');
-            
-            this.load(data);
-        };
-
-        this.draw = function (data) {
-            if (!data && currentData && currentData.data) data = currentData.data;
-            if (!data) return;
-
-            var year = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-            var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
-            var meta = [];
-            var countries = Lampa.Api.sources.tmdb.parseCountries(data);
-            var pg = Lampa.Api.sources.tmdb.parsePG(data);
-            
-            if (year !== '0000') meta.push(year);
-            if (countries.length > 0) meta.push(countries.join(', '));
-            if (vote > 0) meta.push('★ ' + vote);
-            
-            if (data.genres?.length > 0) {
-                meta.push(data.genres.map(item => Lampa.Utils.capitalizeFirstLetter(item.name)).join(', '));
-            }
-            
-            if (data.runtime) meta.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-            if (pg) meta.push(pg);
-            
-            html.find('.stylish-interface-info__meta').text(meta.join(' • '));
-        };
-
-        this.load = function (data) {
-            var _this = this;
-            clearTimeout(timer);
-            
-            var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-            
-            if (loaded[url]) {
-                this.draw(loaded[url]);
-                return;
-            }
-            
-            timer = setTimeout(function () {
-                network.clear();
-                network.timeout(5000);
-                network.silent(url, function (movie) {
-                    loaded[url] = movie;
-                    _this.draw(movie);
-                }, function() {
-                    _this.draw(data);
-                });
-            }, 400);
-        };
-
-        this.render = function () {
-            return html;
-        };
-
-        this.empty = function () {
-            if (html) {
-                html.find('.stylish-interface-info__poster').css('background-image', 'none');
-                html.find('.stylish-interface-info__title').empty();
-                html.find('.stylish-interface-info__meta').empty();
-                html.find('.stylish-interface-info__description').empty();
-            }
-        };
-
-        this.destroy = function () {
-            if (currentRequest) {
-                network.clear(currentRequest);
-                currentRequest = null;
-            }
-            if (html) html.remove();
-            loaded = {};
-            logoCache = {};
-            html = null;
-        };
-    }
-
     function startPlugin() {
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
-        var stylish_interface = stylishComponent;
 
         Lampa.InteractionMain = function (object) {
             var use = new_interface;
-            var interfaceType = Lampa.Storage.get('interface_style', 'default');
 
-            if (interfaceType === 'stylish') {
-                use = stylish_interface;
-            }
-            else if (window.innerWidth < 767) {
-                use = old_interface;
-            }
-            else if (Lampa.Manifest.app_digital < 153) {
-                use = old_interface;
-            }
-            else if (object.title === 'Избранное') {
+            if (window.innerWidth < 767) use = old_interface;
+            if (Lampa.Manifest.app_digital < 153) use = old_interface;
+            if (object.title === 'Избранное') {
                 use = old_interface;
             }
 
@@ -737,7 +415,8 @@
                 name: "Настройки логотипов на главной",
                 description: "Управление отображением логотипов вместо названий"
             }
-        });
+        }); 
+
 
         Lampa.SettingsApi.addParam({
             component: 'interface',
@@ -749,23 +428,6 @@
             field: {
                 name: 'Показывать жанры',
                 description: 'Отображать жанры фильмов/сериалов'
-            }
-        });
-
-        Lampa.SettingsApi.addParam({
-            component: 'interface',
-            param: {
-                name: 'interface_style',
-                type: 'select',
-                values: {
-                    'default': 'Стандартный интерфейс',
-                    'stylish': 'Стильный интерфейс'
-                },
-                default: 'default'
-            },
-            field: {
-                name: 'Стиль интерфейса',
-                description: 'Выберите предпочитаемый стиль интерфейса'
             }
         });
 
@@ -901,171 +563,6 @@
             }
             body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
                 animation: animation-trigger-enter 0.2s forwards
-            }
-
-            /* Стильный интерфейс */
-            .stylish-interface {
-                position: relative;
-                height: 100%;
-                width: 100%;
-            }
-
-            .stylish-interface__background {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-size: cover;
-                background-position: center;
-                filter: brightness(0.5);
-                z-index: -1;
-                transition: background-image 0.3s ease;
-            }
-
-            .stylish-interface-info {
-                display: flex;
-                padding: 2em;
-                height: 100%;
-                align-items: center;
-            }
-
-            .stylish-interface-info__poster {
-                width: 20em;
-                height: 30em;
-                background-size: cover;
-                background-position: center;
-                border-radius: 0.5em;
-                box-shadow: 0 0 2em rgba(0, 0, 0, 0.5);
-                margin-right: 3em;
-                flex-shrink: 0;
-            }
-
-            .stylish-interface-info__content {
-                max-width: 50em;
-            }
-
-            .stylish-interface-info__title {
-                font-size: 3.5em;
-                font-weight: 800;
-                margin-bottom: 0.5em;
-                color: #fff;
-                text-shadow: 0 0 1em rgba(0, 0, 0, 0.5);
-            }
-
-            .stylish-interface-info__meta {
-                font-size: 1.2em;
-                color: rgba(255, 255, 255, 0.8);
-                margin-bottom: 1.5em;
-            }
-
-            .stylish-interface-info__description {
-                font-size: 1.4em;
-                line-height: 1.5;
-                color: rgba(255, 255, 255, 0.9);
-                margin-bottom: 2em;
-            }
-
-            .stylish-interface-info__actions {
-                display: flex;
-                gap: 1.5em;
-            }
-
-            .stylish-interface-info__action {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 1em 2em;
-                border-radius: 0.5em;
-                font-size: 1.2em;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-            .stylish-interface-info__action--play {
-                background: var(--player);
-                color: #fff;
-            }
-
-            .stylish-interface-info__action--trailer {
-                background: rgba(255, 255, 255, 0.1);
-                color: #fff;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-            }
-
-            .stylish-interface-info__action i {
-                margin-right: 0.5em;
-            }
-
-            .stylish-interface-info__action:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 0.5em 1em rgba(0, 0, 0, 0.2);
-            }
-
-            .stylish-interface .card--small.card--wide {
-                width: 16em;
-                margin-right: 1.5em;
-            }
-
-            .stylish-interface .card.card--wide .card__view {
-                border-radius: 0.5em;
-                overflow: hidden;
-            }
-
-            .stylish-interface .card.card--wide .card__image {
-                border-radius: 0.5em;
-            }
-
-            .stylish-interface .card.card--wide.focus .card__view {
-                transform: scale(1.05);
-                box-shadow: 0 0 2em rgba(0, 0, 0, 0.5);
-            }
-
-            @media (max-width: 1200px) {
-                .stylish-interface-info {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-
-                .stylish-interface-info__poster {
-                    width: 15em;
-                    height: 22.5em;
-                    margin-right: 0;
-                    margin-bottom: 2em;
-                }
-
-                .stylish-interface-info__title {
-                    font-size: 2.5em;
-                }
-
-                .stylish-interface-info__description {
-                    font-size: 1.2em;
-                }
-            }
-
-            @media (max-width: 767px) {
-                .stylish-interface-info__poster {
-                    width: 10em;
-                    height: 15em;
-                }
-
-                .stylish-interface-info__title {
-                    font-size: 2em;
-                }
-
-                .stylish-interface-info__meta {
-                    font-size: 1em;
-                }
-
-                .stylish-interface-info__description {
-                    font-size: 1em;
-                }
-
-                .stylish-interface-info__action {
-                    padding: 0.8em 1.5em;
-                    font-size: 1em;
-                }
             }
             </style>
         `);
