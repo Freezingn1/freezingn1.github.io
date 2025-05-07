@@ -170,6 +170,22 @@
 				background: #c22222;
 			}
 			
+			.extensions__item {
+				background-color: #181818;
+			}
+
+			.extensions__item.focus:after {
+				border: 0.3em solid #c22222;
+			}
+
+			.extensions__block-add {
+				background-color: #181818;
+			}
+
+.extensions__block-empty.focus:after, .extensions__block-add.focus:after {
+    border: 0.3em solid #c22222;
+}
+			
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
                 background: -webkit-linear-gradient(66.47deg, rgb(192, 254, 207) -15.94%, rgb(30, 213, 169) 62.41%);
