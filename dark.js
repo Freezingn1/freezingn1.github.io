@@ -158,6 +158,13 @@
 				background-color: #1e1e1e;
 			}			
 			
+			.card-more.focus .card-more__box::after {
+				border: 0.3em solid #c22222;
+			}
+
+			.new-interface .card.card--wide+.card-more .card-more__box {
+				background: rgba(0, 0, 0, 0.3);
+			}
 			
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
