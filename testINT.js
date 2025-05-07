@@ -63,7 +63,7 @@
                     const titleElement = html.find('.new-interface-info__title');
                     if (titleElement.length) {
                         titleElement.html(
-                            `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 8em; max-height:3em;" 
+                            `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 7em; max-height:3em;" 
                              src="${imageUrl}" 
                              alt="${data.title}" />`
                         );
