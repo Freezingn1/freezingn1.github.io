@@ -12,6 +12,12 @@
       };
 
       this.update = function (data) {
+    // Проверяем, что html элемент существует
+    if (!html) {
+        console.error('HTML element is not initialized');
+        return;
+    }
+
     const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
     
     if (logoSetting !== 'hide') {
@@ -19,8 +25,10 @@
         const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
         network.silent(url, function(images) {
+            // Дополнительная проверка html перед использованием
+            if (!html) return;
+
             if (images.logos && images.logos.length > 0) {
-                // Сначала находим русский логотип с максимальным рейтингом
                 let bestRussianLogo = null;
                 if (logoSetting !== 'ru_only') {
                     bestRussianLogo = images.logos.reduce((best, current) => {
@@ -31,7 +39,6 @@
                     }, null);
                 }
 
-                // Находим логотип с абсолютно максимальным рейтингом
                 const bestOverallLogo = images.logos.reduce((best, current) => {
                     if (!best || current.vote_average > best.vote_average) {
                         return current;
@@ -39,31 +46,49 @@
                     return best;
                 }, null);
 
-                // Выбираем русский логотип (если есть), иначе - самый высокорейтинговый
                 const bestLogo = bestRussianLogo || bestOverallLogo;
 
-                if (bestLogo && bestLogo.file_path) {
+                if (bestLogo && bestLogo.file_path && html) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + bestLogo.file_path.replace(".svg", ".png"));
-                    html.find('.new-interface-info__title').html(
-                        `<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" 
-                         src="${imageUrl}" 
-                         alt="${data.title}" />`
-                    );
-                } else {
-                    html.find('.new-interface-info__title').text(data.title);
+                    const titleElement = html.find('.new-interface-info__title');
+                    if (titleElement.length) {
+                        titleElement.html(
+                            `<img style="margin-top:0.3em; margin-bottom:0.1em; max-height:1.8em;" 
+                             src="${imageUrl}" 
+                             alt="${data.title}" />`
+                        );
+                    }
+                } else if (html) {
+                    const titleElement = html.find('.new-interface-info__title');
+                    if (titleElement.length) {
+                        titleElement.text(data.title);
+                    }
                 }
-            } else {
-                html.find('.new-interface-info__title').text(data.title);
+            } else if (html) {
+                const titleElement = html.find('.new-interface-info__title');
+                if (titleElement.length) {
+                    titleElement.text(data.title);
+                }
             }
         }, function() {
-            html.find('.new-interface-info__title').text(data.title);
+            if (html) {
+                const titleElement = html.find('.new-interface-info__title');
+                if (titleElement.length) {
+                    titleElement.text(data.title);
+                }
+            }
         });
-    } else {
-        html.find('.new-interface-info__title').text(data.title);
+    } else if (html) {
+        const titleElement = html.find('.new-interface-info__title');
+        if (titleElement.length) {
+            titleElement.text(data.title);
+        }
     }
 
-    Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-    this.load(data);
+    if (html) {
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+        this.load(data);
+    }
 };
 
       this.draw = function (data) {
