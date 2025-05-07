@@ -158,7 +158,7 @@
 
             _this.draw(movie);
           });
-        }, 500);
+        }, 600);
       };
 
       this.render = function () {
