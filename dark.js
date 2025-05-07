@@ -181,6 +181,15 @@
 			.extensions__block-add {
 				background-color: #181818;
 			}
+			
+			.settings-input--free {
+				background-color: #121212;
+			}
+
+			.settings-input__content {
+				background: #121212;
+			}
+			
 
 .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
     border: 0.3em solid #c22222;
