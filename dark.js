@@ -194,9 +194,6 @@
 				background-color: #121212;
 			}
 						
-			.welcome {
-				background: #000 url(https://sun9-62.userapi.com/s/v1/if2/cMku3OtUInOMXG7O--Rr1-ugJ_UC2szAEjnAhp4RCVyNlQe7yQavGPYCurqgB3IjYFHm-9q3XGyotDwpjyorOHCb.jpg?quality=95&as=32x18,48x27,72x40,108x61,160x90,240x135,360x202,480x270,540x304,640x360,720x405,1080x607,1280x720,1440x810,1920x1080&from=bu&u=ifAvC5r5_fH5Exqd9gNOStUXwq-gIdw5_q5865R55_I) no-repeat 50% 50%;
-			}
 
 .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
     border: 0.3em solid #c22222;
