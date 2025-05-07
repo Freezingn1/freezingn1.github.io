@@ -167,7 +167,7 @@
                                 margin-bottom: 10px;
                                 opacity: 0.80;
                                 max-width: 500px;
-								width: 100%;
+								-webkit-max-width: 500px;
                             ">
                                 RU: ${title}
                             </div>
