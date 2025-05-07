@@ -193,6 +193,10 @@
 			.extensions {
 				background-color: #121212;
 			}
+			
+			.modal__content {
+				background-color: #121212;
+			}
 						
 
 .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
