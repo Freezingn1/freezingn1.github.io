@@ -30,23 +30,33 @@
 
             if (images.logos && images.logos.length > 0) {
                 let bestRussianLogo = null;
-                if (logoSetting !== 'ru_only') {
-                    bestRussianLogo = images.logos.reduce((best, current) => {
-                        if (current.iso_639_1 === 'ru' && (!best || current.vote_average > best.vote_average)) {
-                            return current;
+                let bestEnglishLogo = null;
+                let bestOtherLogo = null;
+
+                // Ищем лучшие логотипы по приоритету: русский -> английский -> любой другой
+                images.logos.forEach(logo => {
+                    if (logo.iso_639_1 === 'ru') {
+                        if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
+                            bestRussianLogo = logo;
                         }
-                        return best;
-                    }, null);
-                }
-
-                const bestOverallLogo = images.logos.reduce((best, current) => {
-                    if (!best || current.vote_average > best.vote_average) {
-                        return current;
                     }
-                    return best;
-                }, null);
+                    else if (logo.iso_639_1 === 'en') {
+                        if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
+                            bestEnglishLogo = logo;
+                        }
+                    }
+                    else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
+                        bestOtherLogo = logo;
+                    }
+                });
 
-                const bestLogo = bestRussianLogo || bestOverallLogo;
+                // Выбираем логотип по приоритету
+                let bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
+
+                // Если настройка "Только русские" и русского лого нет - не показываем ничего
+                if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                    bestLogo = null;
+                }
 
                 if (bestLogo && bestLogo.file_path && html) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + bestLogo.file_path.replace(".svg", ".png"));
