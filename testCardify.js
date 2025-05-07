@@ -148,16 +148,6 @@
         e.object.activity.render().find('.full-start__background').addClass('cardify__background');
       }
     });
-	Lampa.Listener.follow('full', function(e) {
-        if (e.type == 'complete') {
-            // Удаляем информацию о новых сериях
-            e.object.activity.render().find('.full-start-new__details').contents().each(function() {
-                if(this.nodeType === 3 || $(this).text().match(/Новая серия|Вышла новая серия/i)) {
-                    $(this).remove();
-                }
-            });
-        }
-    });
   }
 
   if (window.appready) startPlugin();else {
