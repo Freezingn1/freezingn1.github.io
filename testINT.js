@@ -102,6 +102,9 @@
         if (create !== '0000') head.push('<span>' + create + '</span>');
         if (countries.length > 0) head.push(countries.join(', '));
         if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+		if (data.number_of_episodes && data.number_of_episodes > 0) {
+                details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+            }
         
         // Check if genres should be shown
         if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
