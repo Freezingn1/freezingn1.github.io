@@ -6,100 +6,114 @@
       var timer;
       var network = new Lampa.Reguest();
       var loaded = {};
+      var logoCache = {}; // Кэш для логотипов
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
-    // Проверяем, что html элемент существует
-    if (!html) {
-        console.error('HTML element is not initialized');
-        return;
-    }
+        // Проверяем, что html элемент существует
+        if (!html) {
+            console.error('HTML element is not initialized');
+            return;
+        }
 
-    const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
-    
-    if (logoSetting !== 'hide') {
-        const type = data.name ? 'tv' : 'movie';
-        const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+        
+        if (logoSetting !== 'hide') {
+            const type = data.name ? 'tv' : 'movie';
+            const cacheKey = `${type}_${data.id}`;
+            
+            // Проверяем кэш
+            if (logoCache[cacheKey]) {
+                this.applyLogo(data, logoCache[cacheKey]);
+                return;
+            }
+            
+            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-        network.silent(url, function(images) {
-            // Дополнительная проверка html перед использованием
-            if (!html) return;
+            network.silent(url, (images) => {
+                // Дополнительная проверка html перед использованием
+                if (!html) return;
 
-            if (images.logos && images.logos.length > 0) {
-                let bestRussianLogo = null;
-                let bestEnglishLogo = null;
-                let bestOtherLogo = null;
+                let bestLogo = null;
+                
+                if (images.logos && images.logos.length > 0) {
+                    let bestRussianLogo = null;
+                    let bestEnglishLogo = null;
+                    let bestOtherLogo = null;
 
-                // Ищем лучшие логотипы по приоритету: русский -> английский -> любой другой
-                images.logos.forEach(logo => {
-                    if (logo.iso_639_1 === 'ru') {
-                        if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
-                            bestRussianLogo = logo;
+                    // Ищем лучшие логотипы по приоритету: русский -> английский -> любой другой
+                    images.logos.forEach(logo => {
+                        if (logo.iso_639_1 === 'ru') {
+                            if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
+                                bestRussianLogo = logo;
+                            }
                         }
-                    }
-                    else if (logo.iso_639_1 === 'en') {
-                        if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
-                            bestEnglishLogo = logo;
+                        else if (logo.iso_639_1 === 'en') {
+                            if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
+                                bestEnglishLogo = logo;
+                            }
                         }
-                    }
-                    else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
-                        bestOtherLogo = logo;
-                    }
-                });
+                        else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
+                            bestOtherLogo = logo;
+                        }
+                    });
 
-                // Выбираем логотип по приоритету
-                let bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
+                    // Выбираем логотип по приоритету
+                    bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
 
-                // Если настройка "Только русские" и русского лого нет - не показываем ничего
-                if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                    bestLogo = null;
+                    // Если настройка "Только русские" и русского лого нет - не показываем ничего
+                    if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                        bestLogo = null;
+                    }
+                    
+                    // Сохраняем в кэш
+                    if (bestLogo) {
+                        logoCache[cacheKey] = bestLogo;
+                    }
                 }
-
-                if (bestLogo && bestLogo.file_path && html) {
-                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + bestLogo.file_path.replace(".svg", ".png"));
-                    const titleElement = html.find('.new-interface-info__title');
-                    if (titleElement.length) {
-                        titleElement.html(
-                            `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 7em; max-height:3em;" 
-                             src="${imageUrl}" 
-                             alt="${data.title}" />`
-                        );
-                    }
-                } else if (html) {
+                
+                this.applyLogo(data, bestLogo);
+            }, () => {
+                if (html) {
                     const titleElement = html.find('.new-interface-info__title');
                     if (titleElement.length) {
                         titleElement.text(data.title);
                     }
                 }
-            } else if (html) {
-                const titleElement = html.find('.new-interface-info__title');
-                if (titleElement.length) {
-                    titleElement.text(data.title);
-                }
+            });
+        } else if (html) {
+            const titleElement = html.find('.new-interface-info__title');
+            if (titleElement.length) {
+                titleElement.text(data.title);
             }
-        }, function() {
-            if (html) {
-                const titleElement = html.find('.new-interface-info__title');
-                if (titleElement.length) {
-                    titleElement.text(data.title);
-                }
-            }
-        });
-    } else if (html) {
-        const titleElement = html.find('.new-interface-info__title');
-        if (titleElement.length) {
-            titleElement.text(data.title);
         }
-    }
 
-    if (html) {
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-        this.load(data);
-    }
-};
+        if (html) {
+            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+            this.load(data);
+        }
+      };
+      
+      this.applyLogo = function(data, logo) {
+          if (!html) return;
+          
+          const titleElement = html.find('.new-interface-info__title');
+          if (!titleElement.length) return;
+          
+          if (logo && logo.file_path) {
+              const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
+              titleElement.html(
+                  `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 7em; max-height:3em;" 
+                   src="${imageUrl}" 
+                   alt="${data.title}" />`
+              );
+          } else {
+              titleElement.text(data.title);
+          }
+      };
 
       this.draw = function (data) {
         var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
@@ -112,7 +126,7 @@
         if (create !== '0000') head.push('<span>' + create + '</span>');
         if (countries.length > 0) head.push(countries.join(', '));
         if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-		if (data.number_of_episodes && data.number_of_episodes > 0) {
+        if (data.number_of_episodes && data.number_of_episodes > 0) {
                 details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
             }
         
@@ -156,10 +170,12 @@
       this.destroy = function () {
         html.remove();
         loaded = {};
+        logoCache = {};
         html = null;
       };
     }
 
+    // Остальной код остается без изменений
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
