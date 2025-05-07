@@ -190,6 +190,10 @@
 				background: #121212;
 			}
 			
+			.extensions {
+				background-color: #121212;
+			}
+			
 
 .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
     border: 0.3em solid #c22222;
