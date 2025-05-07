@@ -144,7 +144,7 @@
 
             _this.draw(movie);
           });
-        }, 400);
+        }, 500);
       };
 
       this.render = function () {
