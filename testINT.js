@@ -12,37 +12,35 @@
       };
 
       this.update = function (data) {
-    // Проверяем настройки отображения логотипов
     const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
     
     if (logoSetting !== 'hide') {
         const type = data.name ? 'tv' : 'movie';
-        // Запрашиваем все доступные логотипы
         const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
         network.silent(url, function(images) {
             if (images.logos && images.logos.length > 0) {
-                // Сортируем логотипы по:
-                // 1. Приоритету русского языка
-                // 2. Наивысшему рейтингу (vote_average)
-                // 3. Ширине изображения (width)
-                const sortedLogos = images.logos.sort((a, b) => {
-                    // Русские логотипы всегда в приоритете
-                    if (a.iso_639_1 === 'ru' && b.iso_639_1 !== 'ru') return -1;
-                    if (a.iso_639_1 !== 'ru' && b.iso_639_1 === 'ru') return 1;
-                    
-                    // Сортировка по рейтингу (от высокого к низкому)
-                    const ratingDiff = b.vote_average - a.vote_average;
-                    if (ratingDiff !== 0) return ratingDiff;
-                    
-                    // Если рейтинг одинаковый, берем более широкий логотип
-                    return (b.width || 0) - (a.width || 0);
-                });
+                // Сначала находим русский логотип с максимальным рейтингом
+                let bestRussianLogo = null;
+                if (logoSetting !== 'ru_only') {
+                    bestRussianLogo = images.logos.reduce((best, current) => {
+                        if (current.iso_639_1 === 'ru' && (!best || current.vote_average > best.vote_average)) {
+                            return current;
+                        }
+                        return best;
+                    }, null);
+                }
 
-                // Фильтруем по настройкам (только русские или все)
-                const bestLogo = logoSetting === 'ru_only' 
-                    ? sortedLogos.find(logo => logo.iso_639_1 === 'ru')
-                    : sortedLogos[0];
+                // Находим логотип с абсолютно максимальным рейтингом
+                const bestOverallLogo = images.logos.reduce((best, current) => {
+                    if (!best || current.vote_average > best.vote_average) {
+                        return current;
+                    }
+                    return best;
+                }, null);
+
+                // Выбираем русский логотип (если есть), иначе - самый высокорейтинговый
+                const bestLogo = bestRussianLogo || bestOverallLogo;
 
                 if (bestLogo && bestLogo.file_path) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + bestLogo.file_path.replace(".svg", ".png"));
