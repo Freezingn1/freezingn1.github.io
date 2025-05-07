@@ -1,32 +1,32 @@
 (function() {
-    // Проверяем, что Lampa уже загружена
     if (typeof Lampa === 'undefined') {
-        console.error('Lampa not found!');
+        console.error("Lampa не найдена!");
         return;
     }
 
-    // Перехватываем рендеринг карточек
-    Lampa.Template.add('card_parser', (data) => {
-        if (data && data.item) {
-            const item = data.item;
+    // Перехватываем рендер карточки
+    Lampa.Template.add('card:after', (html, item) => {
+        if (!html || !html.find || !item) return;
 
-            // Формируем массив с нужными данными
-            const season = item.season ? 'S' + item.season : '';
-            const episode = item.episode ? 'E' + item.episode : '';
-            const genre = item.genre ? item.genre.split(',')[0].trim() : '';
+        // Достаём данные (проверяем разные варианты)
+        const season = item.season || item.s || item.info?.season;
+        const episode = item.episode || item.e || item.info?.episode;
+        const genre = (item.genre || item.genres || '').split(',')[0].trim();
 
-            const info = [season, episode, genre].filter(Boolean);
+        // Формируем строку
+        let info = [];
+        if (season) info.push('S' + season);
+        if (episode) info.push('E' + episode);
+        if (genre) info.push(genre);
 
-            // Если есть блок с деталями, заменяем его содержимое
-            if (data.html && data.html.find) {
-                data.html.find('.full-start-new__details').html(
-                    info.join('<span class="full-start-new__split">●</span>')
-                );
-            }
+        // Пробуем разные классы для вставки
+        const detailsBlock = html.find('.full-start-new__details, .card__meta, .meta');
+        if (detailsBlock.length) {
+            detailsBlock.html(info.join(' • '));
+        } else {
+            console.log("Не найден блок для вставки информации");
         }
-
-        return data;
     });
 
-    console.log('Plugin "Only Season, Episode & Genre" loaded!');
+    console.log("Плагин успешно загружен!");
 })();
