@@ -144,10 +144,12 @@
     
 
     Lampa.Listener.follow('full', function (e) {
-      if (e.type == 'complete') {
-        e.object.activity.render().find('.full-start__background').addClass('cardify__background'); .addClass('cardify__background--transparent');
-      }
-    });
+  if (e.type == 'complete') {
+    e.object.activity.render().find('.full-start__background')
+      .addClass('cardify__background')
+      .addClass('cardify__background--transparent');
+  }
+});
   }
 
   if (window.appready) startPlugin();else {
