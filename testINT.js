@@ -66,25 +66,34 @@
         };
 
         self.drawBasicInfo = function(data) {
-    if (!self.html || !data) return;
-    
-    var createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-    var head = [];
-    
-    if (createYear !== '0000') head.push(`<span>${createYear}</span>`);
-    
-    // Исправленный код для отображения стран
-    if (data.production_countries && data.production_countries.length > 0) {
-        head.push(data.production_countries.map(function(c) { 
-            return c.name || c.iso_3166_1; 
-        }).join(', '));
-    } else if (data.origin_country && data.origin_country.length > 0) {
-        // Альтернативный вариант для TV-шоу
-        head.push(data.origin_country.join(', '));
-    }
-    
-    self.html.find('.new-interface-info__head').empty().append(head.join(', '));
-};
+        if (!self.html || !data) return;
+        
+        var createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+        var head = [];
+        
+        if (createYear !== '0000') head.push(`<span>${createYear}</span>`);
+        
+        // Исправленный код для отображения стран
+        var countries = [];
+        
+        // Для фильмов
+        if (data.production_countries && data.production_countries.length > 0) {
+            countries = data.production_countries.map(function(c) { 
+                return c.name || c.iso_3166_1; 
+            });
+        } 
+        // Для TV-шоу
+        else if (data.origin_country && data.origin_country.length > 0) {
+            countries = data.origin_country;
+        }
+        
+        // Добавляем страны, если они есть
+        if (countries.length > 0) {
+            head.push(countries.join(', '));
+        }
+        
+        self.html.find('.new-interface-info__head').empty().append(head.join(', '));
+    };
 
         self.drawDetails = function(data) {
             if (!self.html || !data) return;
