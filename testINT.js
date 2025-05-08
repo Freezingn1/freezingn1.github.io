@@ -529,9 +529,9 @@
             }
             
             .new-interface .full-start__background {
-                height: 108%;
-                left: 30px;
-                top: -4.8em;
+                height:109% !important;
+				left:0em !important;
+				top:-9.2% !important;
             }
             
             .new-interface .full-start__rate {
