@@ -46,8 +46,8 @@
         const TMDB_API_URL = "https://api.themoviedb.org/3";
         const titleCache = new Map();
 
-        // Функция для выбора лучшего логотипа (теперь глобальная)
-        window.getBestLogo = function(logos, setting) {
+        // Функция для выбора лучшего логотипа
+        function getBestLogo(logos, setting) {
             if (!logos || !logos.length) return null;
 
             let filteredLogos = [...logos];
@@ -73,7 +73,7 @@
                 if (aPriority !== bPriority) return bPriority - aPriority;
                 return (b.vote_average || 0) - (a.vote_average || 0);
             })[0];
-        };
+        }
 
         // Получение русского названия
         async function fetchRussianTitle(card) {
@@ -171,23 +171,6 @@
                                 RU: ${title}
                             </div>
                         `);
-                    } else {
-                        // Если русского названия нет - показываем английское с префиксом EN
-                        const englishTitle = movie.title || movie.name;
-                        if (englishTitle) {
-                            render.find(".full-start-new__rate-line").first().before(`
-                                <div class="ru-title-full" style="
-                                    color: #ffffff;
-                                    font-weight: 500;
-                                    text-align: right;
-                                    margin-bottom: 10px;
-                                    opacity: 0.80;
-                                    max-width: 57%;
-                                ">
-                                    EN: ${englishTitle}
-                                </div>
-                            `);
-                        }
                     }
                 });
             }
