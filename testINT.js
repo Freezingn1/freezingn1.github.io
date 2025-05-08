@@ -10,6 +10,7 @@
         var cacheQueue = {};
         var MAX_CACHE_SIZE = 100;
         var currentData = null;
+        var lastRequestId = 0;
 
         this.create = function () {
             html = $(`<div class="new-interface-info">
@@ -25,14 +26,18 @@
         this.update = function (data) {
             if (!html) return;
 
-            // Сохраняем текущие данные перед обработкой
+            // Генерируем новый ID для каждого запроса
+            var requestId = ++lastRequestId;
             currentData = JSON.parse(JSON.stringify(data));
             
-            const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+            // Сразу очищаем предыдущие данные
+            this.clearFields();
             
-            // Всегда обновляем текст сразу, логотип подгрузится асинхронно
+            // Устанавливаем базовую информацию
             this.applyTextTitle(currentData);
-            this.draw(currentData);
+            this.drawBasicInfo(currentData);
+            
+            const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
@@ -40,6 +45,7 @@
                 
                 if (logoCache[cacheKey]) {
                     this.applyLogo(currentData, logoCache[cacheKey]);
+                    this.loadFullData(currentData);
                     return;
                 }
                 
@@ -49,7 +55,8 @@
 
                     network.silent(url, (images) => {
                         delete cacheQueue[cacheKey];
-                        if (!html || !currentData) return;
+                        // Проверяем что это актуальный запрос
+                        if (requestId !== lastRequestId || !html || !currentData) return;
 
                         let bestLogo = this.findBestLogo(images, logoSetting);
                         
@@ -60,71 +67,78 @@
                             logoCache[cacheKey] = bestLogo;
                             this.applyLogo(currentData, bestLogo);
                         }
+                        
+                        this.loadFullData(currentData);
+                    }, () => {
+                        delete cacheQueue[cacheKey];
+                        if (requestId === lastRequestId) {
+                            this.loadFullData(currentData);
+                        }
                     });
+                } else {
+                    this.loadFullData(currentData);
                 }
+            } else {
+                this.loadFullData(currentData);
             }
 
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
         };
 
-        this.findBestLogo = function(images, logoSetting) {
-            if (!images?.logos?.length) return null;
-            
-            let best = { ru: null, en: null, other: null };
-            
-            images.logos.forEach(logo => {
-                if (logo.iso_639_1 === 'ru') {
-                    if (!best.ru || logo.vote_average > best.ru.vote_average) best.ru = logo;
-                }
-                else if (logo.iso_639_1 === 'en') {
-                    if (!best.en || logo.vote_average > best.en.vote_average) best.en = logo;
-                }
-                else if (!best.other || logo.vote_average > best.other.vote_average) {
-                    best.other = logo;
-                }
-            });
-
-            const bestLogo = best.ru || best.en || best.other;
-            return (logoSetting === 'ru_only' && !best.ru) ? null : bestLogo;
+        this.clearFields = function() {
+            if (!html) return;
+            html.find('.new-interface-info__head').empty();
+            html.find('.new-interface-info__title').empty();
+            html.find('.new-interface-info__details').empty();
+            html.find('.new-interface-info__description').empty();
         };
 
-        this.applyLogo = function(data, logo) {
-            if (!html || !data) return;
-            
-            const titleElement = html.find('.new-interface-info__title');
-            if (!titleElement.length) return;
-            
-            if (logo?.file_path) {
-                const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-                titleElement.html(
-                    `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width:7em; max-height:3em;" 
-                     src="${imageUrl}" 
-                     alt="${data.title || data.name}" />`
-                );
-            }
-        };
-
-        this.applyTextTitle = function(data) {
-            if (!html || !data) return;
-            const titleElement = html.find('.new-interface-info__title');
-            if (titleElement.length) {
-                titleElement.text(data.title || data.name);
-            }
-        };
-
-        this.draw = function(data) {
+        this.drawBasicInfo = function(data) {
             if (!html || !data) return;
             
             const createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-            const vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
             const head = [];
-            const details = [];
-            const countries = Lampa.Api.sources.tmdb.parseCountries(data);
-            const pg = Lampa.Api.sources.tmdb.parsePG(data);
             
             if (createYear !== '0000') head.push(`<span>${createYear}</span>`);
-            if (countries.length) head.push(countries.join(', '));
+            if (data.production_countries?.length) {
+                head.push(data.production_countries.map(c => c.iso_3166_1).join(', '));
+            }
+            
+            html.find('.new-interface-info__head').append(head.join(', '));
+        };
+
+        this.loadFullData = function(data) {
+            if (!html || !data) return;
+            
+            const url = Lampa.TMDB.api(
+                (data.name ? 'tv' : 'movie') + '/' + data.id + 
+                '?api_key=' + Lampa.TMDB.key() + 
+                '&append_to_response=content_ratings,release_dates&language=' + 
+                Lampa.Storage.get('language')
+            );
+            
+            if (loaded[url]) {
+                this.drawDetails(loaded[url]);
+                return;
+            }
+            
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                network.clear();
+                network.timeout(5000);
+                network.silent(url, (movie) => {
+                    loaded[url] = movie;
+                    this.drawDetails(movie);
+                });
+            }, 100);
+        };
+
+        this.drawDetails = function(data) {
+            if (!html || !data) return;
+            
+            const vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+            const details = [];
+            
             if (vote > 0) details.push(`<div class="full-start__rate"><div>${vote}</div><div>TMDB</div></div>`);
             
             if (data.number_of_episodes > 0) {
@@ -138,9 +152,10 @@
             }
             
             if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+            
+            const pg = Lampa.Api.sources.tmdb.parsePG(data);
             if (pg) details.push(`<span class="full-start__pg" style="font-size:0.9em;">${pg}</span>`);
             
-            html.find('.new-interface-info__head').empty().append(head.join(', '));
             html.find('.new-interface-info__details').html(details.join(
                 '<span class="new-interface-info__split">&#9679;</span>'
             ));
