@@ -172,7 +172,7 @@
                             const rateLine = render.find(".full-start-new__rate-line").first();
                             if (rateLine && rateLine.length) {
                                 rateLine.before(`
-                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 10px; opacity: 0.80; max-width: 15em;">
+                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 10px; opacity: 0.80; max-width: 15em;text-shadow: 2px 2px 0px #00000040;">
                                         RU: ${title}
                                     </div>
                                 `);
