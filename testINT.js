@@ -1,6 +1,19 @@
 (function () {
     'use strict';
 
+    // Добавляем функцию перевода стран
+    if (!Lampa.Utils.translateCountry) {
+        Lampa.Utils.translateCountry = function(code) {
+            var countries = {
+                'US': 'США', 'RU': 'Россия', 'GB': 'Великобритания', 'FR': 'Франция',
+                'DE': 'Германия', 'JP': 'Япония', 'KR': 'Южная Корея', 'CN': 'Китай',
+                'IN': 'Индия', 'IT': 'Италия', 'ES': 'Испания', 'CA': 'Канада',
+                'AU': 'Австралия', 'BR': 'Бразилия', 'MX': 'Мексика', 'SE': 'Швеция'
+            };
+            return countries[code] || code;
+        };
+    }
+
     function CreateInfo() {
         var self = this;
         self.html = null;
@@ -65,27 +78,44 @@
             return (logoSetting === 'ru_only' && !best.ru) ? null : bestLogo;
         };
 
+        self.getCountryNames = function(data) {
+            var countries = [];
+            
+            // Для фильмов
+            if (data.production_countries?.length) {
+                countries = data.production_countries.map(function(c) {
+                    return Lampa.Utils.translateCountry(c.iso_3166_1) || c.name;
+                });
+            }
+            // Для сериалов
+            else if (data.origin_country?.length) {
+                countries = data.origin_country.map(function(code) {
+                    return Lampa.Utils.translateCountry(code) || code;
+                });
+            }
+            
+            return countries;
+        };
+
         self.drawBasicInfo = function(data) {
-    if (!self.html || !data) return;
-    
-    var createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-    var countries = [];
-    
-    if (data.production_countries?.length) {
-        countries = data.production_countries.map(c => c.name || c.iso_3166_1);
-    } 
-    else if (data.origin_country?.length) {
-        countries = data.origin_country;
-    }
-    
-    var headContent = [];
-    if (createYear !== '0000') headContent.push(`<span>${createYear}</span>`);
-    if (countries.length) headContent.push(countries.join(', '));
-    
-    self.html.find('.new-interface-info__head').html(
-        `<div class="full-start-new__head">${headContent.join(', ')}</div>`
-    );
-};
+            if (!self.html || !data) return;
+            
+            var createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+            var countries = self.getCountryNames(data);
+            var headContent = [];
+            
+            if (createYear !== '0000') {
+                headContent.push('<span>' + createYear + '</span>');
+            }
+            
+            if (countries.length > 0) {
+                headContent.push(countries.join(', '));
+            }
+            
+            self.html.find('.new-interface-info__head').html(
+                '<div class="full-start-new__head">' + headContent.join(', ') + '</div>'
+            );
+        };
 
         self.drawDetails = function(data) {
             if (!self.html || !data) return;
@@ -119,6 +149,7 @@
             }
         };
 
+        // Остальные методы остаются без изменений
         self.loadFullData = function(data) {
             if (!self.html || !data) return;
             
