@@ -7,14 +7,13 @@
       var network = new Lampa.Reguest();
       var loaded = {};
       var logoCache = {}; // Кэш для логотипов
-      var cacheQueue = {}; // Очередь запросов для избежания дублирования
-      var MAX_CACHE_SIZE = 100; // Максимальный размер кэша
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
+        // Проверяем, что html элемент существует
         if (!html) {
             console.error('HTML element is not initialized');
             return;
@@ -32,13 +31,10 @@
                 return;
             }
             
-            // Проверяем, не выполняется ли уже запрос для этого ключа
-            if (cacheQueue[cacheKey]) return;
-            cacheQueue[cacheKey] = true;
-            
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
             network.silent(url, (images) => {
+                // Дополнительная проверка html перед использованием
                 if (!html) return;
 
                 let bestLogo = null;
@@ -48,6 +44,7 @@
                     let bestEnglishLogo = null;
                     let bestOtherLogo = null;
 
+                    // Ищем лучшие логотипы по приоритету: русский -> английский -> любой другой
                     images.logos.forEach(logo => {
                         if (logo.iso_639_1 === 'ru') {
                             if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
@@ -64,26 +61,22 @@
                         }
                     });
 
+                    // Выбираем логотип по приоритету
                     bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
 
+                    // Если настройка "Только русские" и русского лого нет - не показываем ничего
                     if (logoSetting === 'ru_only' && !bestRussianLogo) {
                         bestLogo = null;
                     }
                     
-                    // Сохраняем в кэш с ограничением размера
+                    // Сохраняем в кэш
                     if (bestLogo) {
-                        if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
-                            const oldestKey = Object.keys(logoCache)[0];
-                            delete logoCache[oldestKey];
-                        }
                         logoCache[cacheKey] = bestLogo;
                     }
                 }
                 
-                delete cacheQueue[cacheKey];
                 this.applyLogo(data, bestLogo);
             }, () => {
-                delete cacheQueue[cacheKey];
                 if (html) {
                     const titleElement = html.find('.new-interface-info__title');
                     if (titleElement.length) {
@@ -105,22 +98,22 @@
       };
       
       this.applyLogo = function(data, logo) {
-    if (!html) return;
-    
-    const titleElement = html.find('.new-interface-info__title');
-    if (!titleElement.length) return;
-    
-    if (logo && logo.file_path) {
-        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-        titleElement.html(
-            `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 7em; max-height:3em;" 
-             src="${imageUrl}" 
-             alt="${data.title}" />`
-        );
-    } else {
-        titleElement.text(data.title);
-    }
-};
+          if (!html) return;
+          
+          const titleElement = html.find('.new-interface-info__title');
+          if (!titleElement.length) return;
+          
+          if (logo && logo.file_path) {
+              const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
+              titleElement.html(
+                  `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 7em; max-height:3em;" 
+                   src="${imageUrl}" 
+                   alt="${data.title}" />`
+              );
+          } else {
+              titleElement.text(data.title);
+          }
+      };
 
       this.draw = function (data) {
         var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
@@ -137,6 +130,7 @@
                 details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
             }
         
+        // Check if genres should be shown
         if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
             details.push(data.genres.map(function (item) {
                 return Lampa.Utils.capitalizeFirstLetter(item.name);
@@ -174,14 +168,14 @@
       this.empty = function () {};
 
       this.destroy = function () {
-        if (html) html.remove();
+        html.remove();
         loaded = {};
         logoCache = {};
-        cacheQueue = {};
         html = null;
       };
     }
 
+    // Остальной код остается без изменений
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -536,8 +530,8 @@
             
             .new-interface .full-start__background {
                 height:109% !important;
-                left:0em !important;
-                top:-9.2% !important;
+				left:0em !important;
+				top:-9.2% !important;
             }
             
             .new-interface .full-start__rate {
