@@ -5,7 +5,7 @@ function init() {
         // Ваш код вставки рейтинга
         kpRating.insertAdjacentHTML('afterend', `
             <div class="full-start__rate rate--lampa">
-                <div>8.7</div>
+                <div>{rating}</div>
                 <div class="source--name">LAMPA</div>
             </div>
         `);
