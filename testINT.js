@@ -1,295 +1,314 @@
 (function () {
     'use strict';
 
-    function create() {
-      var html;
-      var timer;
-      var network = new Lampa.Reguest();
-      var loaded = {};
-      var logoCache = {}; // Кэш для логотипов
-      var cacheQueue = {}; // Очередь запросов для избежания дублирования
-      var MAX_CACHE_SIZE = 100; // Максимальный размер кэша
+    function CreateInfo() {
+        var self = this;
+        self.html = null;
+        self.timer = null;
+        self.network = new Lampa.Reguest();
+        self.loaded = {};
+        self.logoCache = {};
+        self.cacheQueue = {};
+        self.MAX_CACHE_SIZE = 100;
+        self.currentData = null;
+        self.lastRequestId = 0;
 
-      this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
-      };
+        self.clearFields = function() {
+            if (!self.html) return;
+            self.html.find('.new-interface-info__head').empty();
+            self.html.find('.new-interface-info__title').empty();
+            self.html.find('.new-interface-info__details').empty();
+            self.html.find('.new-interface-info__description').empty();
+        };
 
-      this.update = function (data) {
-		  html.find('.new-interface-info__head,.new-interface-info__details').text('---');
-        if (!html) {
-            console.error('HTML element is not initialized');
-            return;
-        }
+        self.applyTextTitle = function(data) {
+            if (!self.html || !data) return;
+            var titleElement = self.html.find('.new-interface-info__title');
+            if (titleElement.length) {
+                titleElement.text(data.title || data.name);
+            }
+        };
 
-        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
-        
-        if (logoSetting !== 'hide') {
-            const type = data.name ? 'tv' : 'movie';
-            const cacheKey = `${type}_${data.id}`;
+        self.applyLogo = function(data, logo) {
+            if (!self.html || !data) return;
+            var titleElement = self.html.find('.new-interface-info__title');
+            if (!titleElement.length) return;
             
-            // Проверяем кэш
-            if (logoCache[cacheKey]) {
-                this.applyLogo(data, logoCache[cacheKey]);
+            if (logo?.file_path) {
+                var imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+                titleElement.html(
+                    `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width:7em; max-height:3em;" 
+                     src="${imageUrl}" 
+                     alt="${data.title || data.name}" />`
+                );
+            }
+        };
+
+        self.findBestLogo = function(images, logoSetting) {
+            if (!images?.logos?.length) return null;
+            
+            var best = { ru: null, en: null, other: null };
+            
+            images.logos.forEach(function(logo) {
+                if (logo.iso_639_1 === 'ru') {
+                    if (!best.ru || logo.vote_average > best.ru.vote_average) best.ru = logo;
+                }
+                else if (logo.iso_639_1 === 'en') {
+                    if (!best.en || logo.vote_average > best.en.vote_average) best.en = logo;
+                }
+                else if (!best.other || logo.vote_average > best.other.vote_average) {
+                    best.other = logo;
+                }
+            });
+
+            var bestLogo = best.ru || best.en || best.other;
+            return (logoSetting === 'ru_only' && !best.ru) ? null : bestLogo;
+        };
+
+        self.drawBasicInfo = function(data) {
+            if (!self.html || !data) return;
+            
+            var createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+            var head = [];
+            
+            if (createYear !== '0000') head.push(`<span>${createYear}</span>`);
+            if (data.production_countries?.length) {
+                head.push(data.production_countries.map(function(c) { return c.iso_3166_1; }).join(', '));
+            }
+            
+            self.html.find('.new-interface-info__head').append(head.join(', '));
+        };
+
+        self.drawDetails = function(data) {
+            if (!self.html || !data) return;
+            
+            var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+            var details = [];
+            
+            if (vote > 0) details.push(`<div class="full-start__rate"><div>${vote}</div><div>TMDB</div></div>`);
+            
+            if (data.number_of_episodes > 0) {
+                details.push(`<span class="full-start__pg">Эпизодов ${data.number_of_episodes}</span>`);
+            }
+            
+            if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres?.length) {
+                details.push(data.genres.map(function(item) { 
+                    return Lampa.Utils.capitalizeFirstLetter(item.name);
+                }).join(' | '));
+            }
+            
+            if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+            
+            var pg = Lampa.Api.sources.tmdb.parsePG(data);
+            if (pg) details.push(`<span class="full-start__pg" style="font-size:0.9em;">${pg}</span>`);
+            
+            self.html.find('.new-interface-info__details').html(details.join(
+                '<span class="new-interface-info__split">&#9679;</span>'
+            ));
+            
+            if (data.overview) {
+                self.html.find('.new-interface-info__description').text(data.overview);
+            }
+        };
+
+        self.loadFullData = function(data) {
+            if (!self.html || !data) return;
+            
+            var url = Lampa.TMDB.api(
+                (data.name ? 'tv' : 'movie') + '/' + data.id + 
+                '?api_key=' + Lampa.TMDB.key() + 
+                '&append_to_response=content_ratings,release_dates&language=' + 
+                Lampa.Storage.get('language')
+            );
+            
+            if (self.loaded[url]) {
+                self.drawDetails(self.loaded[url]);
                 return;
             }
             
-            // Проверяем, не выполняется ли уже запрос для этого ключа
-            if (cacheQueue[cacheKey]) return;
-            cacheQueue[cacheKey] = true;
+            clearTimeout(self.timer);
+            self.timer = setTimeout(function() {
+                self.network.clear();
+                self.network.timeout(5000);
+                self.network.silent(url, function(movie) {
+                    self.loaded[url] = movie;
+                    self.drawDetails(movie);
+                });
+            }, 100);
+        };
+
+        self.create = function () {
+            self.html = $(`<div class="new-interface-info">
+                <div class="new-interface-info__body">
+                    <div class="new-interface-info__head"></div>
+                    <div class="new-interface-info__title"></div>
+                    <div class="new-interface-info__details"></div>
+                    <div class="new-interface-info__description"></div>
+                </div>
+            </div>`);
+        };
+
+        self.update = function (data) {
+            if (!self.html) return;
+
+            var requestId = ++self.lastRequestId;
+            self.currentData = JSON.parse(JSON.stringify(data));
             
-            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
-
-            network.silent(url, (images) => {
-                if (!html) return;
-
-                let bestLogo = null;
+            self.clearFields();
+            self.applyTextTitle(self.currentData);
+            self.drawBasicInfo(self.currentData);
+            
+            var logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+            
+            if (logoSetting !== 'hide') {
+                var type = data.name ? 'tv' : 'movie';
+                var cacheKey = `${type}_${data.id}`;
                 
-                if (images.logos && images.logos.length > 0) {
-                    let bestRussianLogo = null;
-                    let bestEnglishLogo = null;
-                    let bestOtherLogo = null;
+                if (self.logoCache[cacheKey]) {
+                    self.applyLogo(self.currentData, self.logoCache[cacheKey]);
+                    self.loadFullData(self.currentData);
+                    return;
+                }
+                
+                if (!self.cacheQueue[cacheKey]) {
+                    self.cacheQueue[cacheKey] = true;
+                    var url = Lampa.TMDB.api(`${type}/${data.id}/images?api_key=${Lampa.TMDB.key()}`);
 
-                    images.logos.forEach(logo => {
-                        if (logo.iso_639_1 === 'ru') {
-                            if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
-                                bestRussianLogo = logo;
+                    self.network.silent(url, function(images) {
+                        delete self.cacheQueue[cacheKey];
+                        if (requestId !== self.lastRequestId || !self.html || !self.currentData) return;
+
+                        var bestLogo = self.findBestLogo(images, logoSetting);
+                        
+                        if (bestLogo) {
+                            if (Object.keys(self.logoCache).length >= self.MAX_CACHE_SIZE) {
+                                delete self.logoCache[Object.keys(self.logoCache)[0]];
                             }
+                            self.logoCache[cacheKey] = bestLogo;
+                            self.applyLogo(self.currentData, bestLogo);
                         }
-                        else if (logo.iso_639_1 === 'en') {
-                            if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
-                                bestEnglishLogo = logo;
-                            }
-                        }
-                        else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
-                            bestOtherLogo = logo;
+                        
+                        self.loadFullData(self.currentData);
+                    }, function() {
+                        delete self.cacheQueue[cacheKey];
+                        if (requestId === self.lastRequestId) {
+                            self.loadFullData(self.currentData);
                         }
                     });
-
-                    bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-
-                    if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                        bestLogo = null;
-                    }
-                    
-                    // Сохраняем в кэш с ограничением размера
-                    if (bestLogo) {
-                        if (Object.keys(logoCache).length >= MAX_CACHE_SIZE) {
-                            const oldestKey = Object.keys(logoCache)[0];
-                            delete logoCache[oldestKey];
-                        }
-                        logoCache[cacheKey] = bestLogo;
-                    }
+                } else {
+                    self.loadFullData(self.currentData);
                 }
-                
-                delete cacheQueue[cacheKey];
-                this.applyLogo(data, bestLogo);
-            }, () => {
-                delete cacheQueue[cacheKey];
-                if (html) {
-                    const titleElement = html.find('.new-interface-info__title');
-                    if (titleElement.length) {
-                        titleElement.text(data.title);
-                    }
-                }
-            });
-        } else if (html) {
-            const titleElement = html.find('.new-interface-info__title');
-            if (titleElement.length) {
-                titleElement.text(data.title);
+            } else {
+                self.loadFullData(self.currentData);
             }
-        }
 
-        if (html) {
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
-        }
-      };
-      
-      this.applyLogo = function(data, logo) {
-    if (!html) return;
-    
-    const titleElement = html.find('.new-interface-info__title');
-    if (!titleElement.length) return;
-    
-    if (logo && logo.file_path) {
-        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-        titleElement.html(
-            `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 7em; max-height:3em;" 
-             src="${imageUrl}" 
-             alt="${data.title}" />`
-        );
-    } else {
-        titleElement.text(data.title);
-    }
-};
+        };
 
-      this.draw = function (data) {
-        var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-        var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
-        var head = [];
-        var details = [];
-        var countries = Lampa.Api.sources.tmdb.parseCountries(data);
-        var pg = Lampa.Api.sources.tmdb.parsePG(data);
+        self.render = function () { return self.html; };
+        self.empty = function () {};
         
-        if (create !== '0000') head.push('<span>' + create + '</span>');
-        if (countries.length > 0) head.push(countries.join(', '));
-        if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-        if (data.number_of_episodes && data.number_of_episodes > 0) {
-                details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
-            }
-        
-        if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
-            details.push(data.genres.map(function (item) {
-                return Lampa.Utils.capitalizeFirstLetter(item.name);
-            }).join(' | '));
-        }
-        
-        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-        
-        html.find('.new-interface-info__head').empty().append(head.join(', '));
-        html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-      };
-
-      this.load = function (data) {
-        var _this = this;
-
-        clearTimeout(timer);
-        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-        if (loaded[url]) return this.draw(loaded[url]);
-        timer = setTimeout(function () {
-          network.clear();
-          network.timeout(5000);
-          network.silent(url, function (movie) {
-            loaded[url] = movie;
-
-            _this.draw(movie);
-          });
-        }, 600);
-      };
-
-      this.render = function () {
-        return html;
-      };
-
-      this.empty = function () {};
-
-      this.destroy = function () {
-        if (html) html.remove();
-        loaded = {};
-        logoCache = {};
-        cacheQueue = {};
-        html = null;
-      };
+        self.destroy = function () {
+            if (self.html) self.html.remove();
+            self.loaded = {};
+            self.logoCache = {};
+            self.cacheQueue = {};
+            self.currentData = null;
+            self.html = null;
+        };
     }
 
-    function component(object) {
-        var network = new Lampa.Reguest();
-        var scroll = new Lampa.Scroll({
-            mask: true,
-            over: true,
-            scroll_by_item: true
-        });
-        var items = [];
-        var html = $('<div class="new-interface"><img class="full-start__background"></div>');
-        var active = 0;
-        var newlampa = Lampa.Manifest.app_digital >= 166;
-        var info;
-        var lezydata;
-        var viewall = Lampa.Storage.field('card_views_type') == 'view' || Lampa.Storage.field('navigation_type') == 'mouse';
-        var background_img = html.find('.full-start__background');
-        var background_last = '';
-        var background_timer;
+    function Component(object) {
+        var self = this;
+        self.network = new Lampa.Reguest();
+        self.scroll = new Lampa.Scroll({ mask: true, over: true, scroll_by_item: true });
+        self.items = [];
+        self.html = $('<div class="new-interface"><img class="full-start__background"></div>');
+        self.active = 0;
+        self.newlampa = Lampa.Manifest.app_digital >= 166;
+        self.info = null;
+        self.lezydata = null;
+        self.viewall = Lampa.Storage.field('card_views_type') == 'view' || Lampa.Storage.field('navigation_type') == 'mouse';
+        self.background_img = self.html.find('.full-start__background');
+        self.background_last = '';
+        self.background_timer = null;
 
-        this.create = function () {};
+        self.create = function () {};
 
-        this.empty = function () {
+        self.empty = function () {
             var button;
-
             if (object.source == 'tmdb') {
-                button = $('<div class="empty__footer"><div class="simple-button selector">' + Lampa.Lang.translate('change_source_on_cub') + '</div></div>');
+                button = $(`<div class="empty__footer"><div class="simple-button selector">${Lampa.Lang.translate('change_source_on_cub')}</div></div>`);
                 button.find('.selector').on('hover:enter', function () {
                     Lampa.Storage.set('source', 'cub');
-                    Lampa.Activity.replace({
-                        source: 'cub'
-                    });
+                    Lampa.Activity.replace({ source: 'cub' });
                 });
             }
-
             var empty = new Lampa.Empty();
-            html.append(empty.render(button));
-            this.start = empty.start;
-            this.activity.loader(false);
-            this.activity.toggle();
+            self.html.append(empty.render(button));
+            self.start = empty.start;
+            self.activity.loader(false);
+            self.activity.toggle();
         };
 
-        this.loadNext = function () {
-            var _this = this;
-
-            if (this.next && !this.next_wait && items.length) {
-                this.next_wait = true;
-                this.next(function (new_data) {
-                    _this.next_wait = false;
-                    new_data.forEach(_this.append.bind(_this));
-                    Lampa.Layer.visible(items[active + 1].render(true));
-                }, function () {
-                    _this.next_wait = false;
-                });
+        self.loadNext = function () {
+            if (self.next && !self.next_wait && self.items.length) {
+                self.next_wait = true;
+                self.next(function (new_data) {
+                    self.next_wait = false;
+                    new_data.forEach(self.append.bind(self));
+                    Lampa.Layer.visible(self.items[self.active + 1].render(true));
+                }, function () { self.next_wait = false; });
             }
         };
 
-        this.push = function () {};
+        self.push = function () {};
 
-        this.build = function (data) {
-            var _this2 = this;
+        self.build = function (data) {
+            self.lezydata = data;
+            self.info = new CreateInfo(object);
+            self.info.create();
+            self.scroll.minus(self.info.render());
+            data.slice(0, self.viewall ? data.length : 2).forEach(self.append.bind(self));
+            self.html.append(self.info.render());
+            self.html.append(self.scroll.render());
 
-            lezydata = data;
-            info = new create(object);
-            info.create();
-            scroll.minus(info.render());
-            data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
-            html.append(info.render());
-            html.append(scroll.render());
-
-            if (newlampa) {
-                Lampa.Layer.update(html);
-                Lampa.Layer.visible(scroll.render(true));
-                scroll.onEnd = this.loadNext.bind(this);
-
-                scroll.onWheel = function (step) {
-                    if (!Lampa.Controller.own(_this2)) _this2.start();
-                    if (step > 0) _this2.down();else if (active > 0) _this2.up();
+            if (self.newlampa) {
+                Lampa.Layer.update(self.html);
+                Lampa.Layer.visible(self.scroll.render(true));
+                self.scroll.onEnd = self.loadNext.bind(self);
+                self.scroll.onWheel = function (step) {
+                    if (!Lampa.Controller.own(self)) self.start();
+                    if (step > 0) self.down(); else if (self.active > 0) self.up();
                 };
             }
-
-            this.activity.loader(false);
-            this.activity.toggle();
+            self.activity.loader(false);
+            self.activity.toggle();
         };
 
-        this.background = function (elem) {
+        self.background = function (elem) {
             var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            clearTimeout(background_timer);
-            if (new_background == background_last) return;
+            clearTimeout(self.background_timer);
+            if (new_background == self.background_last) return;
             
-            background_last = new_background;
-            background_img.removeClass('loaded');
+            self.background_last = new_background;
+            self.background_img.removeClass('loaded');
             
-            background_img[0].onload = function () {
-                background_img.addClass('loaded');
+            self.background_img[0].onload = function () {
+                self.background_img.addClass('loaded');
             };
             
-            background_img[0].onerror = function () {
-                background_img.removeClass('loaded');
+            self.background_img[0].onerror = function () {
+                self.background_img.removeClass('loaded');
             };
             
-            background_img[0].src = background_last;
+            self.background_img[0].src = self.background_last;
         };
 
-        this.append = function (element) {
-            var _this3 = this;
-
+        self.append = function (element) {
             if (element.ready) return;
             element.ready = true;
+            
             var item = new Lampa.InteractionLine(element, {
                 url: element.url,
                 card_small: true,
@@ -299,125 +318,102 @@
                 card_wide: true,
                 nomore: element.nomore
             });
+            
             item.create();
-            item.onDown = this.down.bind(this);
-            item.onUp = this.up.bind(this);
-            item.onBack = this.back.bind(this);
-
-            item.onToggle = function () {
-                active = items.indexOf(item);
-            };
-
-            if (this.onMore) item.onMore = this.onMore.bind(this);
-
+            item.onDown = self.down.bind(self);
+            item.onUp = self.up.bind(self);
+            item.onBack = self.back.bind(self);
+            item.onToggle = function () { self.active = self.items.indexOf(item); };
+            if (self.onMore) item.onMore = self.onMore.bind(self);
+            
             item.onFocus = function (elem) {
-                info.update(elem);
-                _this3.background(elem);
+                self.info.update(elem);
+                self.background(elem);
             };
-
+            
             item.onHover = function (elem) {
-                info.update(elem);
-                _this3.background(elem);
+                self.info.update(elem);
+                self.background(elem);
             };
-
-            item.onFocusMore = info.empty.bind(info);
-            scroll.append(item.render());
-            items.push(item);
+            
+            item.onFocusMore = self.info.empty.bind(self.info);
+            self.scroll.append(item.render());
+            self.items.push(item);
         };
 
-        this.back = function () {
-            Lampa.Activity.backward();
+        self.back = function () { Lampa.Activity.backward(); };
+
+        self.down = function () {
+            self.active++;
+            self.active = Math.min(self.active, self.items.length - 1);
+            if (!self.viewall) self.lezydata.slice(0, self.active + 2).forEach(self.append.bind(self));
+            self.items[self.active].toggle();
+            self.scroll.update(self.items[self.active].render());
         };
 
-        this.down = function () {
-            active++;
-            active = Math.min(active, items.length - 1);
-            if (!viewall) lezydata.slice(0, active + 2).forEach(this.append.bind(this));
-            items[active].toggle();
-            scroll.update(items[active].render());
-        };
-
-        this.up = function () {
-            active--;
-
-            if (active < 0) {
-                active = 0;
+        self.up = function () {
+            self.active--;
+            if (self.active < 0) {
+                self.active = 0;
                 Lampa.Controller.toggle('head');
             } else {
-                items[active].toggle();
-                scroll.update(items[active].render());
+                self.items[self.active].toggle();
+                self.scroll.update(self.items[self.active].render());
             }
         };
 
-        this.start = function () {
-            var _this4 = this;
-
+        self.start = function () {
             Lampa.Controller.add('content', {
-                link: this,
-                toggle: function toggle() {
-                    if (_this4.activity.canRefresh()) return false;
-
-                    if (items.length) {
-                        items[active].toggle();
-                    }
+                link: self,
+                toggle: function () {
+                    if (self.activity.canRefresh()) return false;
+                    if (self.items.length) self.items[self.active].toggle();
                 },
-                update: function update() {},
-                left: function left() {
-                    if (Navigator.canmove('left')) Navigator.move('left');else Lampa.Controller.toggle('menu');
+                update: function () {},
+                left: function () {
+                    if (Navigator.canmove('left')) Navigator.move('left'); else Lampa.Controller.toggle('menu');
                 },
-                right: function right() {
-                    Navigator.move('right');
+                right: function () { Navigator.move('right'); },
+                up: function () {
+                    if (Navigator.canmove('up')) Navigator.move('up'); else Lampa.Controller.toggle('head');
                 },
-                up: function up() {
-                    if (Navigator.canmove('up')) Navigator.move('up');else Lampa.Controller.toggle('head');
-                },
-                down: function down() {
-                    if (Navigator.canmove('down')) Navigator.move('down');
-                },
-                back: this.back
+                down: function () { if (Navigator.canmove('down')) Navigator.move('down'); },
+                back: self.back
             });
             Lampa.Controller.toggle('content');
         };
 
-        this.refresh = function () {
-            this.activity.loader(true);
-            this.activity.need_refresh = true;
+        self.refresh = function () {
+            self.activity.loader(true);
+            self.activity.need_refresh = true;
         };
 
-        this.pause = function () {};
+        self.pause = function () {};
+        self.stop = function () {};
+        self.render = function () { return self.html; };
 
-        this.stop = function () {};
-
-        this.render = function () {
-            return html;
-        };
-
-        this.destroy = function () {
-            network.clear();
-            Lampa.Arrays.destroy(items);
-            scroll.destroy();
-            if (info) info.destroy();
-            html.remove();
-            items = null;
-            network = null;
-            lezydata = null;
+        self.destroy = function () {
+            self.network.clear();
+            Lampa.Arrays.destroy(self.items);
+            self.scroll.destroy();
+            if (self.info) self.info.destroy();
+            self.html.remove();
+            self.items = null;
+            self.network = null;
+            self.lezydata = null;
         };
     }
 
     function startPlugin() {
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
-        var new_interface = component;
+        var new_interface = Component;
 
         Lampa.InteractionMain = function (object) {
             var use = new_interface;
-
             if (window.innerWidth < 767) use = old_interface;
             if (Lampa.Manifest.app_digital < 153) use = old_interface;
-            if (object.title === 'Избранное') {
-                use = old_interface;
-            }
-
+            if (object.title === 'Избранное') use = old_interface;
             return new use(object);
         };
 
@@ -457,29 +453,24 @@
             .new-interface .card--small.card--wide {
                 width: 18.3em;
             }
-            
             .new-interface-info {
                 position: relative;
                 padding: 1.5em;
                 height: 26em;
             }
-            
             .new-interface-info__body {
                 width: 80%;
                 padding-top: 1.1em;
             }
-            
             .new-interface-info__head {
                 color: rgba(255, 255, 255, 0.6);
                 margin-bottom: 0em;
                 font-size: 1.3em;
                 min-height: 1em;
             }
-            
             .new-interface-info__head span {
                 color: #fff;
             }
-            
             .new-interface-info__title {
                 font-size: 4em;
                 margin-top: 0.1em;
@@ -500,11 +491,9 @@
                 letter-spacing: -2px;
                 word-spacing: 5px;
             }
-            
             .full-start__pg, .full-start__status {
                 font-size: 0.9em;
             }
-            
             .new-interface-info__details {
                 margin-bottom: 1.6em;
                 display: flex;
@@ -513,12 +502,10 @@
                 min-height: 1.9em;
                 font-size: 1.3em;
             }
-            
             .new-interface-info__split {
                 margin: 0 1em;
                 font-size: 0.7em;
             }
-            
             .new-interface-info__description {
                 font-size: 1.2em;
                 font-weight: 300;
@@ -530,23 +517,16 @@
                 -webkit-box-orient: vertical;
                 width: 70%;
             }
-            
             .new-interface .full-start__background {
                 opacity: 0.7 !important;
-            }
-            
-            .new-interface .full-start__background {
                 height:109% !important;
                 left:0em !important;
                 top:-9.2% !important;
             }
-            
             .new-interface .full-start__rate {
                 font-size: 1.3em;
                 margin-right: 0;
             }
-            
-            /* Полное удаление card__promo */
             .new-interface .card__promo,
             .new-interface .card .card__promo {
                 display: none !important;
@@ -557,28 +537,22 @@
                 margin: 0 !important;
                 opacity: 0 !important;
             }
-            
             .new-interface .card-more__box {
                 padding-bottom: 95%;
             }
-            
             .new-interface .card.card--wide+.card-more .card-more__box {
                 padding-bottom: 95%;
             }
-            
             .new-interface .card.card--wide .card-watched {
                 display: none !important;
             }
-            
             body.light--version .new-interface-info__body {
                 width: 69%;
                 padding-top: 1.5em;
             }
-            
             body.light--version .new-interface-info {
                 height: 25.3em;
             }
-
             body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
                 animation: animation-card-focus 0.2s
             }
