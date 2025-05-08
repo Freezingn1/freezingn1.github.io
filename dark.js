@@ -135,6 +135,10 @@
 				opacity: 0.80;
 			}
 			
+			.noty {
+				background: #c22222;
+			}
+			
 			/* Цвет иконок правый угол */
 			.head__action.focus {
 				background-color: #c22222;
