@@ -137,6 +137,7 @@
 			
 			.noty {
 				background: #c22222;
+				color: #ffffff;
 			}
 			
 			/* Цвет иконок правый угол */
