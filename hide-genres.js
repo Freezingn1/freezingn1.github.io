@@ -1,38 +1,61 @@
 (function() {
-    // Проверка загрузки Lampa
+    // Проверка, что Lampa загружена
     if (typeof Lampa === 'undefined') {
         console.warn('Lampa не обнаружена');
         return;
     }
 
-    // Основная функция скрытия жанров
-    function hideGenres() {
-        const detailsBlock = document.querySelector('.full-start-new__details');
-        if (!detailsBlock) return;
-
-        // Создаем клон без жанров
-        const newContent = Array.from(detailsBlock.children)
-            .filter(el => !el.textContent.includes('●') && !el.textContent.match(/[А-Яа-я]+\s?\|\s?[А-Яа-я]+/))
-            .map(el => el.outerHTML)
-            .join('');
-
-        // Обновляем блок
-        detailsBlock.innerHTML = newContent;
+    // Безопасная функция скрытия жанров
+    function safeHideGenres() {
+        try {
+            const detailsBlocks = document.querySelectorAll('.full-start-new__details');
+            
+            detailsBlocks.forEach(block => {
+                // Создаем копию всех элементов
+                const elements = Array.from(block.children);
+                
+                // Фильтруем только нужные элементы (оставляем длительность)
+                const filtered = elements.filter(el => {
+                    // Удаляем элементы с разделителем
+                    if (el.classList.contains('full-start-new__split')) return false;
+                    
+                    // Удаляем элементы с перечислением жанров
+                    if (el.textContent.match(/\b[А-Яа-я]+\s?\|\s?[А-Яа-я]+\b/)) return false;
+                    
+                    return true;
+                });
+                
+                // Если остались элементы - обновляем блок
+                if (filtered.length > 0) {
+                    block.innerHTML = filtered.map(el => el.outerHTML).join('');
+                }
+            });
+        } catch (e) {
+            console.error('Ошибка в hide-genres:', e);
+        }
     }
 
-    // Запускаем при изменениях
-    const observer = new MutationObserver(hideGenres);
-    observer.observe(document.body, { 
-        childList: true, 
-        subtree: true 
+    // Запускаем с задержкой и при изменениях
+    const safeObserver = new MutationObserver((mutations) => {
+        safeHideGenres();
     });
 
-    // Дополнительный вызов для надежности
+    // Начинаем наблюдение
+    safeObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: false
+    });
+
+    // Первый запуск с задержкой
+    setTimeout(safeHideGenres, 1500);
+    
+    // Интеграция с Lampa, если доступна
     if (Lampa.Listener) {
-        Lampa.Listener.follow('full', hideGenres);
+        Lampa.Listener.follow('full', () => {
+            setTimeout(safeHideGenres, 500);
+        });
     }
 
-    // Первый запуск
-    setTimeout(hideGenres, 1000);
-    console.log('Плагин hide-genres успешно загружен');
+    console.log('Плагин hide-genres-safe успешно загружен');
 })();
