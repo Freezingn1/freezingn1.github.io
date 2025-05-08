@@ -71,30 +71,19 @@
     var createYear = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
     var countries = [];
     
-    // Получаем страны в правильном формате
-    if (data.production_countries && data.production_countries.length > 0) {
-        countries = data.production_countries.map(function(c) { 
-            return c.name || c.iso_3166_1; 
-        });
+    if (data.production_countries?.length) {
+        countries = data.production_countries.map(c => c.name || c.iso_3166_1);
     } 
-    else if (data.origin_country && data.origin_country.length > 0) {
+    else if (data.origin_country?.length) {
         countries = data.origin_country;
     }
     
-    // Формируем HTML
-    var headHtml = '';
-    if (createYear !== '0000') {
-        headHtml += `<span>${createYear}</span>`;
-    }
+    var headContent = [];
+    if (createYear !== '0000') headContent.push(`<span>${createYear}</span>`);
+    if (countries.length) headContent.push(countries.join(', '));
     
-    if (countries.length > 0) {
-        if (headHtml !== '') headHtml += ', ';
-        headHtml += countries.join(', ');
-    }
-    
-    // Устанавливаем HTML с нужным классом
     self.html.find('.new-interface-info__head').html(
-        `<div class="full-start-new__head">${headHtml}</div>`
+        `<div class="full-start-new__head">${headContent.join(', ')}</div>`
     );
 };
 
