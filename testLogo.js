@@ -160,7 +160,7 @@
                 fetchRussianTitle(movie).then(title => {
                     if (title) {
                         render.find(".full-start-new__rate-line").first().before(`
-                            <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 10px; opacity: 0.80; max-width: 400px; width: fit-content; margin-left: auto">
+                            <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 10px; opacity: 0.80; max-width: 200px; width: fit-content; margin-left: auto">
                                 RU: ${title}
                             </div>
                         `);
