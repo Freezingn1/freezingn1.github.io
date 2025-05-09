@@ -234,6 +234,21 @@
 				background: #c22222 !important;
 			}
 			
+			.modal {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.7); /* Полупрозрачный чёрный фон */
+				backdrop-filter: blur(10px); /* Размытие фона */
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				z-index: 1000;
+			}
+			
+			
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
                 background: -webkit-linear-gradient(66.47deg, rgb(192, 254, 207) -15.94%, rgb(30, 213, 169) 62.41%);
