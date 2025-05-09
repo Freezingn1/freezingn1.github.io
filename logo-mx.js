@@ -45,6 +45,7 @@
         const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
         const TMDB_API_URL = "https://api.themoviedb.org/3";
         const titleCache = new Map();
+        const logoCache = new Map();
 
         // Функция для выбора лучшего логотипа
         function getBestLogo(logos, setting) {
@@ -99,8 +100,32 @@
             return null;
         }
 
+        // Получение логотипов
+        async function fetchLogos(card) {
+            try {
+                if (logoCache.has(card.id)) return logoCache.get(card.id);
+
+                const mediaType = card.first_air_date ? 'tv' : 'movie';
+                const url = `${TMDB_API_URL}/${mediaType}/${card.id}/images?api_key=${TMDB_API_KEY}`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+                const logos = data.logos || [];
+
+                if (logos.length) {
+                    logoCache.set(card.id, logos);
+                    return logos;
+                }
+            } catch (error) {
+                console.error("Ошибка при получении логотипов:", error);
+            }
+            return [];
+        }
+
         // Обработка полной страницы
-        Lampa.Listener.follow("full", function(event) {
+        Lampa.Listener.follow("full", async function(event) {
             if (event.type !== "complite") return;
             if (!event.object || !event.object.activity || !event.object.activity.render) return;
             
@@ -111,7 +136,11 @@
                 const render = event.object.activity.render();
                 if (!render || !render.find) return;
                 
-                const titleElement = render.find(".full-start__title");
+                // Ищем заголовок по разным возможным селекторам
+                let titleElement = render.find(".full-start__title, .full-start-new__title");
+                if (!titleElement || !titleElement.length) {
+                    titleElement = render.find(".full__title");
+                }
                 if (!titleElement || !titleElement.length) return;
                 
                 const originalTitle = movie.title || movie.name;
@@ -119,8 +148,8 @@
                 
                 const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                                 || /аниме|anime/i.test(originalTitle);
-                const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
-                const russianTitleSetting = Lampa.Storage.get("russian_titles_settings") || "show_when_no_ru_logo";
+                const logoSetting = Lampa.Storage.get("logo_glav", "interface") || "show_all";
+                const russianTitleSetting = Lampa.Storage.get("russian_titles_settings", "interface") || "show_when_no_ru_logo";
 
                 // Удаляем предыдущие русские названия
                 render.find('.ru-title-full').remove();
@@ -137,43 +166,52 @@
                 // Очищаем заголовок перед загрузкой
                 titleElement.empty();
 
-                // Загружаем все логотипы
-                const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
+                // Загружаем логотипы
+                const logos = await fetchLogos(movie);
+                const logo = getBestLogo(logos, logoSetting);
 
-                $.get(tmdbUrl, function(data) {
-                    const logos = data.logos || [];
-                    const logo = getBestLogo(logos, logoSetting);
-
-                    if (logo?.file_path) {
-                        // Показываем логотип
-                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-                        titleElement.html(`<img style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em;" src="${imageUrl}" />`);
+                if (logo?.file_path) {
+                    // Показываем логотип
+                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+                    const img = new Image();
+                    img.src = imageUrl;
+                    img.style = "max-height: 4em; max-width: 100%; object-fit: contain; margin: 0.5em 0;";
+                    img.onload = function() {
+                        titleElement.empty().append(img);
                         
                         // Показываем русское название в зависимости от настроек
                         if (russianTitleSetting === "show_always" || 
                             (russianTitleSetting === "show_when_no_ru_logo" && logo.iso_639_1 !== "ru")) {
                             showRussianTitle();
                         }
-                    } else {
-                        // Если логотипов нет вообще
+                    };
+                    img.onerror = function() {
+                        console.error("Не удалось загрузить логотип:", imageUrl);
                         showTextTitle();
                         if (russianTitleSetting === "show_always") {
                             showRussianTitle();
                         }
-                    }
-                }).fail(() => {
-                    console.error("Ошибка загрузки логотипов из TMDB");
+                    };
+                } else {
+                    // Если логотипов нет вообще
                     showTextTitle();
-                });
+                    if (russianTitleSetting === "show_always") {
+                        showRussianTitle();
+                    }
+                }
 
                 function showRussianTitle() {
                     fetchRussianTitle(movie).then(title => {
                         if (title && render && render.find) {
-                            const rateLine = render.find(".full-start__rate-line").first();
+                            // Ищем место для вставки русского названия
+                            let rateLine = render.find(".full-start__rate-line, .full-start-new__rate-line").first();
+                            if (!rateLine || !rateLine.length) {
+                                rateLine = render.find(".full__subtitle").first();
+                            }
                             if (rateLine && rateLine.length) {
                                 rateLine.before(`
-                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 10px; opacity: 0.80; max-width: 15em;text-shadow: 1px 1px 0px #00000059;">
-                                        RU: ${title}
+                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; margin-bottom: 10px; opacity: 0.80; max-width: 100%; text-shadow: 1px 1px 0px #00000059;">
+                                        ${title}
                                     </div>
                                 `);
                             }
@@ -190,6 +228,12 @@
                 }
             } catch (error) {
                 console.error("Ошибка в обработчике full:", error);
+                // В случае ошибки показываем обычное название
+                const titleElement = event.object.activity.render().find(".full-start__title, .full-start-new__title, .full__title");
+                if (titleElement && titleElement.length) {
+                    const originalTitle = event.data.movie.title || event.data.movie.name;
+                    titleElement.text(originalTitle);
+                }
             }
         });
 
@@ -198,9 +242,18 @@
         style.textContent = `
             .ru-title-full {
                 transition: opacity 0.3s ease;
+                font-size: 1.1em;
             }
             .ru-title-full:hover {
                 opacity: 1 !important;
+            }
+            .full-start__title img,
+            .full-start-new__title img,
+            .full__title img {
+                max-height: 4em !important;
+                max-width: 100% !important;
+                object-fit: contain !important;
+                margin: 0.5em 0 !important;
             }
         `;
         document.head.appendChild(style);
