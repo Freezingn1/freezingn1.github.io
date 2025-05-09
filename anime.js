@@ -1,7 +1,7 @@
 (function() {
-    // Убедитесь, что jQuery подключен
+    // Проверяем, подключен ли jQuery
     if (typeof $ === 'undefined') {
-        console.error('jQuery is not loaded');
+        console.error('jQuery is not loaded. Please include jQuery before running this script.');
         return;
     }
 
@@ -12,9 +12,70 @@
 
         // Добавляем обработчик клика с делегированием
         $(document).on('click', '.menu__item[data-action="lnum"]', function() {
+            console.log('Anime2 menu item clicked');
+            // Скрываем все активные разделы
             $('.activity--active').removeClass('activity--active');
-            var content = `...`; // Ваш HTML-контент
+
+            // Создаем контент для нового раздела
+            var content = `
+            <div class="activity layer--width activity--active">
+                <div class="activity__body">
+                    <div class="new-interface">
+                        <img class="full-start__background loaded" src="https://image.tmdb.org/t/p/w1280//89qSKhLrJOUhp6xgbqgSTpzblbA.jpg">
+                        <div class="new-interface-info">
+                            <div class="new-interface-info__body">
+                                <div class="new-interface-info__head"><span>2025</span>, Китай</div>
+                                <div class="new-interface-info__title"><img class="new-interface-logo" src="https://image.tmdb.org//t/p/w500/1FIvQSUzFovFdk8rNXnE9t76G6E.png" alt="Сверхкуб" onerror="this.onerror=null;this.parentElement.textContent='Сверхкуб'"></div>
+                                <div class="new-interface-info__details">
+                                    <div class="full-start__rate"><div>9.1</div><div>TMDB</div></div>
+                                    <span class="new-interface-info__split">●</span>
+                                    <span class="full-start__pg">Эпизодов 12</span>
+                                    <span class="new-interface-info__split">●</span>
+                                    <span class="full-start__pg" style="font-size: 0.9em;">14+</span>
+                                </div>
+                                <div class="new-interface-info__description"></div>
+                            </div>
+                        </div>
+                        <div class="scroll scroll--mask scroll--over layer--wheight" style="height: 239.281px;">
+                            <div class="scroll__content">
+                                <div class="scroll__body">
+                                    <div class="items-line layer--visible layer--render items-line--type-none">
+                                        <div class="items-line__head">
+                                            <div class="items-line__title">Популярное в Anime2</div>
+                                            <div class="items-line__more selector">Еще</div>
+                                        </div>
+                                        <div class="items-line__body">
+                                            <div class="scroll scroll--horizontal">
+                                                <div class="scroll__content">
+                                                    <div class="scroll__body items-cards">
+                                                        <div class="card selector layer--visible layer--render card--tv card--small card--wide card--loaded">
+                                                            <div class="card__view">
+                                                                <img src="https://image.tmdb.org/t/p/w780//89qSKhLrJOUhp6xgbqgSTpzblbA.jpg" class="card__img">
+                                                                <div class="card__icons"><div class="card__icons-inner"></div></div>
+                                                                <div class="card__type" style="font-size: 0.9em;">Сериал</div>
+                                                                <div class="card__vote">9.1</div>
+                                                                <div class="card__quality"><div>webrip</div></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="activity__loader"></div>
+            </div>
+            `;
+
+            // Добавляем контент в обертку
             $('.wrap__content').append(content);
+            console.log('New section added to .wrap__content');
+
+            // Имитируем загрузку данных
             setTimeout(function() {
                 $('.activity__loader').hide();
             }, 1000);
@@ -23,25 +84,25 @@
         // Функция для добавления пункта меню
         function addMenuItem() {
             var menuList = $('.menu__list');
-            console.log('menuList found:', menuList.length);
+            console.log('Checking for .menu__list, found:', menuList.length);
             if (menuList.length) {
                 menuList.append(menuItem);
-                console.log('Menu item added');
+                console.log('Menu item added to .menu__list');
             } else {
-                setTimeout(addMenuItem, 100);
+                setTimeout(addMenuItem, 100); // Повторяем через 100 мс
             }
         }
 
         // Начинаем попытки добавить пункт меню
         addMenuItem();
 
-        // Альтернатива: наблюдаем за DOM
+        // Наблюдаем за DOM для динамически добавленных .menu__list
         const observer = new MutationObserver((mutations, obs) => {
             var menuList = $('.menu__list');
             if (menuList.length) {
                 menuList.append(menuItem);
-                console.log('Menu item added via observer');
-                obs.disconnect();
+                console.log('Menu item added via MutationObserver');
+                obs.disconnect(); // Останавливаем наблюдение
             }
         });
         observer.observe(document.body, { childList: true, subtree: true });
