@@ -17,14 +17,17 @@
 
     // Функция для добавления пункта меню
     function addMenuItem() {
+        console.log('[Anime2 Plugin] Attempting to add menu item...');
         // Находим меню
         var menu = $('.menu .menu__list');
         if (menu.length) {
+            console.log('[Anime2 Plugin] Menu found, adding item...');
             // Добавляем пункт меню
             menu.append(menuItem);
             
             // Добавляем обработчик клика
             menuItem.on('click', function() {
+                console.log('[Anime2 Plugin] Anime2 menu item clicked');
                 Lampa.Activity.push({
                     url: 'movie',
                     title: 'Anime2',
@@ -32,26 +35,41 @@
                     source: 'tmdb',
                     page: 1,
                     filters: {
-                        genre: '16', // ID жанра "Анимация" в TMDB
-                        type: 'tv'   // Можно изменить на 'movie' для аниме-фильмов
+                        genre: '16', // Анимация
+                        type: 'tv'
                     }
                 });
             });
+            console.log('[Anime2 Plugin] Menu item added successfully');
+        } else {
+            console.log('[Anime2 Plugin] Menu not found!');
         }
     }
 
     // Инициализация плагина
     function init() {
-        // Ждем загрузки Lampa
+        console.log('[Anime2 Plugin] Initializing plugin...');
         if (window.Lampa) {
+            console.log('[Anime2 Plugin] Lampa is loaded');
             addMenuItem();
         } else {
-            // Если Lampa еще не загружена, ждем события
-            window.addEventListener('lampa:loaded', addMenuItem);
+            console.log('[Anime2 Plugin] Lampa not loaded, waiting for lampa:loaded event');
+            window.addEventListener('lampa:loaded', function() {
+                console.log('[Anime2 Plugin] Lampa:loaded event triggered');
+                addMenuItem();
+            });
         }
     }
 
     // Запускаем инициализацию
-    $(document).ready(init);
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        console.log('[Anime2 Plugin] Document ready, initializing...');
+        init();
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Anime2 Plugin] DOMContentLoaded, initializing...');
+            init();
+        });
+    }
 
 })();
