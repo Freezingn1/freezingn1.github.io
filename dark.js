@@ -165,7 +165,7 @@
             }
             
             .modal__content {
-                background-color: #1e1e1e;
+                background-color: #1e1e1e !important;
             }			
             
             .card-more.focus .card-more__box::after {
@@ -221,6 +221,17 @@
 				box-shadow: -10px 0 20px 0px rgb(22 22 22 / 50%);
 			}
             
+			.modal__title {
+				background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text;
+			}
+			
+			.notification-item {
+				border: 2px solid #c22222;
+			}
+			
+			.notification-date {
+				background: #c22222;
+			}
 			
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
