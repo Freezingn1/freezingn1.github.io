@@ -1,4 +1,4 @@
-(function  (function () {
+(function () {
     'use strict';
 
     // Создаем элемент меню
@@ -18,33 +18,39 @@
     // Функция для добавления пункта меню
     function addMenuItem() {
         console.log('[Anime2 Plugin] Attempting to add menu item...');
+        // Находим меню
         var menu = $('.menu .menu__list');
         if (menu.length) {
             console.log('[Anime2 Plugin] Menu found, adding item...');
+            // Добавляем пункт меню
             menu.append(menuItem);
             
+            // Добавляем обработчик клика
             menuItem.on('click', function() {
                 console.log('[Anime2 Plugin] Anime2 menu item clicked');
-                try {
+                // Проверяем, доступен ли TMDB
+                if (Lampa.TMDB && Lampa.TMDB.api_key) {
+                    console.log('[Anime2 Plugin] TMDB is configured');
                     Lampa.Activity.push({
-                        url: '/discover/tv',
+                        url: 'discover/tv', // Используем endpoint для сериалов
                         title: 'Anime2',
-                        component: 'category',
+                        component: 'category_full', // Для отображения карточек
                         source: 'tmdb',
                         page: 1,
                         filters: {
-                            with_genres: '16', // Анимация
-                            with_original_language: 'ja' // Только японский язык для аниме
+                            with_genres: '16', // Жанр "Анимация"
+                            with_original_language: 'ja', // Только японский язык для аниме
+                            sort_by: 'popularity.desc' // Сортировка по популярности
                         }
                     });
-                    console.log('[Anime2 Plugin] Activity pushed successfully');
-                } catch (error) {
-                    console.error('[Anime2 Plugin] Error pushing activity:', error);
+                } else {
+                    console.error('[Anime2 Plugin] TMDB API key is not configured!');
+                    Lampa.Noty.show('Ошибка: TMDB API ключ не настроен. Проверьте настройки Lampa.');
                 }
             });
             console.log('[Anime2 Plugin] Menu item added successfully');
         } else {
-            console.log('[Anime2 Plugin] Menu not found!');
+            console.error('[Anime2 Plugin] Menu not found!');
         }
     }
 
