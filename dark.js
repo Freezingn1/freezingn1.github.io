@@ -9,7 +9,11 @@
     }
 
     // Основная функция для применения стилей
-    
+    function applyStyles() {
+        // Устанавливаем тёмный фон для body
+        safeAddStyle(document.body, {
+            'background': '#121212'
+        });
 
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
