@@ -165,7 +165,7 @@
             }
             
             .modal__content {
-                background-color: #1e1e1e !important;
+                background-color: #121212 !important;
             }			
             
             .card-more.focus .card-more__box::after {
@@ -206,6 +206,7 @@
             
             .modal__content {
                 background-color: #121212;
+				box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 51%);
             }
                         
 
@@ -222,15 +223,15 @@
 			}
             
 			.modal__title {
-				background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text;
+				background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text !important;
 			}
 			
 			.notification-item {
-				border: 2px solid #c22222;
+				border: 2px solid #c22222 !important;
 			}
 			
 			.notification-date {
-				background: #c22222;
+				background: #c22222 !important;
 			}
 			
             /* Градиентный текст для рейтинга */
