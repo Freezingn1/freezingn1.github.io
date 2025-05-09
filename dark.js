@@ -209,9 +209,13 @@
             }
                         
 
-.extensions__block-empty.focus:after, .extensions__block-add.focus:after {
-    border: 0.3em solid #c22222;
-}
+			.extensions__block-empty.focus:after, .extensions__block-add.focus:after {
+				border: 0.3em solid #c22222;
+			}
+			
+			.settings__content {
+				box-shadow: -10px 0 20px 0px rgb(22 22 22 / 50%);
+			}
             
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
