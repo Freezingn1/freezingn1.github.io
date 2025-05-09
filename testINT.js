@@ -12,7 +12,6 @@
       };
 
       this.update = function (data) {
-        // Проверяем, что html элемент существует
         if (!html) {
             console.error('HTML element is not initialized');
             return;
@@ -25,7 +24,6 @@
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
             network.silent(url, (images) => {
-                // Дополнительная проверка html перед использованием
                 if (!html) return;
 
                 let bestLogo = null;
@@ -35,7 +33,6 @@
                     let bestEnglishLogo = null;
                     let bestOtherLogo = null;
 
-                    // Ищем лучшие логотипы по приоритету: русский -> английский -> любой другой
                     images.logos.forEach(logo => {
                         if (logo.iso_639_1 === 'ru') {
                             if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
@@ -52,10 +49,8 @@
                         }
                     });
 
-                    // Выбираем логотип по приоритету
                     bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
 
-                    // Если настройка "Только русские" и русского лого нет - не показываем ничего
                     if (logoSetting === 'ru_only' && !bestRussianLogo) {
                         bestLogo = null;
                     }
@@ -90,11 +85,12 @@
           if (!titleElement.length) return;
           
           if (logo && logo.file_path) {
-              const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path.replace(".svg", ".png"));
+              const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
               titleElement.html(
-                  `<img style="margin-top:0.3em; margin-bottom:0.3em; max-width: 7em; max-height:3em;" 
+                  `<img class="new-interface-logo" 
                    src="${imageUrl}" 
-                   alt="${data.title}" />`
+                   alt="${data.title}"
+                   onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
               );
           } else {
               titleElement.text(data.title);
@@ -116,7 +112,6 @@
                 details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
             }
         
-        // Check if genres should be shown
         if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
             details.push(data.genres.map(function (item) {
                 return Lampa.Utils.capitalizeFirstLetter(item.name);
@@ -141,7 +136,6 @@
           network.timeout(5000);
           network.silent(url, function (movie) {
             loaded[url] = movie;
-
             _this.draw(movie);
           });
         }, 600);
@@ -160,7 +154,6 @@
       };
     }
 
-    // Остальной код остается без изменений
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -479,6 +472,16 @@
                 word-spacing: 5px;
             }
             
+            .new-interface-logo {
+                margin-top: 0.3em;
+                margin-bottom: 0.3em;
+                max-width: 7em;
+                max-height: 3em;
+                object-fit: contain;
+                width: auto;
+                height: auto;
+            }
+            
             .full-start__pg, .full-start__status {
                 font-size: 0.9em;
             }
@@ -515,8 +518,8 @@
             
             .new-interface .full-start__background {
                 height:109% !important;
-				left:0em !important;
-				top:-9.2% !important;
+                left:0em !important;
+                top:-9.2% !important;
             }
             
             .new-interface .full-start__rate {
