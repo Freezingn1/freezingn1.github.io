@@ -207,6 +207,8 @@
             .modal__content {
                 background-color: #121212;
 				box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 51%);
+				max-height: 90vh;
+				overflow: hidden;
             }
                         
 
