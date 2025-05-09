@@ -1,4 +1,4 @@
-(function () {
+(function  (function () {
     'use strict';
 
     // Создаем элемент меню
@@ -18,27 +18,29 @@
     // Функция для добавления пункта меню
     function addMenuItem() {
         console.log('[Anime2 Plugin] Attempting to add menu item...');
-        // Находим меню
         var menu = $('.menu .menu__list');
         if (menu.length) {
             console.log('[Anime2 Plugin] Menu found, adding item...');
-            // Добавляем пункт меню
             menu.append(menuItem);
             
-            // Добавляем обработчик клика
             menuItem.on('click', function() {
                 console.log('[Anime2 Plugin] Anime2 menu item clicked');
-                Lampa.Activity.push({
-                    url: 'movie',
-                    title: 'Anime2',
-                    component: 'category',
-                    source: 'tmdb',
-                    page: 1,
-                    filters: {
-                        genre: '16', // Анимация
-                        type: 'tv'
-                    }
-                });
+                try {
+                    Lampa.Activity.push({
+                        url: '/discover/tv',
+                        title: 'Anime2',
+                        component: 'category',
+                        source: 'tmdb',
+                        page: 1,
+                        filters: {
+                            with_genres: '16', // Анимация
+                            with_original_language: 'ja' // Только японский язык для аниме
+                        }
+                    });
+                    console.log('[Anime2 Plugin] Activity pushed successfully');
+                } catch (error) {
+                    console.error('[Anime2 Plugin] Error pushing activity:', error);
+                }
             });
             console.log('[Anime2 Plugin] Menu item added successfully');
         } else {
