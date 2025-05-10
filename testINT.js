@@ -79,23 +79,25 @@
       };
       
       this.applyLogo = function(data, logo) {
-          if (!html) return;
-          
-          const titleElement = html.find('.new-interface-info__title');
-          if (!titleElement.length) return;
-          
-          if (logo && logo.file_path) {
-              const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-              titleElement.html(
-                  `<img class="new-interface-logo" 
-                   src="${imageUrl}" 
-                   alt="${data.title}"
-                   onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
-              );
-          } else {
-              titleElement.text(data.title);
-          }
-      };
+    if (!html) return;
+    
+    const titleElement = html.find('.new-interface-info__title');
+    if (!titleElement.length) return;
+    
+    // Проверяем, что логотип существует и имеет расширение .svg
+    if (logo && logo.file_path && logo.file_path.toLowerCase().endsWith('.svg')) {
+        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+        titleElement.html(
+            `<img class="new-interface-logo" 
+             src="${imageUrl}" 
+             alt="${data.title}"
+             onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
+        );
+    } else {
+        // Если SVG нет, выводим обычный текст
+        titleElement.text(data.title);
+    }
+};
 
       this.draw = function (data) {
         var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
