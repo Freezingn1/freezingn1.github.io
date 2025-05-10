@@ -4,10 +4,6 @@
     Lampa.Platform.tv();
     
     function createAnimeMenu() {
-        if(Lampa.Manifest.certificate !== 'bylampa') {
-            Lampa.Noty.show('Ошибка доступа');
-            return;
-        }
 
         const animeSections = [
             {
