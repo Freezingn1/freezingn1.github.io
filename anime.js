@@ -3,49 +3,89 @@
 
     Lampa.Platform.tv();
     
-    function createAnimeMenu() {
+    function initAnimeSection() {
 
-        const animeSections = [
-            {
-                title: 'Популярное аниме',
-                url: 'discover/tv?with_original_language=ja&with_genres=16&without_genres=10762&first_air_date.gte=2020-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&vote_average.gte=7.0&vote_count.gte=20'
-            },
-            {
-                title: 'Новинки аниме',
-                url: 'discover/tv?with_original_language=ja&with_genres=16&without_genres=10762&first_air_date.gte=2023-01-01&sort_by=first_air_date.desc&vote_average.gte=7.0'
-            },
-            {
-                title: 'Топ аниме',
-                url: 'discover/tv?with_original_language=ja&with_genres=16&without_genres=10762&sort_by=vote_average.desc&vote_count.gte=100&first_air_date.gte=2010-01-01'
+        // Иконка SVG для меню
+        const animeIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="8.5" cy="10.5" r="1.5"/><circle cx="15.5" cy="10.5" r="1.5"/><path d="M12 16c-1.48 0-2.75-.81-3.45-2H6.88c.8 2.05 2.79 3.5 5.12 3.5s4.32-1.45 5.12-3.5h-1.67c-.69 1.19-1.97 2-3.45 2z"/></svg>';
+
+        // Создаем пункт меню
+        const menuItem = $(`
+            <li class="menu__item selector" data-action="anime">
+                <div class="menu__ico">${animeIcon}</div>
+                <div class="menu__text">Аниме</div>
+            </li>
+        `);
+
+        // Функция для добавления в меню
+        function addToMenu() {
+            // Попробуем разные варианты селекторов меню
+            const menuSelectors = [
+                '.menu__list', 
+                '.navigation__list',
+                '.main-menu ul',
+                '.menu .menu__list',
+                'nav ul:first'
+            ];
+            
+            let menuAdded = false;
+            
+            for(let selector of menuSelectors) {
+                if($(selector).length) {
+                    $(selector).append(menuItem);
+                    console.log('Аниме пункт добавлен в меню через селектор:', selector);
+                    menuAdded = true;
+                    break;
+                }
             }
-        ];
+            
+            if(!menuAdded) {
+                console.error('Не удалось найти меню для добавления пункта');
+            }
+        }
 
-        // Создаем пункт меню "Аниме"
-        const menuItem = $(`<li class="menu__item selector" data-action="anime_tmdb">
-            <div class="menu__ico">${svgIcon}</div>
-            <div class="menu__text">Аниме</div>
-        </li>`);
-
-        menuItem.on('hover:enter', function() {
+        // Обработчик нажатия
+        menuItem.on('hover:enter click', function() {
             Lampa.Activity.push({
-                url: 'anime',
+                url: 'discover/tv?with_original_language=ja&with_genres=16',
                 title: 'Аниме',
                 component: 'category_full',
                 source: 'tmdb',
                 card_type: 'true',
                 page: 1,
-                // Добавляем секции для горизонтального отображения
-                sections: animeSections
+                sections: [
+                    {
+                        title: 'Популярное аниме',
+                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=popularity.desc'
+                    },
+                    {
+                        title: 'Топ аниме',
+                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=vote_average.desc'
+                    },
+                    {
+                        title: 'Новинки',
+                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=first_air_date.desc'
+                    }
+                ]
             });
         });
 
-        $('.menu .menu__list').eq(0).append(menuItem);
+        // Пробуем добавить сразу
+        addToMenu();
+        
+        // Если меню еще не загружено, ждем события ready
+        if(!$('.menu__item').length) {
+            Lampa.Listener.follow('app', function(e) {
+                if(e.type === 'ready') {
+                    addToMenu();
+                }
+            });
+        }
     }
 
-    const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><path fill="currentColor" fill-rule="evenodd" d="m368.256 214.573l-102.627 187.35c40.554 71.844 73.647 97.07 138.664 94.503c63.67-2.514 136.974-89.127 95.694-163.243L397.205 150.94c-3.676 12.266-25.16 55.748-28.95 63.634M216.393 440.625C104.077 583.676-57.957 425.793 20.85 302.892c0 0 83.895-147.024 116.521-204.303c25.3-44.418 53.644-72.37 90.497-81.33c44.94-10.926 97.565 12.834 125.62 56.167c19.497 30.113 36.752 57.676 6.343 109.738c-3.613 6.184-136.326 248.402-143.438 257.46m8.014-264.595c-30.696-17.696-30.696-62.177 0-79.873s69.273 4.544 69.273 39.936s-38.578 57.633-69.273 39.937" clip-rule="evenodd"/></svg>';
-
-    if(window.origin) createAnimeMenu();
-    else Lampa.Listener.follow('app', function(e){
-        if(e.type === 'ready') createAnimeMenu();
-    });
+    // Запускаем инициализацию
+    if(window.origin) {
+        initAnimeSection();
+    } else {
+        document.addEventListener('DOMContentLoaded', initAnimeSection);
+    }
 })();
