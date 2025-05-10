@@ -2873,6 +2873,37 @@ function showMainMenu(previousController) {
     });
 }
 
+function showLnumToggleMenu(previousController) {
+    var key = 'disableLnum';
+    var currentValue = getStoredSetting(key, false);
+
+    var options = [
+        { title: 'Включить LNUM', value: false },
+        { title: 'Отключить LNUM', value: true }
+    ];
+
+    var items = options.map(function(option) {
+        return {
+            title: option.title,
+            value: option.value,
+            checkbox: true,
+            checked: currentValue === option.value
+        };
+    });
+
+    Lampa.Select.show({
+        title: 'Управление LNUM',
+        items: items,
+        onBack: function () {
+            Lampa.Controller.toggle(previousController || 'settings');
+        },
+        onCheck: function (selected) {
+            setStoredSetting(key, selected.value);
+            showLnumToggleMenu(previousController);
+        }
+    });
+}
+
 // Основная функция запуска
 Lampa.SettingsApi.addParam({
     component: 'surs',
@@ -2886,6 +2917,38 @@ Lampa.SettingsApi.addParam({
     },
     onChange: function () {
         showMainMenu(); 
+    }
+});
+
+Lampa.SettingsApi.addParam({
+    component: 'surs',
+    param: {
+        name: 'surs_disableLnum',
+        type: 'button'
+    },
+    field: {
+        name: Lampa.Lang.translate('Отключить LNUM'),
+        description: Lampa.Lang.translate('Отключает функциональность LNUM, если включено.')
+    },
+    onChange: function () {
+        var previousController = Lampa.Controller.enabled().name;
+        showLnumToggleMenu(previousController);
+    }
+});
+
+Lampa.SettingsApi.addParam({
+    component: 'surs',
+    param: {
+        name: 'surs_disableLnum',
+        type: 'button'
+    },
+    field: {
+        name: Lampa.Lang.translate('Управление LNUM'),
+        description: Lampa.Lang.translate('Включение/отключение функциональности LNUM.')
+    },
+    onChange: function () {
+        var previousController = Lampa.Controller.enabled().name;
+        showLnumToggleMenu(previousController);
     }
 });
 
@@ -3797,7 +3860,16 @@ function addMainButton() {
 
 
 
-
+function krivieruki() {
+    var disableLnum = getStoredSetting('disableLnum', false);
+    if (!disableLnum) {
+        Lampa.Utils.putScriptAsync([
+            "https://levende.github.io/lampa-plugins/lnum.js"
+        ], function() {
+            // Скрипт загружен
+        });
+    }
+}
 
 
 
@@ -3823,6 +3895,8 @@ if (window.appready) {
 }
         }
     });
+	if (!getStoredSetting('disableLnum', false)) {
+        krivieruki();
    }
 }
 
