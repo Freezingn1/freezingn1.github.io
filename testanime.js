@@ -1,128 +1,107 @@
 (function() {
     'use strict';
 
-    // Инициализация платформы
-    Lampa.Platform.tv();
-    
-    // Конфигурация плагина
-    const plugin = {
-        // Основные настройки
-        name: 'tmdb_anime_lists',
-        title: 'TMDB Anime Collections',
-        version: '1.0',
-        description: 'Аниме-подборки из TMDB списков',
-        
-        // Списки для отображения (можно добавлять новые)
-        lists: [
-            {
-                id: 146567,
-                name: 'Лучшие аниме-сериалы',
-                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>'
-            }
-        ],
-        
-        // Иконка плагина
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><path fill="currentColor" fill-rule="evenodd" d="m368.256 214.573l-102.627 187.35c40.554 71.844 73.647 97.07 138.664 94.503c63.67-2.514 136.974-89.127 95.694-163.243L397.205 150.94c-3.676 12.266-25.16 55.748-28.95 63.634M216.393 440.625C104.077 583.676-57.957 425.793 20.85 302.892c0 0 83.895-147.024 116.521-204.303c25.3-44.418 53.644-72.37 90.497-81.33c44.94-10.926 97.565 12.834 125.62 56.167c19.497 30.113 36.752 57.676 6.343 109.738c-3.613 6.184-136.326 248.402-143.438 257.46m8.014-264.595c-30.696-17.696-30.696-62.177 0-79.873s69.273 4.544 69.273 39.936s-38.578 57.633-69.273 39.937" clip-rule="evenodd"/></svg>'
-    };
-
-    // Основная функция плагина
-    function initPlugin() {
-        // Создаем пункт меню
-        const menuItem = $(`<li class="menu__item selector" data-action="tmdb_anime_lists">
-            <div class="menu__ico">${plugin.icon}</div>
-            <div class="menu__text">${plugin.title}</div>
-        </li>`);
-        
-        // Обработчик клика по меню
-        menuItem.on('hover:enter', function() {
-            showAnimeLists();
-        });
-        
-        // Добавляем пункт в меню
-        setTimeout(() => {
-            $('.menu .menu__list').eq(0).prepend(menuItem);
-        }, 1000);
+    // Ждем загрузки Lampa
+    if (!window.Lampa) {
+        console.error('Lampa не найдена');
+        return;
     }
 
-    // Альтернативная реализация показа меню
+    // Конфигурация плагина
+    const plugin = {
+        name: 'tmdb_anime_lists',
+        title: 'TMDB Anime Collections',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
+        
+        lists: [
+            {id: 146567, name: 'Лучшие аниме-сериалы'},
+            {id: 82486, name: 'Популярные аниме-фильмы'}
+        ]
+    };
+
+    // Добавляем пункт в главное меню
+    function addToMenu() {
+        const menuItem = $(`
+            <li class="menu__item selector" data-action="${plugin.name}">
+                <div class="menu__ico">${plugin.icon}</div>
+                <div class="menu__text">${plugin.title}</div>
+            </li>
+        `);
+        
+        menuItem.on('hover:enter', showAnimeLists);
+        
+        // Пытаемся добавить в меню несколько раз с интервалом
+        const tryAdd = () => {
+            if ($('.menu .menu__list').length) {
+                $('.menu .menu__list').eq(0).prepend(menuItem);
+            } else {
+                setTimeout(tryAdd, 500);
+            }
+        };
+        
+        tryAdd();
+    }
+
+    // Показываем список коллекций через стандартный Activity
     function showAnimeLists() {
-    const items = plugin.lists.map(list => ({
-        title: list.name,
-        component: 'full',
-        action: () => loadTmdbList(list.id, list.name)
-    }));
-    
-    Lampa.Activity.push({
-        component: 'list',
-        url: '',
-        title: plugin.title,
-        items: items
-    });
-}
+        const activity = {
+            component: 'list',
+            url: '',
+            title: plugin.title,
+            items: plugin.lists.map(list => ({
+                title: list.name,
+                action: () => loadTmdbList(list.id, list.name)
+            }))
+        };
+        
+        Lampa.Activity.push(activity);
+    }
 
     // Загружаем список из TMDB
     function loadTmdbList(listId, listName) {
-        Lampa.Activity.push({
+        const activity = {
+            component: 'full',
             url: '',
             title: listName,
-            component: 'full',
-            source: 'tmdb_list_' + listId,
+            source: 'tmdb_list',
             search: '',
-            card_type: 'small',
-            page: 1,
             method: 'list',
-            params: {
-                id: listId
-            }
-        });
+            params: {id: listId}
+        };
+        
+        Lampa.Activity.push(activity);
     }
 
-    // Регистрируем кастомный метод для загрузки списков
+    // Регистрируем метод загрузки данных
     Lampa.Storage.add('tmdb_list', {
         load: function(params) {
-            return new Promise((resolve, reject) => {
-                const listId = params.id;
-                const url = `https://api.themoviedb.org/3/list/${listId}?api_key=${Lampa.Storage.get('tmdb_api_key', '')}&language=${Lampa.Storage.lang()}`;
+            return new Promise((resolve) => {
+                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${Lampa.Storage.get('tmdb_api_key','')}`;
                 
                 Lampa.Api.json(url, (response) => {
-                    if(response && response.items) {
-                        const items = response.items.map(item => {
-                            return {
-                                id: item.id,
-                                type: item.media_type === 'movie' ? 'movie' : 'tv',
-                                name: item.title || item.name,
-                                title: item.title || item.name,
-                                original_title: item.original_title || item.original_name,
-                                year: parseInt((item.release_date || item.first_air_date || '').substring(0, 4)) || 0,
-                                poster: Lampa.Utils.protocol() + 'image.tmdb.org/t/p/w300' + (item.poster_path || ''),
-                                cover: Lampa.Utils.protocol() + 'image.tmdb.org/t/p/original' + (item.backdrop_path || ''),
-                                description: item.overview || '',
-                                rating: Math.round((item.vote_average || 0) * 10) / 10
-                            };
-                        });
-                        
-                        resolve({
-                            results: items,
-                            more: false
-                        });
-                    }
-                    else {
-                        reject('Не удалось загрузить список');
-                    }
+                    const items = (response?.items || []).map(item => ({
+                        id: item.id,
+                        type: item.media_type === 'movie' ? 'movie' : 'tv',
+                        name: item.title || item.name,
+                        poster: Lampa.Utils.protocol() + 'image.tmdb.org/t/p/w300' + (item.poster_path || ''),
+                        description: item.overview || '',
+                        year: (item.release_date || item.first_air_date || '').substring(0,4) || 0,
+                        rating: item.vote_average ? Math.round(item.vote_average * 10)/10 : 0
+                    }));
+                    
+                    resolve({results: items, more: false});
                 });
             });
         }
     });
 
-    // Запускаем плагин после загрузки приложения
-    if(window.appready) {
-        initPlugin();
-    } 
-    else {
-        Lampa.Listener.follow('app', function(e) {
-            if(e.type === 'ready') {
-                initPlugin();
-            }
+    // Запускаем после полной загрузки приложения
+    if (window.appready) {
+        addToMenu();
+    } else {
+        Lampa.Listener.follow('app', (e) => {
+            if (e.type === 'ready') addToMenu();
         });
     }
+
 })();
