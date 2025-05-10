@@ -10,7 +10,7 @@
 
         // Создаем пункт меню
         const menuItem = $(`
-            <li class="menu__item selector" data-action="anime">
+            <li class="menu__item selector" data-action="anime2">
                 <div class="menu__ico">${animeIcon}</div>
                 <div class="menu__text">Аниме</div>
             </li>
