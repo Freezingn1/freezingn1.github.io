@@ -10,7 +10,7 @@
 
         // Создаем пункт меню
         const menuItem = $(`
-            <li class="menu__item selector" data-action="anime2">
+            <li class="menu__item selector" data-action="anime">
                 <div class="menu__ico">${animeIcon}</div>
                 <div class="menu__text">Аниме</div>
             </li>
@@ -18,48 +18,45 @@
 
         // Функция для добавления в меню
         function addToMenu() {
-            // Попробуем разные варианты селекторов меню
             const menuSelectors = [
                 '.menu__list', 
                 '.navigation__list',
                 '.main-menu ul',
                 '.menu .menu__list',
-                'nav ul:first'
+                'nav ul:first',
+                '.navigation .menu__list'
             ];
-            
-            let menuAdded = false;
             
             for(let selector of menuSelectors) {
                 if($(selector).length) {
                     $(selector).append(menuItem);
-                    console.log('Аниме пункт добавлен в меню через селектор:', selector);
-                    menuAdded = true;
-                    break;
+                    console.log('Аниме пункт добавлен через селектор:', selector);
+                    return true;
                 }
             }
             
-            if(!menuAdded) {
-                console.error('Не удалось найти меню для добавления пункта');
-            }
+            console.error('Не удалось найти меню для добавления пункта');
+            return false;
         }
 
-        // Обработчик нажатия
+        // Обработчик нажатия с исправленным компонентом
         menuItem.on('hover:enter click', function() {
             Lampa.Activity.push({
                 url: 'discover/tv?with_original_language=ja&with_genres=16',
                 title: 'Аниме',
-                component: 'category_full',
+                component: 'full', // Исправлено с category_full на full
                 source: 'tmdb',
                 card_type: 'true',
                 page: 1,
-                sections: [
+                // Параметры для горизонтальных блоков
+                blocks: [
                     {
                         title: 'Популярное аниме',
                         url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=popularity.desc'
                     },
                     {
-                        title: 'Топ аниме',
-                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=vote_average.desc'
+                        title: 'Топ рейтинга',
+                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=vote_average.desc&vote_count.gte=100'
                     },
                     {
                         title: 'Новинки',
@@ -69,11 +66,9 @@
             });
         });
 
-        // Пробуем добавить сразу
-        addToMenu();
-        
-        // Если меню еще не загружено, ждем события ready
-        if(!$('.menu__item').length) {
+        // Попытка добавления пункта в меню
+        if(!addToMenu()) {
+            // Если не удалось, ждем готовности приложения
             Lampa.Listener.follow('app', function(e) {
                 if(e.type === 'ready') {
                     addToMenu();
@@ -82,10 +77,10 @@
         }
     }
 
-    // Запускаем инициализацию
-    if(window.origin) {
+    // Запускаем после полной загрузки
+    if(document.readyState === 'complete') {
         initAnimeSection();
     } else {
-        document.addEventListener('DOMContentLoaded', initAnimeSection);
+        window.addEventListener('load', initAnimeSection);
     }
 })();
