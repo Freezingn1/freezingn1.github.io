@@ -142,16 +142,48 @@
     $('body').append(Lampa.Template.get('cardify_css', {}, true));
     
     var icon = "<svg width=\"36\" height=\"28\" viewBox=\"0 0 36 28\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n        <rect x=\"1.5\" y=\"1.5\" width=\"33\" height=\"25\" rx=\"3.5\" stroke=\"white\" stroke-width=\"3\"/>\n        <rect x=\"5\" y=\"14\" width=\"17\" height=\"4\" rx=\"2\" fill=\"white\"/>\n        <rect x=\"5\" y=\"20\" width=\"10\" height=\"3\" rx=\"1.5\" fill=\"white\"/>\n        <rect x=\"25\" y=\"20\" width=\"6\" height=\"3\" rx=\"1.5\" fill=\"white\"/>\n    </svg>";
-    
 
+    // Добавляем функцию загрузки фона в оригинальном разрешении
     Lampa.Listener.follow('full', function (e) {
       if (e.type == 'complete') {
-        e.object.activity.render().find('.full-start__background').addClass('cardify__background');
+        var activity = e.object.activity;
+        var render = activity.render();
+        
+        // Добавляем класс для стилей Cardify
+        render.find('.full-start__background').addClass('cardify__background');
+        
+        // Загружаем фон в оригинальном разрешении
+        if (activity.loadBackground) {
+          activity.loadBackground = function (data) {
+            var background = data.movie.backdrop_path 
+              ? Api.img(data.movie.backdrop_path, 'original') 
+              : data.movie.background_image 
+                ? data.movie.background_image 
+                : '';
+
+            if (window.innerWidth > 790 && background && !Storage.field('light_version')) {
+              var background_image = render.find('.full-start__background')[0] || {};
+
+              background_image.onload = function (e) {
+                render.find('.full-start__background').addClass('loaded');
+              };
+
+              background_image.src = background;
+            } else {
+              render.find('.full-start__background').remove();
+            }
+          };
+          
+          activity.loadBackground({
+            movie: e.object.movie || e.object.data
+          });
+        }
       }
     });
   }
 
-  if (window.appready) startPlugin();else {
+  if (window.appready) startPlugin();
+  else {
     Lampa.Listener.follow('app', function (e) {
       if (e.type == 'ready') startPlugin();
     });
