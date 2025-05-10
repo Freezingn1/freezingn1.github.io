@@ -3015,13 +3015,15 @@ function showLnumToggleMenu(previousController) {
                 title: 'LNUM включен',
                 value: false,
                 checkbox: true,
-                checked: !currentValue
+                checked: !currentValue,
+                description: 'Загружает внешние коллекции'
             },
             {
                 title: 'LNUM отключен',
                 value: true,
                 checkbox: true,
-                checked: currentValue
+                checked: currentValue,
+                description: 'Блокирует загрузку lnum.js'
             }
         ],
         onBack: function() {
@@ -3029,9 +3031,24 @@ function showLnumToggleMenu(previousController) {
         },
         onCheck: function(selected) {
             setStoredSetting(key, selected.value);
-            Lampa.Noty.show('Изменения применятся после обновления главной страницы');
+            Lampa.Noty.show('Для применения перезагрузите главную страницу');
+            
+            // Если LNUM включили - сразу загружаем
+            if (!selected.value) {
+                krivieruki();
+            }
         }
     });
+}
+
+if (window.appready) {
+    add();
+    startProfileListener();
+    addMainButton();
+    krivieruki(); // <-- Теперь будет проверять настройку disable_lnum
+    if (!Lampa.Storage.get('surs_disableMenu')) {
+        addSettingMenu();
+    }
 }
 
 Lampa.SettingsApi.addParam({
@@ -3843,10 +3860,17 @@ function addMainButton() {
 
 
 function krivieruki() {
+    // Проверяем, не отключен ли LNUM в настройках
+    if (getStoredSetting('disable_lnum', false)) {
+        console.log("LNUM отключен в настройках");
+        return; // Не загружаем скрипт, если отключено
+    }
+
+    // Если LNUM включен - загружаем скрипт
     Lampa.Utils.putScriptAsync([
         "https://levende.github.io/lampa-plugins/lnum.js"
     ], function() {
-
+        console.log("LNUM загружен");
     });
 }
 
