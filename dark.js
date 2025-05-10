@@ -250,6 +250,10 @@
 				z-index: 1000;
 			}
 			
+			.noty__body {
+				box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
+			}
+			
 			
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
