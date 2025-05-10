@@ -34,7 +34,7 @@
                 menuItem.on('hover:enter', showAnimeLists);
                 $('.menu .menu__list').eq(0).prepend(menuItem);
             } else {
-                setTimeout(addMenuButton, 500);
+                setTimeout(addMenuButton, 1500);
             }
         };
 
