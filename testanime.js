@@ -14,8 +14,7 @@
         icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
         
         lists: [
-            {id: 146567, name: 'Лучшие аниме-сериалы'},
-            {id: 82486, name: 'Популярные аниме-фильмы'}
+            {id: 146567, name: 'Лучшие аниме-сериалы'}
         ]
     };
 
@@ -76,7 +75,7 @@
     Lampa.Storage.add('tmdb_list', {
         load: function(params) {
             return new Promise((resolve) => {
-                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${Lampa.Storage.get('tmdb_api_key','')}`;
+                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=f83446fde4dacae2924b41ff789d2bb0`;
                 
                 Lampa.Api.json(url, (response) => {
                     const items = (response?.items || []).map(item => ({
