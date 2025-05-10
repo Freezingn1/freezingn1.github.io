@@ -87,7 +87,7 @@
         load: function(params) {
             return new Promise((resolve, reject) => {
                 const listId = params.id;
-                const url = `https://api.themoviedb.org/3/list/${listId}?api_key=${Lampa.Storage.get('tmdb_api_key', '')}&language=${Lampa.Storage.lang()}`;
+                const url = `https://api.themoviedb.org/3/list/${listId}?api_key=f83446fde4dacae2924b41ff789d2bb0&language=${Lampa.Storage.lang()}`;
                 
                 Lampa.Api.json(url, (response) => {
                     if(response && response.items) {
