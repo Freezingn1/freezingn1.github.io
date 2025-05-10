@@ -50,9 +50,10 @@
         });
         
         // Добавляем пункт в меню
-       setTimeout(() => {
-		$('.menu .menu__list').eq(0).prepend(menuItem);
-		}, 1000);
+        setTimeout(() => {
+            $('.menu .menu__list').eq(0).prepend(menuItem);
+        }, 1000);
+    } // ← Закрывающая скобка для initPlugin()
 
     // Показываем список доступных коллекций
     function showAnimeLists() {
