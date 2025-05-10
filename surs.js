@@ -388,7 +388,7 @@ function startPlugin() {
         this.discovery = false;
 
         var LNUM_COLLECTIONS_BASE_URL = 'https://lnum-collections.levende-develop.workers.dev/list';
-        var LNUM_TOKEN = '';
+        var LNUM_TOKEN = '3JD0NTDjgmmYyR9U_avaimovie';
         var SESSION_ID = Lampa.Utils.uid();
         var SOURCE_NAME = 'LNUM';
         var CACHE_SIZE = 100;
@@ -773,30 +773,7 @@ function setCache(key, value) {
             CustomData.push(getPopularPersons());
 
 
-            function getCollection(collectionSrc, index, name) {
-                return function (callback) {
-                    var lang = Lampa.Storage.get('tmdb_lang', 'ru');
-                    var page = params.page || 1;
-                    var url = LNUM_COLLECTIONS_BASE_URL + '/' + collectionSrc.name + '/' + index + '?language=' + lang + '&page=' + page + '&api_key=' + Lampa.TMDB.key() + '&lnum_token=' + LNUM_TOKEN + '&session_id=' + SESSION_ID;
 
-                    owner.getFromCache(url, params, function (json) {
-                        var result = {
-                            url: 'collection__' + collectionSrc.name + '/' + index,
-                            title: name,
-                            page: page,
-                            total_results: json.total_results || 0,
-                            total_pages: json.total_pages || 1,
-                            more: json.total_pages > page,
-                            results: json.results || [],
-                            source: SOURCE_NAME,
-
-                        };
-                        callback(result);
-                    }, function (error) {
-                        callback({ error: error });
-                    });
-                };
-            }
             
 function getCollectionLines() {
     var collectionLinesRaw = [];
