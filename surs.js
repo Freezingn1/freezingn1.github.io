@@ -2445,40 +2445,33 @@ partsData.splice(4, 0, upcomingEpisodesRequest);
 
 
 function add() {
-    // Получаем значение из Storage
     var sourceName = Lampa.Storage.get('surs_name') || 'AVIAMOVIE';
     var sourceNameKids = sourceName + ' KIDS';
     var sourceNameRus = sourceName + ' RUS';
 
-    // Создаем источники
-    var tmdb_mod = Object.assign({}, Lampa.Api.sources.tmdb, new SourceTMDB(Lampa.Api.sources.tmdb));
-    var tmdb_mod_kids = Object.assign({}, Lampa.Api.sources.tmdb, new SourceTMDBkids(Lampa.Api.sources.tmdb));
-    var tmdb_mod_rus = Object.assign({}, Lampa.Api.sources.tmdb, new SourceTMDBrus(Lampa.Api.sources.tmdb));
+    // Проверяем, существует ли уже источник, перед созданием
+    if (!Lampa.Api.sources.hasOwnProperty(sourceName)) {
+        Object.defineProperty(Lampa.Api.sources, sourceName, {
+            get: function() { return tmdb_mod; },
+            configurable: true // Разрешает переопределение в будущем
+        });
+    }
 
-    Lampa.Api.sources.tmdb_mod = tmdb_mod;
-    Lampa.Api.sources.tmdb_mod_kids = tmdb_mod_kids;
-    Lampa.Api.sources.tmdb_mod_rus = tmdb_mod_rus;
+    if (!Lampa.Api.sources.hasOwnProperty(sourceNameKids)) {
+        Object.defineProperty(Lampa.Api.sources, sourceNameKids, {
+            get: function() { return tmdb_mod_kids; },
+            configurable: true
+        });
+    }
 
-    // Динамически определяем источники
-    Object.defineProperty(Lampa.Api.sources, sourceName, {
-        get: function() {
-            return tmdb_mod;
-        }
-    });
+    if (!Lampa.Api.sources.hasOwnProperty(sourceNameRus)) {
+        Object.defineProperty(Lampa.Api.sources, sourceNameRus, {
+            get: function() { return tmdb_mod_rus; },
+            configurable: true
+        });
+    }
 
-    Object.defineProperty(Lampa.Api.sources, sourceNameKids, {
-        get: function() {
-            return tmdb_mod_kids;
-        }
-    });
-
-    Object.defineProperty(Lampa.Api.sources, sourceNameRus, {
-        get: function() {
-            return tmdb_mod_rus;
-        }
-    });
-
-    // Добавляем источники в меню
+    // Остальной код (добавление в меню и т.д.) ...
     Lampa.Params.select('source', Object.assign({}, Lampa.Params.values['source'], {
         [sourceName]: sourceName,
         [sourceNameKids]: sourceNameKids,
