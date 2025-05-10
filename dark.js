@@ -216,9 +216,6 @@
 				border: 0.3em solid #c22222;
 			}
 			
-			.settings__content {
-				box-shadow: -10px 0 20px 0px rgb(22 22 22 / 50%);
-			}
 			
 			.selectbox__content {
 				box-shadow: -10px 0 20px 0px rgb(22 22 22 / 50%);
