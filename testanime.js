@@ -12,7 +12,7 @@
 
     // 1. Ждем готовности Lampa
     function waitForLampa(callback) {
-        if (window.Lampa && Lampa.Storage && Lampa.Activity && Lampa.Reguest) {
+        if (window.Lampa && Lampa.Storage && Lampa.Activity) {
             console.log('Lampa API готов');
             callback();
         } else {
@@ -32,41 +32,49 @@
                     const url = `https://api.themoviedb.org/3/list/${plugin.list_id}?api_key=${plugin.api_key}`;
                     console.log('Запрос к API:', url);
 
-                    Lampa.Reguest.json(url, (response) => {
-                        console.log('Полный ответ API:', response);
-                        if (!response || !response.items) {
-                            console.error('Ошибка: нет данных в ответе');
-                            return resolve({results: [], more: false});
-                        }
+                    fetch(url)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Ошибка HTTP: ' + response.status);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Полный ответ API через fetch:', data);
+                            if (!data || !data.items) {
+                                console.error('Ошибка: нет данных в ответе');
+                                return resolve({results: [], more: false});
+                            }
 
-                        const items = response.items.map(item => {
-                            return {
-                                id: item.id,
-                                type: item.media_type === 'movie' ? 'movie' : 'tv',
-                                name: item.title || item.name || 'Без названия',
-                                title: item.title || item.name || 'Без названия',
-                                original_title: item.original_title || item.original_name || '',
-                                poster: item.poster_path 
-                                    ? 'https://image.tmdb.org/t/p/w300' + item.poster_path 
-                                    : '',
-                                cover: item.backdrop_path 
-                                    ? 'https://image.tmdb.org/t/p/original' + item.backdrop_path 
-                                    : '',
-                                description: item.overview || 'Описание отсутствует',
-                                year: (item.release_date || item.first_air_date || '').substring(0,4) || 'N/A',
-                                rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : 0,
-                                age: '16+',
-                                genres: item.genre_ids ? item.genre_ids.map(id => 'аниме') : ['аниме'],
-                                countries: ['JP']
-                            };
+                            const items = data.items.map(item => {
+                                return {
+                                    id: item.id,
+                                    type: item.media_type === 'movie' ? 'movie' : 'tv',
+                                    name: item.name || item.title || 'Без названия',
+                                    title: item.name || item.title || 'Без названия',
+                                    original_title: item.original_name || item.original_title || '',
+                                    poster: item.poster_path 
+                                        ? 'https://image.tmdb.org/t/p/w300' + item.poster_path 
+                                        : 'https://via.placeholder.com/300x450?text=No+Poster',
+                                    cover: item.backdrop_path 
+                                        ? 'https://image.tmdb.org/t/p/original' + item.backdrop_path 
+                                        : '',
+                                    description: item.overview || 'Описание отсутствует',
+                                    year: parseInt((item.first_air_date || item.release_date || '0').substring(0, 4), 10) || 0,
+                                    rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : 0,
+                                    age: '16+',
+                                    genres: item.genre_ids ? item.genre_ids.map(id => 'аниме') : ['аниме'],
+                                    countries: ['JP']
+                                };
+                            });
+
+                            console.log('Обработанные элементы:', items);
+                            resolve({results: items, more: false});
+                        })
+                        .catch(error => {
+                            console.error('Ошибка fetch:', error);
+                            resolve({results: [], more: false});
                         });
-
-                        console.log('Обработанные элементы:', items);
-                        resolve({results: items, more: false});
-                    }, (error) => {
-                        console.error('Ошибка API:', error);
-                        resolve({results: [], more: false});
-                    });
                 });
             }
         });
@@ -100,7 +108,7 @@
         menuItem.on('hover:enter', function() {
             console.log('Запуск активности для:', plugin.title);
             Lampa.Activity.push({
-                component: 'full',
+                component: 'category_full',
                 title: plugin.title,
                 source: 'anime_source',
                 method: 'list',
@@ -129,10 +137,9 @@
             addMenuButton();
         });
 
-        // Отладка компонента
         Lampa.Listener.follow('component', (e) => {
             console.log('Компонент загружен:', e);
-            if (e.component === 'full' && e.source === 'anime_source') {
+            if (e.component === 'category_full' && e.source === 'anime_source') {
                 console.log('Компонент для anime_source активирован');
             }
         });
@@ -144,7 +151,6 @@
         console.log('Lampa:', !!window.Lampa);
         console.log('Lampa.Storage:', !!Lampa.Storage);
         console.log('Lampa.Activity:', !!Lampa.Activity);
-        console.log('Lampa.Reguest:', !!Lampa.Reguest);
     }
 
     setTimeout(testPlugin, 3000);
