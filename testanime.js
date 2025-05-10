@@ -1,18 +1,16 @@
 (function() {
     'use strict';
 
-    // Конфигурация плагина
     const plugin = {
         name: 'tmdb_anime_lists',
         title: 'Аниме коллекции',
         icon: '🎌',
-        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Замените на свой ключ
+        api_key: 'f83446fde4dacae2924b41ff789d2bb0',
         lists: [
-            {id: 146567, name: 'Топ аниме-сериалы'} // Тестовый список
+            {id: 146567, name: 'Топ аниме-сериалы'}
         ]
     };
 
-    // Основной класс плагина
     function AnimePlugin() {
         this.initialized = false;
         this.network = new Lampa.Reguest();
@@ -23,7 +21,6 @@
             if (this.initialized) return;
             this.initialized = true;
             
-            // Регистрируем источник данных
             Lampa.Storage.add('anime_plugin', {
                 load: this.loadList.bind(this)
             });
@@ -31,54 +28,53 @@
 
         loadList: function(params) {
             return new Promise((resolve) => {
-                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${plugin.api_key}&language=ru`;
+                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${plugin.api_key}`;
                 
-                console.log('Запрашиваем URL:', url); // Логируем URL
+                console.log('[DEBUG] Запрос к TMDB:', url);
                 
                 this.network.silent(url, (json) => {
-                    console.log('Ответ от TMDB:', json); // Логируем ответ
+                    console.log('[DEBUG] Ответ TMDB:', json);
                     
-                    if (!json || !json.results) { // Исправлено на results вместо items
-                        console.error('Ошибка структуры ответа');
+                    // Проверка структуры ответа
+                    if (!json || !json.results) {
+                        console.error('Некорректный формат ответа');
                         return resolve({results: [], more: false});
                     }
 
+                    // Преобразование данных
                     const items = json.results.map(item => {
-                        // Генерируем абсолютные URL для изображений
-                        const poster = item.poster_path 
-                            ? Lampa.Utils.protocol() + 'image.tmdb.org/t/p/w300' + item.poster_path 
-                            : '';
+                        const baseImgUrl = 'https://image.tmdb.org/t/p/';
                         
-                        const cover = item.backdrop_path 
-                            ? Lampa.Utils.protocol() + 'image.tmdb.org/t/p/original' + item.backdrop_path 
-                            : '';
-
-                        // Основные обязательные поля
                         return {
                             id: item.id,
-                            type: item.media_type === 'movie' ? 'movie' : 'tv',
-                            name: item.title || item.name,
-                            title: item.title || item.name,
-                            original_title: item.original_title || item.original_name || '',
-                            poster: poster,
-                            cover: cover,
-                            description: item.overview || '',
-                            year: (item.release_date || item.first_air_date || '').substring(0,4) || 0,
-                            rating: item.vote_average ? Math.round(item.vote_average * 10)/10 : 0,
+                            type: item.media_type || 'movie',
+                            name: item.title || item.name || 'Без названия',
+                            title: item.title || item.name || 'Без названия',
+                            poster: item.poster_path 
+                                ? baseImgUrl + 'w300' + item.poster_path 
+                                : 'https://dummyimage.com/300x450/000/fff&text=No+image',
+                            cover: item.backdrop_path 
+                                ? baseImgUrl + 'original' + item.backdrop_path 
+                                : 'https://dummyimage.com/1920x1080/000/fff&text=No+image',
+                            description: item.overview || 'Описание отсутствует',
+                            year: new Date(item.release_date || item.first_air_date || '').getFullYear() || 2023,
+                            rating: item.vote_average?.toFixed(1) || '0.0',
                             age: '16+',
-                            genres: ['аниме'],
-                            countries: ['JP']
+                            genres: item.genre_ids?.map(id => Lampa.TMDB.genres(id)) || ['Аниме'],
+                            countries: item.origin_country || ['JP']
                         };
                     });
 
-                    console.log('Преобразовано элементов:', items.length);
+                    console.log('[DEBUG] Преобразовано элементов:', items.length);
                     resolve({results: items, more: false});
+                }, (error) => {
+                    console.error('[ERROR] Ошибка запроса:', error);
+                    resolve({results: [], more: false});
                 });
             });
         }
     };
 
-    // Инициализация плагина
     function startPlugin() {
         if (window.anime_plugin_initialized) return;
         window.anime_plugin_initialized = true;
@@ -86,62 +82,34 @@
         const animePlugin = new AnimePlugin();
         animePlugin.initialize();
 
-        // Создаем и добавляем пункт меню
-        function createAndAddMenu() {
+        // Добавление пункта меню
+        function updateMenu() {
             const menu = $('.menu .menu__list').first();
-            if (!menu.length) {
-                setTimeout(createAndAddMenu, 500);
-                return;
-            }
+            if (!menu.length) return setTimeout(updateMenu, 500);
 
-            // Удаляем старый пункт если есть
             menu.find(`[data-action="${plugin.name}"]`).remove();
             
-            // Создаем новый пункт меню
-            const menuItem = $(`
+            menu.prepend(`
                 <li class="menu__item selector" data-action="${plugin.name}">
                     <div class="menu__ico">${plugin.icon}</div>
                     <div class="menu__text">${plugin.title}</div>
                 </li>
-            `);
-
-            menuItem.on('hover:enter', function() {
+            `).on('hover:enter', () => {
                 Lampa.Activity.push({
-                    component: 'selector',
+                    component: 'full',
                     title: plugin.title,
-                    items: plugin.lists.map(list => ({
-                        title: list.name,
-                        action: () => {
-                            Lampa.Activity.push({
-                                component: 'full',
-                                title: list.name,
-                                source: 'anime_plugin',
-                                method: 'list',
-                                params: {id: list.id},
-                                card_type: 'default' // Важный параметр
-                            });
-                        }
-                    }))
+                    source: 'anime_plugin',
+                    method: 'list',
+                    params: {id: plugin.lists[0].id},
+                    card_type: 'vertical'
                 });
             });
-
-            menu.prepend(menuItem);
-            console.log('Пункт меню добавлен');
         }
 
-        // Первоначальное добавление
-        createAndAddMenu();
-
-        // Обновляем при каждом открытии меню
-        Lampa.Listener.follow('app_menu', createAndAddMenu);
+        Lampa.Listener.follow('app_menu', updateMenu);
+        updateMenu();
     }
 
-    // Запускаем плагин
-    if (window.appready) {
-        startPlugin();
-    } else {
-        Lampa.Listener.follow('app', function(e) {
-            if (e.type === 'ready') startPlugin();
-        });
-    }
+    if (window.appready) startPlugin();
+    else Lampa.Listener.follow('app', e => e.type === 'ready' && startPlugin());
 })();
