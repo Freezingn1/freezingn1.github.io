@@ -50,8 +50,9 @@
         });
         
         // Добавляем пункт в меню
-        $('.menu .menu__list').eq(0).prepend(menuItem);
-    }
+       setTimeout(() => {
+		$('.menu .menu__list').eq(0).prepend(menuItem);
+		}, 1000);
 
     // Показываем список доступных коллекций
     function showAnimeLists() {
