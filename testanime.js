@@ -1,64 +1,105 @@
 (function() {
     'use strict';
-    
+
     const plugin = {
-        name: 'test_anime_plugin',
-        title: 'Тест Аниме',
-        icon: '🎌'
+        name: 'tmdb_anime_lists',
+        title: 'Аниме коллекции',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
+        lists: [
+            {id: 'test_list', name: 'Тестовая коллекция'}
+        ]
     };
 
-    function init() {
-        // 1. Проверяем добавление в меню
+    function waitForLampa(callback) {
+        if (window.Lampa && Lampa.Storage && Lampa.Activity) {
+            callback();
+        } else {
+            setTimeout(() => waitForLampa(callback), 100);
+        }
+    }
+
+    function addMenuButton() {
+        const menuContainer = $('.menu .menu__list:first');
+        if (!menuContainer.length) {
+            setTimeout(addMenuButton, 500);
+            return;
+        }
+
+        if ($(`[data-action="${plugin.name}"]`).length) return;
+
         const menuItem = $(`
             <li class="menu__item selector" data-action="${plugin.name}">
                 <div class="menu__ico">${plugin.icon}</div>
                 <div class="menu__text">${plugin.title}</div>
             </li>
         `);
-        
-        menuItem.on('hover:enter', () => {
-            // 2. Проверяем открытие Activity
-            Lampa.Activity.push({
-                component: 'full',
-                title: 'Тестовые данные',
-                source: 'test_anime_loader',
-                method: 'list',
-                back: true
-            });
-        });
-        
-        // 3. Пытаемся добавить в меню
-        const tryAddToMenu = () => {
-            const menu = $('body');
-            if (menu.length) {
-                menu.prepend(menuItem);
-                console.log('Пункт меню добавлен!');
-            } else {
-                setTimeout(tryAddToMenu, 500);
-            }
-        };
-        
-        tryAddToMenu();
-        
-        // 4. Регистрируем тестовый загрузчик
-        Lampa.Storage.add('test_anime_loader', {
-            load: () => Promise.resolve({
-                results: [{
-                    id: 1,
-                    type: 'tv',
-                    name: 'Тестовое аниме',
-                    poster: 'https://image.tmdb.org/t/p/w300/8fLNbQ6WtDlJ3LcyhpKojIpKz0V.jpg',
-                    year: 2023,
-                    rating: 8.5
-                }],
-                more: false
-            })
+
+        menuItem.on('hover:enter', showMainMenu);
+        menuContainer.prepend(menuItem);
+    }
+
+    function showMainMenu() {
+        Lampa.Activity.push({
+            component: 'selector',
+            title: plugin.title,
+            items: plugin.lists.map(list => ({
+                title: list.name,
+                action: () => loadAnimeList(list.id, list.name)
+            })),
+            back: true
         });
     }
 
-    if (window.Lampa) {
-        init();
-    } else {
-        document.addEventListener('lampa_start', init);
+    function loadAnimeList(listId, listName) {
+        Lampa.Activity.push({
+            component: 'full',
+            title: listName,
+            source: 'anime_test_loader',
+            method: 'list',
+            params: {id: listId},
+            back: true
+        });
     }
+
+    function registerLoader() {
+        Lampa.Storage.add('anime_test_loader', {
+            load: function(params) {
+                return new Promise((resolve) => {
+                    // Полноценный тестовый объект со всеми обязательными полями
+                    const testItem = {
+                        id: 123,
+                        type: 'tv',
+                        name: 'Тестовое аниме',
+                        title: 'Тестовое аниме',
+                        original_title: 'Test Anime',
+                        year: 2023,
+                        poster: 'https://image.tmdb.org/t/p/w300/8fLNbQ6WtDlJ3LcyhpKojIpKz0V.jpg',
+                        cover: 'https://image.tmdb.org/t/p/original/9faGSFi5jam6pDWGNd0p8JcJgXQ.jpg',
+                        description: 'Это тестовое аниме для проверки плагина',
+                        rating: 8.5,
+                        age: '16+',
+                        genres: ['аниме', 'тест'],
+                        countries: ['Япония']
+                    };
+
+                    resolve({
+                        results: [testItem],
+                        more: false
+                    });
+                });
+            }
+        });
+    }
+
+    waitForLampa(() => {
+        registerLoader();
+        addMenuButton();
+        
+        Lampa.Listener.follow('app_menu', () => {
+            setTimeout(addMenuButton, 300);
+        });
+        
+        console.log('Плагин аниме инициализирован');
+    });
+
 })();
