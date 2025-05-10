@@ -217,9 +217,6 @@
 			}
 			
 			
-			.selectbox__content {
-				box-shadow: -10px 0 20px 0px rgb(22 22 22 / 50%);
-			}
             
 			.modal__title {
 				background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text !important;
