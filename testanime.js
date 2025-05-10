@@ -1,25 +1,40 @@
 (function() {
     'use strict';
 
-    // Ждем загрузки Lampa
-    if (!window.Lampa) {
-        console.error('Lampa не найдена');
-        return;
-    }
-
     // Конфигурация плагина
     const plugin = {
         name: 'tmdb_anime_lists',
         title: 'TMDB Anime Collections',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
+        icon: '⭐',
+        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Вставьте сюда ваш ключ TMDB
         
         lists: [
-            {id: 146567, name: 'Лучшие аниме-сериалы'}
+            {id: 146567, name: 'Лучшие аниме-сериалы'},
+            {id: 82486, name: 'Популярные аниме-фильмы'}
         ]
     };
 
-    // Добавляем пункт в главное меню
+    // Проверяем доступность Lampa
+    function checkLampa() {
+        if (!window.Lampa) {
+            console.error('Lampa не найдена!');
+            return false;
+        }
+        if (!Lampa.Activity || !Lampa.Storage || !Lampa.Api) {
+            console.error('Не хватает необходимых компонентов Lampa');
+            return false;
+        }
+        return true;
+    }
+
+    // Добавляем пункт в меню
     function addToMenu() {
+        if (!$('.menu .menu__list').length) {
+            console.log('Меню не найдено, пробуем снова...');
+            setTimeout(addToMenu, 1000);
+            return;
+        }
+
         const menuItem = $(`
             <li class="menu__item selector" data-action="${plugin.name}">
                 <div class="menu__ico">${plugin.icon}</div>
@@ -28,79 +43,108 @@
         `);
         
         menuItem.on('hover:enter', showAnimeLists);
-        
-        // Пытаемся добавить в меню несколько раз с интервалом
-        const tryAdd = () => {
-            if ($('.menu .menu__list').length) {
-                $('.menu .menu__list').eq(0).prepend(menuItem);
-            } else {
-                setTimeout(tryAdd, 500);
-            }
-        };
-        
-        tryAdd();
+        $('.menu .menu__list').eq(0).prepend(menuItem);
+        console.log('Пункт меню добавлен');
     }
 
-    // Показываем список коллекций через стандартный Activity
+    // Показываем список коллекций
     function showAnimeLists() {
-        const activity = {
+        console.log('Показываем список коллекций');
+        
+        Lampa.Activity.push({
             component: 'list',
             url: '',
             title: plugin.title,
             items: plugin.lists.map(list => ({
                 title: list.name,
+                icon: list.icon,
                 action: () => loadTmdbList(list.id, list.name)
-            }))
-        };
-        
-        Lampa.Activity.push(activity);
+            })),
+            onReady: function() {
+                console.log('Список коллекций загружен');
+            }
+        });
     }
 
     // Загружаем список из TMDB
     function loadTmdbList(listId, listName) {
-        const activity = {
+        console.log(`Загрузка списка ${listId}...`);
+        
+        Lampa.Activity.push({
             component: 'full',
             url: '',
             title: listName,
             source: 'tmdb_list',
             search: '',
             method: 'list',
-            params: {id: listId}
-        };
-        
-        Lampa.Activity.push(activity);
+            params: {id: listId},
+            onReady: function() {
+                console.log('Список аниме загружен');
+            }
+        });
     }
 
     // Регистрируем метод загрузки данных
     Lampa.Storage.add('tmdb_list', {
         load: function(params) {
-            return new Promise((resolve) => {
-                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=f83446fde4dacae2924b41ff789d2bb0`;
+            return new Promise((resolve, reject) => {
+                console.log(`Запрашиваем данные списка ${params.id}...`);
+                
+                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${plugin.api_key}`;
+                
+                console.log('URL запроса:', url);
                 
                 Lampa.Api.json(url, (response) => {
-                    const items = (response?.items || []).map(item => ({
-                        id: item.id,
-                        type: item.media_type === 'movie' ? 'movie' : 'tv',
-                        name: item.title || item.name,
-                        poster: Lampa.Utils.protocol() + 'image.tmdb.org/t/p/w300' + (item.poster_path || ''),
-                        description: item.overview || '',
-                        year: (item.release_date || item.first_air_date || '').substring(0,4) || 0,
-                        rating: item.vote_average ? Math.round(item.vote_average * 10)/10 : 0
-                    }));
+                    console.log('Ответ от TMDB:', response);
                     
+                    if (!response || !response.items) {
+                        console.error('Некорректный ответ от TMDB');
+                        reject('Ошибка загрузки данных');
+                        return;
+                    }
+                    
+                    const items = response.items.map(item => {
+                        const poster = item.poster_path 
+                            ? Lampa.Utils.protocol() + 'image.tmdb.org/t/p/w300' + item.poster_path 
+                            : '';
+                        
+                        return {
+                            id: item.id,
+                            type: item.media_type === 'movie' ? 'movie' : 'tv',
+                            name: item.title || item.name,
+                            poster: poster,
+                            description: item.overview || '',
+                            year: (item.release_date || item.first_air_date || '').substring(0,4) || 0,
+                            rating: item.vote_average || 0
+                        };
+                    });
+                    
+                    console.log(`Загружено ${items.length} элементов`);
                     resolve({results: items, more: false});
+                }, (error) => {
+                    console.error('Ошибка запроса:', error);
+                    reject('Ошибка сети');
                 });
             });
         }
     });
 
-    // Запускаем после полной загрузки приложения
-    if (window.appready) {
-        addToMenu();
-    } else {
-        Lampa.Listener.follow('app', (e) => {
-            if (e.type === 'ready') addToMenu();
-        });
+    // Инициализация плагина
+    function init() {
+        if (!checkLampa()) return;
+        
+        console.log('Инициализация плагина...');
+        
+        if (window.appready) {
+            addToMenu();
+        } else {
+            Lampa.Listener.follow('app', (e) => {
+                if (e.type === 'ready') addToMenu();
+            });
+        }
     }
+
+    // Запускаем плагин
+    init();
 
 })();
