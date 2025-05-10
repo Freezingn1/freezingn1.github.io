@@ -4,102 +4,81 @@
     const plugin = {
         name: 'tmdb_anime_lists',
         title: 'Аниме коллекции',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
+        icon: '🎌',
         lists: [
-            {id: 'test_list', name: 'Тестовая коллекция'}
+            {id: 'test', name: 'Тестовая коллекция'}
         ]
     };
 
-    function waitForLampa(callback) {
-        if (window.Lampa && Lampa.Storage && Lampa.Activity) {
-            callback();
-        } else {
-            setTimeout(() => waitForLampa(callback), 100);
-        }
-    }
-
-    function addMenuButton() {
-        const menuContainer = $('.menu .menu__list:first');
-        if (!menuContainer.length) {
-            setTimeout(addMenuButton, 500);
+    // 1. Проверяем готовность Lampa
+    function initPlugin() {
+        if (!window.Lampa || !Lampa.Storage || !Lampa.Activity) {
+            console.error('Lampa API не доступен');
+            setTimeout(initPlugin, 100);
             return;
         }
 
-        if ($(`[data-action="${plugin.name}"]`).length) return;
+        console.log('Lampa API доступен');
 
-        const menuItem = $(`
-            <li class="menu__item selector" data-action="${plugin.name}">
-                <div class="menu__ico">${plugin.icon}</div>
-                <div class="menu__text">${plugin.title}</div>
-            </li>
-        `);
-
-        menuItem.on('hover:enter', showMainMenu);
-        menuContainer.prepend(menuItem);
-    }
-
-    function showMainMenu() {
-        Lampa.Activity.push({
-            component: 'selector',
-            title: plugin.title,
-            items: plugin.lists.map(list => ({
-                title: list.name,
-                action: () => loadAnimeList(list.id, list.name)
-            })),
-            back: true
-        });
-    }
-
-    function loadAnimeList(listId, listName) {
-        Lampa.Activity.push({
-            component: 'full',
-            title: listName,
-            source: 'anime_test_loader',
-            method: 'list',
-            params: {id: listId},
-            back: true
-        });
-    }
-
-    function registerLoader() {
+        // 2. Регистрируем тестовый загрузчик
         Lampa.Storage.add('anime_test_loader', {
-            load: function(params) {
-                return new Promise((resolve) => {
-                    // Полноценный тестовый объект со всеми обязательными полями
-                    const testItem = {
-                        id: 123,
+            load: function() {
+                console.log('Загрузчик вызван');
+                return Promise.resolve({
+                    results: [{
+                        id: 1,
                         type: 'tv',
                         name: 'Тестовое аниме',
-                        title: 'Тестовое аниме',
+                        title: 'Тестовое аниме (2023)',
                         original_title: 'Test Anime',
-                        year: 2023,
                         poster: 'https://image.tmdb.org/t/p/w300/8fLNbQ6WtDlJ3LcyhpKojIpKz0V.jpg',
                         cover: 'https://image.tmdb.org/t/p/original/9faGSFi5jam6pDWGNd0p8JcJgXQ.jpg',
-                        description: 'Это тестовое аниме для проверки плагина',
+                        description: 'Это тестовый пример аниме',
+                        year: 2023,
                         rating: 8.5,
                         age: '16+',
-                        genres: ['аниме', 'тест'],
+                        genres: ['аниме', 'приключения'],
                         countries: ['Япония']
-                    };
-
-                    resolve({
-                        results: [testItem],
-                        more: false
-                    });
+                    }],
+                    more: false
                 });
             }
         });
+
+        // 3. Добавляем пункт меню
+        function addMenuButton() {
+            const menu = $('.menu .menu__list').first();
+            if (!menu.length) {
+                setTimeout(addMenuButton, 300);
+                return;
+            }
+
+            if (!menu.find(`[data-action="${plugin.name}"]`).length) {
+                menu.prepend(`
+                    <li class="menu__item selector" data-action="${plugin.name}">
+                        <div class="menu__ico">${plugin.icon}</div>
+                        <div class="menu__text">${plugin.title}</div>
+                    </li>
+                `).find(`[data-action="${plugin.name}"]`).on('hover:enter', function() {
+                    Lampa.Activity.push({
+                        component: 'full',
+                        url: '',
+                        title: plugin.title,
+                        source: 'anime_test_loader',
+                        method: 'list',
+                        card_type: 'default'
+                    });
+                });
+                console.log('Пункт меню добавлен');
+            }
+        }
+
+        addMenuButton();
+
+        // 4. Дублируем добавление при открытии меню
+        Lampa.Listener.follow('app_menu', addMenuButton);
     }
 
-    waitForLampa(() => {
-        registerLoader();
-        addMenuButton();
-        
-        Lampa.Listener.follow('app_menu', () => {
-            setTimeout(addMenuButton, 300);
-        });
-        
-        console.log('Плагин аниме инициализирован');
-    });
-
+    // Запускаем после небольшой задержки
+    setTimeout(initPlugin, 500);
 })();
