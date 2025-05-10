@@ -3004,6 +3004,35 @@ function showMinVotesMenu(previousController) {
     });
 }
 
+function showLnumToggleMenu(previousController) {
+    var key = 'disable_lnum';
+    var currentValue = getStoredSetting(key, false);
+
+    Lampa.Select.show({
+        title: 'Управление LNUM',
+        items: [
+            {
+                title: 'LNUM включен',
+                value: false,
+                checkbox: true,
+                checked: !currentValue
+            },
+            {
+                title: 'LNUM отключен',
+                value: true,
+                checkbox: true,
+                checked: currentValue
+            }
+        ],
+        onBack: function() {
+            Lampa.Controller.toggle(previousController || 'settings');
+        },
+        onCheck: function(selected) {
+            setStoredSetting(key, selected.value);
+            Lampa.Noty.show('Изменения применятся после обновления главной страницы');
+        }
+    });
+}
 
 Lampa.SettingsApi.addParam({
     component: 'surs',
