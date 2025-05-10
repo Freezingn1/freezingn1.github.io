@@ -29,7 +29,7 @@
         
         // 3. Пытаемся добавить в меню
         const tryAddToMenu = () => {
-            const menu = $('.menu .menu__list:first');
+            const menu = $('body');
             if (menu.length) {
                 menu.prepend(menuItem);
                 console.log('Пункт меню добавлен!');
