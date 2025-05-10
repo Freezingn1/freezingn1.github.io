@@ -773,7 +773,30 @@ function setCache(key, value) {
             CustomData.push(getPopularPersons());
 
 
+            function getCollection(collectionSrc, index, name) {
+                return function (callback) {
+                    var lang = Lampa.Storage.get('tmdb_lang', 'ru');
+                    var page = params.page || 1;
+                    var url = LNUM_COLLECTIONS_BASE_URL + '/' + collectionSrc.name + '/' + index + '?language=' + lang + '&page=' + page + '&api_key=' + Lampa.TMDB.key() + '&lnum_token=' + LNUM_TOKEN + '&session_id=' + SESSION_ID;
 
+                    owner.getFromCache(url, params, function (json) {
+                        var result = {
+                            url: 'collection__' + collectionSrc.name + '/' + index,
+                            title: name,
+                            page: page,
+                            total_results: json.total_results || 0,
+                            total_pages: json.total_pages || 1,
+                            more: json.total_pages > page,
+                            results: json.results || [],
+                            source: SOURCE_NAME,
+
+                        };
+                        callback(result);
+                    }, function (error) {
+                        callback({ error: error });
+                    });
+                };
+            }
             
 function getCollectionLines() {
     var collectionLinesRaw = [];
@@ -2850,53 +2873,7 @@ function showMainMenu(previousController) {
     });
 }
 
-function showLnumToggleMenu(previousController) {
-    var key = 'disableLnum';
-    var currentValue = getStoredSetting(key, false);
-
-    var options = [
-        { title: 'Включить LNUM', value: false },
-        { title: 'Отключить LNUM', value: true }
-    ];
-
-    var items = options.map(function(option) {
-        return {
-            title: option.title,
-            value: option.value,
-            checkbox: true,
-            checked: currentValue === option.value
-        };
-    });
-
-    Lampa.Select.show({
-        title: 'Управление LNUM',
-        items: items,
-        onBack: function () {
-            Lampa.Controller.toggle(previousController || 'settings');
-        },
-        onCheck: function (selected) {
-            setStoredSetting(key, selected.value);
-            showLnumToggleMenu(previousController);
-        }
-    });
-}
-
 // Основная функция запуска
-Lampa.SettingsApi.addParam({
-    component: 'surs',
-    param: {
-        name: 'surs_filter_menu',
-        type: 'button'
-    },
-    field: {
-        name: 'Глобальный фильтр',
-        description: 'Выбор жанров, вариантов сортировки и стриминговых сервисов.'
-    },
-    onChange: function () {
-        showMainMenu(); 
-    }
-});
-
 Lampa.SettingsApi.addParam({
     component: 'surs',
     param: {
@@ -2916,16 +2893,15 @@ Lampa.SettingsApi.addParam({
 Lampa.SettingsApi.addParam({
     component: 'surs',
     param: {
-        name: 'surs_disableLnum',
+        name: 'surs_filter_menu',
         type: 'button'
     },
     field: {
-        name: Lampa.Lang.translate('Управление LNUM'),
-        description: Lampa.Lang.translate('Включение/отключение функциональности LNUM.')
+        name: 'Глобальный фильтр',
+        description: 'Выбор жанров, вариантов сортировки и стриминговых сервисов.'
     },
     onChange: function () {
-        var previousController = Lampa.Controller.enabled().name;
-        showLnumToggleMenu(previousController);
+        showMainMenu(); 
     }
 });
 
@@ -3838,14 +3814,11 @@ function addMainButton() {
 
 
 function krivieruki() {
-    var disableLnum = getStoredSetting('disableLnum', false);
-    if (!disableLnum) {
-        Lampa.Utils.putScriptAsync([
-            "https://levende.github.io/lampa-plugins/lnum.js"
-        ], function() {
-            // Скрипт загружен
-        });
-    }
+    Lampa.Utils.putScriptAsync([
+        "https://levende.github.io/lampa-plugins/lnum.js"
+    ], function() {
+
+    });
 }
 
 
@@ -3872,8 +3845,6 @@ if (window.appready) {
 }
         }
     });
-	if (!getStoredSetting('disableLnum', false)) {
-        krivieruki();
    }
 }
 
