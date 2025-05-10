@@ -6,7 +6,7 @@
         name: 'tmdb_anime_lists',
         title: 'Аниме коллекции',
         icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
-        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Замените на реальный ключ TMDB
+        api_key: 'f83446fde4dacae2924b41ff789d2bb0',
         lists: [
             {id: 146567, name: 'Топ аниме-сериалы'}
         ]
@@ -14,12 +14,21 @@
 
     // Основной класс плагина
     function AnimePlugin() {
+        this.initialized = false;
         this.network = new Lampa.Reguest();
-        this.cache = {};
     }
 
     AnimePlugin.prototype = {
-        // Метод для загрузки списка
+        initialize: function() {
+            if (this.initialized) return;
+            this.initialized = true;
+            
+            // Регистрируем источник данных
+            Lampa.Storage.add('anime_plugin', {
+                load: this.loadList.bind(this)
+            });
+        },
+
         loadList: function(params) {
             return new Promise((resolve) => {
                 const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${plugin.api_key}&language=ru`;
@@ -54,47 +63,19 @@
                     resolve({results: items, more: false});
                 });
             });
-        },
-
-        // Метод для отображения карточки
-        createCard: function(card) {
-            const template = Lampa.Template.get('card_vertical');
-            if (!template) return $('<div>');
-
-            const elem = $(template);
-            elem.find('.card__title').text(card.title || card.name);
-            elem.find('.card__poster').attr('src', card.poster);
-            elem.find('.card__rating').text(card.rating);
-            elem.find('.card__year').text(card.year);
-            
-            return elem;
         }
     };
 
     // Инициализация плагина
-    function initPlugin() {
-        if (!window.Lampa || !Lampa.Storage || !Lampa.Activity) {
-            setTimeout(initPlugin, 100);
-            return;
-        }
+    function startPlugin() {
+        if (window.anime_plugin_initialized) return;
+        window.anime_plugin_initialized = true;
 
         const animePlugin = new AnimePlugin();
+        animePlugin.initialize();
 
-        // Регистрируем источник данных
-        Lampa.Storage.add('anime_plugin', {
-            load: animePlugin.loadList.bind(animePlugin)
-        });
-
-        // Добавляем пункт в меню
-        function addMenuButton() {
-            const menu = $('.menu .menu__list').first();
-            if (!menu.length) {
-                setTimeout(addMenuButton, 500);
-                return;
-            }
-
-            if (menu.find(`[data-action="${plugin.name}"]`).length) return;
-
+        // Создаем пункт меню
+        function createMenuItem() {
             const menuItem = $(`
                 <li class="menu__item selector" data-action="${plugin.name}">
                     <div class="menu__ico">${plugin.icon}</div>
@@ -114,25 +95,44 @@
                                 title: list.name,
                                 source: 'anime_plugin',
                                 method: 'list',
-                                params: {id: list.id},
-                                card: animePlugin.createCard
+                                params: {id: list.id}
                             });
                         }
                     }))
                 });
             });
 
-            menu.prepend(menuItem);
+            return menuItem;
         }
 
-        addMenuButton();
-        Lampa.Listener.follow('app_menu', addMenuButton);
+        // Добавляем пункт в меню
+        function addToMenu() {
+            const menu = $('.menu .menu__list').first();
+            if (!menu.length) {
+                setTimeout(addToMenu, 500);
+                return;
+            }
+
+            // Удаляем старый пункт если есть
+            menu.find(`[data-action="${plugin.name}"]`).remove();
+            
+            // Добавляем новый пункт
+            menu.prepend(createMenuItem());
+        }
+
+        // Первоначальное добавление
+        addToMenu();
+
+        // Обновляем при каждом открытии меню
+        Lampa.Listener.follow('app_menu', addToMenu);
     }
 
     // Запускаем плагин
     if (window.appready) {
-        initPlugin();
+        startPlugin();
     } else {
-        document.addEventListener('lampa_start', initPlugin);
+        Lampa.Listener.follow('app', function(e) {
+            if (e.type === 'ready') startPlugin();
+        });
     }
 })();
