@@ -388,8 +388,9 @@ function startPlugin() {
         this.discovery = false;
 
         var LNUM_COLLECTIONS_BASE_URL = 'https://lnum-collections.levende-develop.workers.dev/list';
-        var LNUM_TOKEN = '3JD0NTDjgmmYyR9U_avaimovie';
+        var LNUM_TOKEN = '';
         var SESSION_ID = Lampa.Utils.uid();
+        var SOURCE_NAME = 'LNUM';
         var CACHE_SIZE = 100;
         var CACHE_TIME = 1000 * 60 * 60 * 10; // 
         var cache = {};
