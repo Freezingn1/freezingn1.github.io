@@ -2445,33 +2445,40 @@ partsData.splice(4, 0, upcomingEpisodesRequest);
 
 
 function add() {
+    // Получаем значение из Storage
     var sourceName = Lampa.Storage.get('surs_name') || 'AVIAMOVIE';
     var sourceNameKids = sourceName + ' KIDS';
     var sourceNameRus = sourceName + ' RUS';
 
-    // Проверяем, существует ли уже источник, перед созданием
-    if (!Lampa.Api.sources.hasOwnProperty(sourceName)) {
-        Object.defineProperty(Lampa.Api.sources, sourceName, {
-            get: function() { return tmdb_mod; },
-            configurable: true // Разрешает переопределение в будущем
-        });
-    }
+    // Создаем источники
+    var tmdb_mod = Object.assign({}, Lampa.Api.sources.tmdb, new SourceTMDB(Lampa.Api.sources.tmdb));
+    var tmdb_mod_kids = Object.assign({}, Lampa.Api.sources.tmdb, new SourceTMDBkids(Lampa.Api.sources.tmdb));
+    var tmdb_mod_rus = Object.assign({}, Lampa.Api.sources.tmdb, new SourceTMDBrus(Lampa.Api.sources.tmdb));
 
-    if (!Lampa.Api.sources.hasOwnProperty(sourceNameKids)) {
-        Object.defineProperty(Lampa.Api.sources, sourceNameKids, {
-            get: function() { return tmdb_mod_kids; },
-            configurable: true
-        });
-    }
+    Lampa.Api.sources.tmdb_mod = tmdb_mod;
+    Lampa.Api.sources.tmdb_mod_kids = tmdb_mod_kids;
+    Lampa.Api.sources.tmdb_mod_rus = tmdb_mod_rus;
 
-    if (!Lampa.Api.sources.hasOwnProperty(sourceNameRus)) {
-        Object.defineProperty(Lampa.Api.sources, sourceNameRus, {
-            get: function() { return tmdb_mod_rus; },
-            configurable: true
-        });
-    }
+    // Динамически определяем источники
+    Object.defineProperty(Lampa.Api.sources, sourceName, {
+        get: function() {
+            return tmdb_mod;
+        }
+    });
 
-    // Остальной код (добавление в меню и т.д.) ...
+    Object.defineProperty(Lampa.Api.sources, sourceNameKids, {
+        get: function() {
+            return tmdb_mod_kids;
+        }
+    });
+
+    Object.defineProperty(Lampa.Api.sources, sourceNameRus, {
+        get: function() {
+            return tmdb_mod_rus;
+        }
+    });
+
+    // Добавляем источники в меню
     Lampa.Params.select('source', Object.assign({}, Lampa.Params.values['source'], {
         [sourceName]: sourceName,
         [sourceNameKids]: sourceNameKids,
@@ -2866,7 +2873,53 @@ function showMainMenu(previousController) {
     });
 }
 
+function showLnumToggleMenu(previousController) {
+    var key = 'disableLnum';
+    var currentValue = getStoredSetting(key, false);
+
+    var options = [
+        { title: 'Включить LNUM', value: false },
+        { title: 'Отключить LNUM', value: true }
+    ];
+
+    var items = options.map(function(option) {
+        return {
+            title: option.title,
+            value: option.value,
+            checkbox: true,
+            checked: currentValue === option.value
+        };
+    });
+
+    Lampa.Select.show({
+        title: 'Управление LNUM',
+        items: items,
+        onBack: function () {
+            Lampa.Controller.toggle(previousController || 'settings');
+        },
+        onCheck: function (selected) {
+            setStoredSetting(key, selected.value);
+            showLnumToggleMenu(previousController);
+        }
+    });
+}
+
 // Основная функция запуска
+Lampa.SettingsApi.addParam({
+    component: 'surs',
+    param: {
+        name: 'surs_filter_menu',
+        type: 'button'
+    },
+    field: {
+        name: 'Глобальный фильтр',
+        description: 'Выбор жанров, вариантов сортировки и стриминговых сервисов.'
+    },
+    onChange: function () {
+        showMainMenu(); 
+    }
+});
+
 Lampa.SettingsApi.addParam({
     component: 'surs',
     param: {
@@ -2886,15 +2939,16 @@ Lampa.SettingsApi.addParam({
 Lampa.SettingsApi.addParam({
     component: 'surs',
     param: {
-        name: 'surs_filter_menu',
+        name: 'surs_disableLnum',
         type: 'button'
     },
     field: {
-        name: 'Глобальный фильтр',
-        description: 'Выбор жанров, вариантов сортировки и стриминговых сервисов.'
+        name: Lampa.Lang.translate('Управление LNUM'),
+        description: Lampa.Lang.translate('Включение/отключение функциональности LNUM.')
     },
     onChange: function () {
-        showMainMenu(); 
+        var previousController = Lampa.Controller.enabled().name;
+        showLnumToggleMenu(previousController);
     }
 });
 
@@ -2997,52 +3051,6 @@ function showMinVotesMenu(previousController) {
     });
 }
 
-function showLnumToggleMenu(previousController) {
-    var key = 'disable_lnum';
-    var currentValue = getStoredSetting(key, false);
-
-    Lampa.Select.show({
-        title: 'Управление LNUM',
-        items: [
-            {
-                title: 'LNUM включен',
-                value: false,
-                checkbox: true,
-                checked: !currentValue,
-                description: 'Загружает внешние коллекции'
-            },
-            {
-                title: 'LNUM отключен',
-                value: true,
-                checkbox: true,
-                checked: currentValue,
-                description: 'Блокирует загрузку lnum.js'
-            }
-        ],
-        onBack: function() {
-            Lampa.Controller.toggle(previousController || 'settings');
-        },
-        onCheck: function(selected) {
-            setStoredSetting(key, selected.value);
-            Lampa.Noty.show('Для применения перезагрузите главную страницу');
-            
-            // Если LNUM включили - сразу загружаем
-            if (!selected.value) {
-                krivieruki();
-            }
-        }
-    });
-}
-
-if (window.appready) {
-    add();
-    startProfileListener();
-    addMainButton();
-    krivieruki(); // <-- Теперь будет проверять настройку disable_lnum
-    if (!Lampa.Storage.get('surs_disableMenu')) {
-        addSettingMenu();
-    }
-}
 
 Lampa.SettingsApi.addParam({
     component: 'surs',
@@ -3853,18 +3861,14 @@ function addMainButton() {
 
 
 function krivieruki() {
-    // Проверяем, не отключен ли LNUM в настройках
-    if (getStoredSetting('disable_lnum', false)) {
-        console.log("LNUM отключен в настройках");
-        return; // Не загружаем скрипт, если отключено
+    var disableLnum = getStoredSetting('disableLnum', false);
+    if (!disableLnum) {
+        Lampa.Utils.putScriptAsync([
+            "https://levende.github.io/lampa-plugins/lnum.js"
+        ], function() {
+            // Скрипт загружен
+        });
     }
-
-    // Если LNUM включен - загружаем скрипт
-    Lampa.Utils.putScriptAsync([
-        "https://levende.github.io/lampa-plugins/lnum.js"
-    ], function() {
-        console.log("LNUM загружен");
-    });
 }
 
 
@@ -3891,6 +3895,8 @@ if (window.appready) {
 }
         }
     });
+	if (!getStoredSetting('disableLnum', false)) {
+        krivieruki();
    }
 }
 
