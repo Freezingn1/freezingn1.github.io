@@ -51,29 +51,19 @@
 
     // Альтернативная реализация показа меню
     function showAnimeLists() {
-        const menu = new Lampa.RegActivity('menu');
-        
-        menu.create = function() {
-            this.html.html(Lampa.Template.js('menu'));
-            
-            plugin.lists.forEach(list => {
-                $('.menu__body', this.html).append(`
-                    <div class="selector menu__item" data-action="${list.id}">
-                        <div class="menu__ico">${list.icon}</div>
-                        <div class="menu__text">${list.name}</div>
-                    </div>
-                `);
-            });
-            
-            $('.selector', this.html).on('hover:enter', (e) => {
-                const listId = $(e.currentTarget).data('action');
-                const list = plugin.lists.find(item => item.id == listId);
-                if(list) loadTmdbList(list.id, list.name);
-            });
-        };
-        
-        Lampa.Activity.push(menu);
-    }
+    const items = plugin.lists.map(list => ({
+        title: list.name,
+        component: 'full',
+        action: () => loadTmdbList(list.id, list.name)
+    }));
+    
+    Lampa.Activity.push({
+        component: 'list',
+        url: '',
+        title: plugin.title,
+        items: items
+    });
+}
 
     // Загружаем список из TMDB
     function loadTmdbList(listId, listName) {
