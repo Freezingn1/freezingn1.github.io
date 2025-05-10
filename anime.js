@@ -10,13 +10,13 @@
 
         // Создаем пункт меню
         const menuItem = $(`
-            <li class="menu__item selector" data-action="anime2">
+            <li class="menu__item selector" data-action="anime">
                 <div class="menu__ico">${animeIcon}</div>
                 <div class="menu__text">Аниме</div>
             </li>
         `);
 
-        // Функция для добавления в меню
+        // Функция добавления в меню
         function addToMenu() {
             const menuSelectors = [
                 '.menu__list', 
@@ -39,45 +39,38 @@
             return false;
         }
 
-        // Обработчик нажатия с исправленным компонентом
+        // Обработчик нажатия с компонентом category
         menuItem.on('hover:enter click', function() {
             Lampa.Activity.push({
                 url: 'discover/tv?with_original_language=ja&with_genres=16',
                 title: 'Аниме',
-                component: 'full', // Исправлено с category_full на full
+                component: 'category', // Используем компонент category
                 source: 'tmdb',
                 card_type: 'true',
                 page: 1,
-                // Параметры для горизонтальных блоков
-                blocks: [
-                    {
-                        title: 'Популярное аниме',
-                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=popularity.desc'
+                // Для компонента category используем другой формат параметров
+                category: {
+                    view: 'poster', // или 'poster' для другого вида
+                    count: 20,
+                    fields: ['title','year','imdb','kp_id','age'],
+                    filters: {
+                        with_original_language: 'ja',
+                        with_genres: '16'
                     },
-                    {
-                        title: 'Топ рейтинга',
-                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=vote_average.desc&vote_count.gte=100'
-                    },
-                    {
-                        title: 'Новинки',
-                        url: 'discover/tv?with_original_language=ja&with_genres=16&sort_by=first_air_date.desc'
-                    }
-                ]
+                    sort: 'popularity.desc'
+                }
             });
         });
 
-        // Попытка добавления пункта в меню
+        // Попытка добавления пункта
         if(!addToMenu()) {
-            // Если не удалось, ждем готовности приложения
             Lampa.Listener.follow('app', function(e) {
-                if(e.type === 'ready') {
-                    addToMenu();
-                }
+                if(e.type === 'ready') addToMenu();
             });
         }
     }
 
-    // Запускаем после полной загрузки
+    // Запуск после загрузки
     if(document.readyState === 'complete') {
         initAnimeSection();
     } else {
