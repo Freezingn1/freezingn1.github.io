@@ -4,30 +4,33 @@
     // Конфигурация плагина
     const plugin = {
         name: 'tmdb_anime_lists',
-        title: 'TMDB Anime Collections',
-        icon: '⭐',
-        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Обязательно замените на свой ключ TMDB
-        
+        title: 'Аниме коллекции',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
+        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Замените на свой ключ TMDB
         lists: [
-            {id: 146567, name: 'Лучшие аниме-сериалы'},
-            {id: 82486, name: 'Популярные аниме-фильмы'}
+            {id: 146567, name: 'Топ аниме-сериалы'}
         ]
     };
 
-    // Основная функция инициализации
-    function initPlugin() {
-        if (!window.Lampa || !Lampa.Activity || !Lampa.Storage) {
-            console.error('Lampa API не доступен');
+    // Ждем готовности Lampa
+    function waitForLampa(callback) {
+        if (window.Lampa && Lampa.Storage && Lampa.Activity) {
+            callback();
+        } else {
+            setTimeout(() => waitForLampa(callback), 100);
+        }
+    }
+
+    // Добавляем пункт в меню
+    function addMenuButton() {
+        const menuContainer = $('.menu .menu__list:first');
+        if (!menuContainer.length) {
+            setTimeout(addMenuButton, 500);
             return;
         }
 
-        // Добавляем пункт в меню
-        function addToMenu() {
-        if (!$('.menu .menu__list').length) {
-            console.log('Меню не найдено, пробуем снова...');
-            setTimeout(addToMenu, 1000);
-            return;
-        }
+        // Проверяем, не добавлен ли уже пункт
+        if ($(`[data-action="${plugin.name}"]`).length) return;
 
         const menuItem = $(`
             <li class="menu__item selector" data-action="${plugin.name}">
@@ -35,37 +38,40 @@
                 <div class="menu__text">${plugin.title}</div>
             </li>
         `);
-        
-        menuItem.on('hover:enter', showAnimeLists);
-        $('.menu .menu__list').eq(0).prepend(menuItem);
-        console.log('Пункт меню добавлен');
+
+        menuItem.on('hover:enter', showMainMenu);
+        menuContainer.prepend(menuItem);
     }
 
-        // Показываем список коллекций
-        const showAnimeLists = () => {
-            Lampa.Activity.push({
-                component: 'selector',
-                title: plugin.title,
-                items: plugin.lists.map(list => ({
-                    title: list.name,
-                    action: () => loadTmdbList(list.id, list.name)
-                }))
-            });
-        };
+    // Показываем главное меню плагина
+    function showMainMenu() {
+        Lampa.Activity.push({
+            component: 'selector',
+            title: plugin.title,
+            items: plugin.lists.map(list => ({
+                title: list.name,
+                icon: list.icon || plugin.icon,
+                action: () => loadAnimeList(list.id, list.name)
+            })),
+            back: true
+        });
+    }
 
-        // Загружаем список из TMDB
-        const loadTmdbList = (listId, listName) => {
-            Lampa.Activity.push({
-                component: 'full',
-                title: listName,
-                source: 'tmdb_list',
-                method: 'list',
-                params: {id: listId}
-            });
-        };
+    // Загружаем список аниме
+    function loadAnimeList(listId, listName) {
+        Lampa.Activity.push({
+            component: 'full',
+            title: listName,
+            source: 'tmdb_anime_loader',
+            method: 'list',
+            params: {id: listId},
+            back: true
+        });
+    }
 
-        // Регистрируем метод загрузки данных
-        Lampa.Storage.add('tmdb_list', {
+    // Регистрируем загрузчик данных
+    function registerLoader() {
+        Lampa.Storage.add('tmdb_anime_loader', {
             load: function(params) {
     return Promise.resolve({
         results: [{
@@ -80,16 +86,17 @@
     });
 }
         });
+    }
 
-        // Запускаем добавление в меню
+    // Инициализация плагина
+    waitForLampa(() => {
+        registerLoader();
         addMenuButton();
-    }
-
-    // Запускаем плагин после загрузки Lampa
-    if (window.appready) {
-        initPlugin();
-    } else {
-        document.addEventListener('lampa_start', initPlugin);
-    }
+        
+        // Обновляем меню при каждом его открытии
+        Lampa.Listener.follow('app_menu', () => {
+            setTimeout(addMenuButton, 300);
+        });
+    });
 
 })();
