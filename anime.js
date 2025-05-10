@@ -54,36 +54,14 @@
 
         // Открываем категорию аниме
         function openAnimeCategory() {
-            Lampa.Activity.push({
-                url: 'discover/tv',
-                title: 'Аниме',
-                component: 'full',
-                source: 'tmdb',
-                card_type: 'poster',
-                page: 1,
-                filters: {
-                    with_genres: '16',       // Жанр аниме
-                    with_original_language: 'ja' // Японский язык
-                },
-                blocks: [
-                    {
-                        title: 'Популярное',
-                        url: 'discover/tv?with_genres=16&with_original_language=ja&sort_by=popularity.desc',
-                        filters: {}
-                    },
-                    {
-                        title: 'Топ рейтинга',
-                        url: 'discover/tv?with_genres=16&with_original_language=ja&sort_by=vote_average.desc&vote_count.gte=100',
-                        filters: {}
-                    },
-                    {
-                        title: 'Новинки',
-                        url: 'discover/tv?with_genres=16&with_original_language=ja&sort_by=first_air_date.desc',
-                        filters: {}
-                    }
-                ]
-            });
-        }
+    Lampa.Activity.push({
+        url: 'discover/tv?with_genres=16&with_original_language=ja',
+        title: 'Аниме',
+        component: 'category',
+        source: 'tmdb',
+        card_type: 'poster'
+    });
+}
 
         // Пытаемся добавить пункт меню
         if (!addMenuItem()) {
