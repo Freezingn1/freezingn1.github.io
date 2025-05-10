@@ -3902,4 +3902,4 @@ if (window.appready) {
 
 if (!window.plugin_tmdb_mod_ready) startPlugin();
 
-})( );
+})();
