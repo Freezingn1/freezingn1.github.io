@@ -22,21 +22,24 @@
         }
 
         // Добавляем пункт в меню
-        const addMenuButton = () => {
-            if ($('.menu .menu__list').length) {
-                const menuItem = $(`
-                    <li class="menu__item selector" data-action="${plugin.name}">
-                        <div class="menu__ico">${plugin.icon}</div>
-                        <div class="menu__text">${plugin.title}</div>
-                    </li>
-                `);
-                
-                menuItem.on('hover:enter', showAnimeLists);
-                $('.menu .menu__list').eq(0).prepend(menuItem);
-            } else {
-                setTimeout(addMenuButton, 1500);
-            }
-        };
+        function addToMenu() {
+        if (!$('.menu .menu__list').length) {
+            console.log('Меню не найдено, пробуем снова...');
+            setTimeout(addToMenu, 1000);
+            return;
+        }
+
+        const menuItem = $(`
+            <li class="menu__item selector" data-action="${plugin.name}">
+                <div class="menu__ico">${plugin.icon}</div>
+                <div class="menu__text">${plugin.title}</div>
+            </li>
+        `);
+        
+        menuItem.on('hover:enter', showAnimeLists);
+        $('.menu .menu__list').eq(0).prepend(menuItem);
+        console.log('Пункт меню добавлен');
+    }
 
         // Показываем список коллекций
         const showAnimeLists = () => {
@@ -64,35 +67,18 @@
         // Регистрируем метод загрузки данных
         Lampa.Storage.add('tmdb_list', {
             load: function(params) {
-                return new Promise((resolve) => {
-                    const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${plugin.api_key}&language=ru-RU`;
-                    
-                    Lampa.Api.json(url, (response) => {
-                        if (!response || !response.items) {
-                            console.error('Некорректный ответ от TMDB', response);
-                            return resolve({results: [], more: false});
-                        }
-
-                        const items = response.items.map(item => ({
-                            id: item.id,
-                            type: item.media_type === 'movie' ? 'movie' : 'tv',
-                            name: item.title || item.name,
-                            title: item.title || item.name,
-                            poster: item.poster_path 
-                                ? Lampa.Utils.protocol() + 'image.tmdb.org/t/p/w300' + item.poster_path 
-                                : '',
-                            cover: item.backdrop_path 
-                                ? Lampa.Utils.protocol() + 'image.tmdb.org/t/p/original' + item.backdrop_path 
-                                : '',
-                            description: item.overview || '',
-                            year: parseInt((item.release_date || item.first_air_date || '').substring(0, 4)) || 0,
-                            rating: item.vote_average ? Math.round(item.vote_average * 10) / 10 : 0
-                        }));
-
-                        resolve({results: items, more: false});
-                    });
-                });
-            }
+    return Promise.resolve({
+        results: [{
+            id: 123,
+            type: 'tv',
+            name: 'Тестовое аниме',
+            poster: 'https://image.tmdb.org/t/p/w300/8fLNbQ6WtDlJ3LcyhpKojIpKz0V.jpg',
+            rating: 8.5,
+            year: 2023
+        }],
+        more: false
+    });
+}
         });
 
         // Запускаем добавление в меню
