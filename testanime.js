@@ -6,13 +6,13 @@
         name: 'anime_plugin',
         title: 'Аниме коллекции',
         icon: '🎌',
-        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Замените на реальный ключ
-        list_id: 146567 // ID списка TMDB
+        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Проверьте ключ
+        list_id: 146567 // Проверьте ID списка
     };
 
     // 1. Ждем готовности Lampa
     function waitForLampa(callback) {
-        if (window.Lampa && Lampa.Storage && Lampa.Activity) {
+        if (window.Lampa && Lampa.Storage && Lampa.Activity && Lampa.Reguest) {
             console.log('Lampa API готов');
             callback();
         } else {
@@ -27,47 +27,44 @@
         
         Lampa.Storage.add('anime_source', {
             load: function(params) {
-                console.log('Загрузка данных...');
-                
+                console.log('Параметры запроса:', params);
                 return new Promise((resolve) => {
                     const url = `https://api.themoviedb.org/3/list/${plugin.list_id}?api_key=${plugin.api_key}`;
-                    console.log('Отправляем запрос:', url);
+                    console.log('Запрос к API:', url);
 
                     Lampa.Reguest.json(url, (response) => {
-                        console.log('Получен ответ:', response);
-                        
-                        if (!response || !response.results) {
-                            console.error('Некорректный формат ответа');
+                        console.log('Полный ответ API:', response);
+                        if (!response || !response.items) {
+                            console.error('Ошибка: нет данных в ответе');
                             return resolve({results: [], more: false});
                         }
 
-                        const items = response.results.map(item => {
-                            // Обязательные поля для Lampa
+                        const items = response.items.map(item => {
                             return {
                                 id: item.id,
                                 type: item.media_type === 'movie' ? 'movie' : 'tv',
-                                name: item.title || item.name,
-                                title: item.title || item.name,
-                                original_title: item.original_title || item.original_name,
+                                name: item.title || item.name || 'Без названия',
+                                title: item.title || item.name || 'Без названия',
+                                original_title: item.original_title || item.original_name || '',
                                 poster: item.poster_path 
                                     ? 'https://image.tmdb.org/t/p/w300' + item.poster_path 
                                     : '',
                                 cover: item.backdrop_path 
                                     ? 'https://image.tmdb.org/t/p/original' + item.backdrop_path 
                                     : '',
-                                description: item.overview || '',
-                                year: (item.release_date || item.first_air_date || '').substring(0,4) || 0,
+                                description: item.overview || 'Описание отсутствует',
+                                year: (item.release_date || item.first_air_date || '').substring(0,4) || 'N/A',
                                 rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : 0,
                                 age: '16+',
-                                genres: ['аниме'],
+                                genres: item.genre_ids ? item.genre_ids.map(id => 'аниме') : ['аниме'],
                                 countries: ['JP']
                             };
                         });
 
-                        console.log('Сформировано элементов:', items.length);
+                        console.log('Обработанные элементы:', items);
                         resolve({results: items, more: false});
                     }, (error) => {
-                        console.error('Ошибка запроса:', error);
+                        console.error('Ошибка API:', error);
                         resolve({results: [], more: false});
                     });
                 });
@@ -75,7 +72,7 @@
         });
     }
 
-    // 3. Добавляем пункт меню с полной отладкой
+    // 3. Добавляем пункт меню
     function addMenuButton() {
         console.log('Попытка добавить пункт меню...');
         
@@ -86,14 +83,12 @@
             return;
         }
 
-        // Удаляем старый пункт если есть
         const oldItem = menu.find(`[data-action="${plugin.name}"]`);
         if (oldItem.length) {
             console.log('Удаляем старый пункт меню');
             oldItem.remove();
         }
 
-        // Создаем новый пункт
         console.log('Создаем новый пункт меню');
         const menuItem = $(`
             <li class="menu__item selector" data-action="${plugin.name}">
@@ -102,22 +97,19 @@
             </li>
         `);
 
-        // Обработчик клика с полной отладкой
         menuItem.on('hover:enter', function() {
-            console.log('Клик по пункту меню обнаружен');
-            
+            console.log('Запуск активности для:', plugin.title);
             Lampa.Activity.push({
                 component: 'full',
                 title: plugin.title,
                 source: 'anime_source',
                 method: 'list',
                 params: {},
-                card_type: 'default',
                 onReady: function() {
-                    console.log('Активность успешно создана');
+                    console.log('Активность загружена');
                 },
                 onError: function(error) {
-                    console.error('Ошибка активности:', error);
+                    console.error('Ошибка загрузки активности:', error);
                 }
             });
         });
@@ -132,10 +124,17 @@
         registerSource();
         addMenuButton();
         
-        // Обновляем при каждом открытии меню
         Lampa.Listener.follow('app_menu', function() {
             console.log('Обновляем меню...');
             addMenuButton();
+        });
+
+        // Отладка компонента
+        Lampa.Listener.follow('component', (e) => {
+            console.log('Компонент загружен:', e);
+            if (e.component === 'full' && e.source === 'anime_source') {
+                console.log('Компонент для anime_source активирован');
+            }
         });
     });
 
