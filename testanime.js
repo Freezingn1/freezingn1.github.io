@@ -1,84 +1,138 @@
 (function() {
     'use strict';
 
+    // Конфигурация плагина
     const plugin = {
         name: 'tmdb_anime_lists',
         title: 'Аниме коллекции',
-        icon: '🎌',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M18 9c0-1.1-.9-2-2-2V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-2c1.1 0 2-.9 2-2v-4zm-2 0v4h-2V9h2zM4 5h10v12H4V5z"/></svg>',
+        api_key: 'f83446fde4dacae2924b41ff789d2bb0', // Замените на реальный ключ TMDB
         lists: [
-            {id: 'test', name: 'Тестовая коллекция'}
+            {id: 146567, name: 'Топ аниме-сериалы'}
         ]
     };
 
-    // 1. Проверяем готовность Lampa
+    // Основной класс плагина
+    function AnimePlugin() {
+        this.network = new Lampa.Reguest();
+        this.cache = {};
+    }
+
+    AnimePlugin.prototype = {
+        // Метод для загрузки списка
+        loadList: function(params) {
+            return new Promise((resolve) => {
+                const url = `https://api.themoviedb.org/3/list/${params.id}?api_key=${plugin.api_key}&language=ru`;
+                
+                this.network.native(url, (json) => {
+                    if (!json || !json.items) {
+                        console.error('Ошибка загрузки данных:', json);
+                        resolve({results: [], more: false});
+                        return;
+                    }
+
+                    const items = json.items.map(item => ({
+                        id: item.id,
+                        type: item.media_type === 'movie' ? 'movie' : 'tv',
+                        name: item.title || item.name,
+                        title: item.title || item.name,
+                        original_title: item.original_title || item.original_name,
+                        poster: item.poster_path 
+                            ? 'https://image.tmdb.org/t/p/w300' + item.poster_path 
+                            : '',
+                        cover: item.backdrop_path 
+                            ? 'https://image.tmdb.org/t/p/original' + item.backdrop_path 
+                            : '',
+                        description: item.overview || '',
+                        year: (item.release_date || item.first_air_date || '').substring(0,4) || 0,
+                        rating: item.vote_average ? Math.round(item.vote_average * 10)/10 : 0,
+                        age: '16+',
+                        genres: ['аниме'],
+                        countries: ['Япония']
+                    }));
+
+                    resolve({results: items, more: false});
+                });
+            });
+        },
+
+        // Метод для отображения карточки
+        createCard: function(card) {
+            const template = Lampa.Template.get('card_vertical');
+            if (!template) return $('<div>');
+
+            const elem = $(template);
+            elem.find('.card__title').text(card.title || card.name);
+            elem.find('.card__poster').attr('src', card.poster);
+            elem.find('.card__rating').text(card.rating);
+            elem.find('.card__year').text(card.year);
+            
+            return elem;
+        }
+    };
+
+    // Инициализация плагина
     function initPlugin() {
         if (!window.Lampa || !Lampa.Storage || !Lampa.Activity) {
-            console.error('Lampa API не доступен');
             setTimeout(initPlugin, 100);
             return;
         }
 
-        console.log('Lampa API доступен');
+        const animePlugin = new AnimePlugin();
 
-        // 2. Регистрируем тестовый загрузчик
-        Lampa.Storage.add('anime_test_loader', {
-            load: function() {
-                console.log('Загрузчик вызван');
-                return Promise.resolve({
-                    results: [{
-                        id: 1,
-                        type: 'tv',
-                        name: 'Тестовое аниме',
-                        title: 'Тестовое аниме (2023)',
-                        original_title: 'Test Anime',
-                        poster: 'https://image.tmdb.org/t/p/w300/8fLNbQ6WtDlJ3LcyhpKojIpKz0V.jpg',
-                        cover: 'https://image.tmdb.org/t/p/original/9faGSFi5jam6pDWGNd0p8JcJgXQ.jpg',
-                        description: 'Это тестовый пример аниме',
-                        year: 2023,
-                        rating: 8.5,
-                        age: '16+',
-                        genres: ['аниме', 'приключения'],
-                        countries: ['Япония']
-                    }],
-                    more: false
-                });
-            }
+        // Регистрируем источник данных
+        Lampa.Storage.add('anime_plugin', {
+            load: animePlugin.loadList.bind(animePlugin)
         });
 
-        // 3. Добавляем пункт меню
+        // Добавляем пункт в меню
         function addMenuButton() {
             const menu = $('.menu .menu__list').first();
             if (!menu.length) {
-                setTimeout(addMenuButton, 300);
+                setTimeout(addMenuButton, 500);
                 return;
             }
 
-            if (!menu.find(`[data-action="${plugin.name}"]`).length) {
-                menu.prepend(`
-                    <li class="menu__item selector" data-action="${plugin.name}">
-                        <div class="menu__ico">${plugin.icon}</div>
-                        <div class="menu__text">${plugin.title}</div>
-                    </li>
-                `).find(`[data-action="${plugin.name}"]`).on('hover:enter', function() {
-                    Lampa.Activity.push({
-                        component: 'full',
-                        url: '',
-                        title: plugin.title,
-                        source: 'anime_test_loader',
-                        method: 'list',
-                        card_type: 'default'
-                    });
+            if (menu.find(`[data-action="${plugin.name}"]`).length) return;
+
+            const menuItem = $(`
+                <li class="menu__item selector" data-action="${plugin.name}">
+                    <div class="menu__ico">${plugin.icon}</div>
+                    <div class="menu__text">${plugin.title}</div>
+                </li>
+            `);
+
+            menuItem.on('hover:enter', function() {
+                Lampa.Activity.push({
+                    component: 'selector',
+                    title: plugin.title,
+                    items: plugin.lists.map(list => ({
+                        title: list.name,
+                        action: () => {
+                            Lampa.Activity.push({
+                                component: 'full',
+                                title: list.name,
+                                source: 'anime_plugin',
+                                method: 'list',
+                                params: {id: list.id},
+                                card: animePlugin.createCard
+                            });
+                        }
+                    }))
                 });
-                console.log('Пункт меню добавлен');
-            }
+            });
+
+            menu.prepend(menuItem);
         }
 
         addMenuButton();
-
-        // 4. Дублируем добавление при открытии меню
         Lampa.Listener.follow('app_menu', addMenuButton);
     }
 
-    // Запускаем после небольшой задержки
-    setTimeout(initPlugin, 500);
+    // Запускаем плагин
+    if (window.appready) {
+        initPlugin();
+    } else {
+        document.addEventListener('lampa_start', initPlugin);
+    }
 })();
