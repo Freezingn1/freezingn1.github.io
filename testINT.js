@@ -513,7 +513,7 @@
             }
             
             .new-interface .full-start__background {
-                opacity: 0.5 !important;
+                opacity: 0.6 !important;
             }
             
             .new-interface .full-start__background {
