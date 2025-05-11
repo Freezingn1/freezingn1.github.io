@@ -56,9 +56,14 @@
         this.pause = function () {};
         this.stop = function () {};
         this.destroy = function () {};
+
+        // ВАЖНО: метод start обязателен
+        this.start = function () {
+            this.create();
+        };
     }
 
-    // Добавление пункта в DOM меню вручную
+    // Добавление пункта в меню вручную
     function injectMenuItem() {
         const checkMenu = setInterval(() => {
             const menuList = document.querySelector('.menu__list');
@@ -84,7 +89,6 @@
         }, 500);
     }
 
-    // Регистрируем компонент и вставляем меню
     Lampa.Component.add('anime_uncensored', AnimeUncensored);
     injectMenuItem();
 })();
