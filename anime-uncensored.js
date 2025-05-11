@@ -17,49 +17,54 @@
         }
     ];
 
-    function AnimeUncensored() {
-        let scroll, html, body;
+    Component.add('anime_uncensored', {
+        render: function () {
+            this.html = Template.get('items');
+            this.scroll = this.html.querySelector('.scroll__content');
+            return this.html;
+        },
 
-        this.create = function () {
-            html = document.createElement('div');
-            html.classList.add('layer');
-
-            body = document.createElement('div');
-            body.classList.add('layer__body');
-
-            scroll = document.createElement('div');
-            scroll.classList.add('scroll__content');
-
-            html.appendChild(body);
-            body.appendChild(scroll);
-
+        start: function () {
             this.build();
-        };
 
-        this.build = function () {
-            testItems.forEach(item => {
-                let card = document.createElement('div');
-                card.classList.add('card', 'card--collection');
-                card.innerHTML = `
-                    <div class="card__img" style="background-image: url('${item.img}')"></div>
-                    <div class="card__title">${item.name}</div>
-                    <div class="card__descr">${item.original_title}</div>
-                `;
-                scroll.appendChild(card);
+            Controller.add('anime_uncensored', {
+                toggle: () => {
+                    Controller.collectionSet(this.scroll);
+                    Controller.collectionFocus(false);
+                },
+                up: Navigator.up,
+                down: Navigator.down,
+                left: Navigator.left,
+                right: Navigator.right,
+                back: Navigator.back
             });
 
-            this.start();
-        };
+            Controller.toggle('anime_uncensored');
+        },
 
-        this.start = function () {
-            document.body.appendChild(html);
-        };
-    }
+        build: function () {
+            this.scroll.innerHTML = ''; // очистка
 
-    Lampa.Launcher.add({
+            testItems.forEach(item => {
+                const card = Template.get('card', {
+                    title: item.name,
+                    original_title: item.original_title,
+                    poster: item.img
+                });
+
+                this.scroll.appendChild(card);
+            });
+        },
+
+        destroy: function () {
+            this.html.remove();
+        }
+    });
+
+    Menu.add({
         title: 'Uncensored Anime',
-        category: 'uncensored',
-        name: 'anime_uncensored',
-        component: AnimeUncensored
+        url: '',
+        component: 'anime_uncensored',
+        name: 'uncensored_anime'
     });
 })();
