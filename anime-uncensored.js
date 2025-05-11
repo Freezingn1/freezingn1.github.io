@@ -1,5 +1,6 @@
 (function () {
-    const LIST_ID = '8202504';
+    const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0';
+    const LIST_ID = '8202504'; // ID публичного списка аниме на TMDb
 
     function AnimeUncensored() {
         let html;
@@ -9,33 +10,36 @@
             this.activity.loader(true);
             this.activity.backdrop = true;
 
-            TMDB.list(LIST_ID, (result) => {
-                this.activity.loader(false);
+            fetch(`https://api.themoviedb.org/3/list/${LIST_ID}?api_key=${API_KEY}&language=ru-RU`)
+                .then(response => response.json())
+                .then(result => {
+                    this.activity.loader(false);
 
-                if (result && result.items && result.items.length) {
-                    items = result.items.map((item) => {
-                        item.name = item.title || item.name;
-                        item.original_name = item.original_title || item.original_name;
-                        return item;
-                    });
+                    if (result && result.items && result.items.length) {
+                        items = result.items.map(item => {
+                            item.name = item.title || item.name;
+                            item.original_name = item.original_title || item.original_name;
+                            return item;
+                        });
 
-                    let view = new Lampa.CardCollection({
-                        title: 'Аниме (Uncensored)',
-                        items: items,
-                        url: '',
-                        page: 1
-                    });
+                        let view = new Lampa.CardCollection({
+                            title: 'Аниме (Uncensored)',
+                            items: items,
+                            url: '',
+                            page: 1
+                        });
 
-                    view.visible();
-                    html = view.render();
-                    this.activity.render(html);
-                } else {
+                        view.visible();
+                        html = view.render();
+                        this.activity.render(html);
+                    } else {
+                        this.empty();
+                    }
+                })
+                .catch(() => {
+                    this.activity.loader(false);
                     this.empty();
-                }
-            }, () => {
-                this.activity.loader(false);
-                this.empty();
-            });
+                });
         };
 
         this.empty = function () {
