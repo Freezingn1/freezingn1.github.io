@@ -14,57 +14,57 @@
         this.create = () => {
             this.activity.loader(true);
 
-            fetch(`https://api.themoviedb.org/3/list/${LIST_ID}?api_key=${API_KEY}&language=ru-RU`)
-                .then(res => res.json())
-                .then(json => {
-                    let items = json.items || [];
+            Lampa.Api.request('list/' + LIST_ID, {
+                api_key: API_KEY,
+                language: 'ru-RU'
+            }, (json) => {
+                let items = json.items || [];
 
-                    if (!items.length) {
-                        body.append(`<div class="empty">Список пуст</div>`);
-                    }
+                console.log('Загружено через Lampa.Api:', items);
 
-                    items.forEach(item => {
-						console.log('Ответ TMDb:', json);
-						console.log('Элементы:', json.items);
+                if (!items.length) {
+                    body.append(`<div class="empty">Список пуст</div>`);
+                    this.activity.loader(false);
+                    return;
+                }
 
-                        let method = item.name ? 'tv' : 'movie';
+                items.forEach(item => {
+                    let method = item.name ? 'tv' : 'movie';
 
-                        let card = Template.get('card', {
-                            title: item.title || item.name,
-                            original_title: item.original_title || item.original_name,
-                            release_date: item.release_date || item.first_air_date,
-                            vote_average: item.vote_average,
-                            poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : ''
-                        });
-
-                        card.on('hover:focus', () => {
-                            Background.change(item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : '');
-                        });
-
-                        card.on('hover:enter', () => {
-                            Lampa.Activity.push({
-                                url: '',
-                                title: item.title || item.name,
-                                component: 'full',
-                                id: item.id,
-                                method: method
-                            });
-                        });
-
-                        body.append(card);
+                    let card = Template.get('card', {
+                        title: item.title || item.name,
+                        original_title: item.original_title || item.original_name,
+                        release_date: item.release_date || item.first_air_date,
+                        vote_average: item.vote_average,
+                        poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : ''
                     });
 
-                    this.activity.loader(false);
-                    this.activity.toggle();
-                    scroll.render();
-                    scroll.update();
-                    Controller.enable('content');
-                })
-                .catch(e => {
-                    console.error('Ошибка загрузки:', e);
-                    body.append(`<div class="empty">Ошибка загрузки списка</div>`);
-                    this.activity.loader(false);
+                    card.on('hover:focus', () => {
+                        Background.change(item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : '');
+                    });
+
+                    card.on('hover:enter', () => {
+                        Lampa.Activity.push({
+                            url: '',
+                            title: item.title || item.name,
+                            component: 'full',
+                            id: item.id,
+                            method: method
+                        });
+                    });
+
+                    body.append(card);
                 });
+
+                this.activity.loader(false);
+                this.activity.toggle();
+                scroll.render();
+                scroll.update();
+                Controller.enable('content');
+            }, () => {
+                body.append(`<div class="empty">Ошибка загрузки</div>`);
+                this.activity.loader(false);
+            });
         };
 
         this.pause = () => {};
@@ -112,10 +112,8 @@
         });
     }
 
-    // Регистрируем компонент
     Lampa.Component.add('anime_uncensored', AnimeComponent);
 
-    // Добавляем меню с задержкой
     Lampa.Listener.follow('app', e => {
         if (e.type === 'ready') {
             setTimeout(addToMenuList, 1000);
