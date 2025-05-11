@@ -1,91 +1,65 @@
 (function () {
-    const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0';
-    const LIST_ID = '146567'; // ID публичного списка аниме на TMDb
+    const testItems = [
+        {
+            name: 'Атака титанов',
+            original_title: 'Shingeki no Kyojin',
+            img: 'https://image.tmdb.org/t/p/w500/aiy35Evcofzl7hASZZvsFgltHTX.jpg'
+        },
+        {
+            name: 'Тетрадь смерти',
+            original_title: 'Death Note',
+            img: 'https://image.tmdb.org/t/p/w500/4tS0iy9hzzNidHAgZ0sRzy9PI24.jpg'
+        },
+        {
+            name: 'Клинок, рассекающий демонов',
+            original_title: 'Kimetsu no Yaiba',
+            img: 'https://image.tmdb.org/t/p/w500/u7IE5HU8ISGmY1Yz9UXrJjYDUfP.jpg'
+        }
+    ];
 
     function AnimeUncensored() {
-        let html;
-        let items = [];
+        let scroll, html, body;
 
         this.create = function () {
-            this.activity.loader(true);
-            this.activity.backdrop = true;
+            html = document.createElement('div');
+            html.classList.add('layer');
 
-            fetch(`https://api.themoviedb.org/3/list/${LIST_ID}?api_key=${API_KEY}&language=ru-RU`)
-                .then(response => response.json())
-                .then(result => {
-                    this.activity.loader(false);
+            body = document.createElement('div');
+            body.classList.add('layer__body');
 
-                    if (result && result.items && result.items.length) {
-                        items = result.items.map(item => {
-                            item.name = item.title || item.name;
-                            item.original_name = item.original_title || item.original_name;
-                            return item;
-                        });
+            scroll = document.createElement('div');
+            scroll.classList.add('scroll__content');
 
-                        let view = new Lampa.CardCollection({
-                            title: 'Аниме (Uncensored)',
-                            items: items,
-                            url: '',
-                            page: 1
-                        });
+            html.appendChild(body);
+            body.appendChild(scroll);
 
-                        view.visible();
-                        html = view.render();
-                        this.activity.render(html);
-                    } else {
-                        this.empty();
-                    }
-                })
-                .catch(() => {
-                    this.activity.loader(false);
-                    this.empty();
-                });
+            this.build();
         };
 
-        this.empty = function () {
-            let empty = Template.get('empty');
-            empty.querySelector('.empty__title').textContent = 'Здесь пусто';
-            empty.querySelector('.empty__descr').textContent = 'Не удалось загрузить список.';
-            this.activity.render(empty);
+        this.build = function () {
+            testItems.forEach(item => {
+                let card = document.createElement('div');
+                card.classList.add('card', 'card--collection');
+                card.innerHTML = `
+                    <div class="card__img" style="background-image: url('${item.img}')"></div>
+                    <div class="card__title">${item.name}</div>
+                    <div class="card__descr">${item.original_title}</div>
+                `;
+                scroll.appendChild(card);
+            });
+
+            this.start();
         };
 
-        this.render = function () {
-            return html;
-        };
-
-        this.pause = function () {};
-        this.stop = function () {};
-        this.destroy = function () {};
         this.start = function () {
-            this.create();
+            document.body.appendChild(html);
         };
     }
 
-    function injectMenuItem() {
-        const checkMenu = setInterval(() => {
-            const menuList = document.querySelector('.menu__list');
-
-            if (menuList && !menuList.querySelector('[data-action="anime_uncensored"]')) {
-                const item = document.createElement('li');
-                item.className = 'menu__item selector';
-                item.setAttribute('data-action', 'anime_uncensored');
-                item.textContent = 'Аниме (Uncensored)';
-
-                item.addEventListener('click', () => {
-                    Lampa.Activity.push({
-                        url: '',
-                        title: 'Аниме (Uncensored)',
-                        component: 'anime_uncensored',
-                        page: 1
-                    });
-                });
-
-                menuList.appendChild(item);
-                clearInterval(checkMenu);
-            }
-        }, 500);
-    }
-
-    Lampa.Component.add('anime_uncensored', AnimeUncensored);
-    injectMenuItem();
+    Lampa.Launcher.add({
+        title: 'Uncensored Anime',
+        category: 'uncensored',
+        name: 'anime_uncensored',
+        component: AnimeUncensored
+    });
 })();
