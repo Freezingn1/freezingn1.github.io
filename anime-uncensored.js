@@ -68,25 +68,38 @@
         this.render = () => html;
     }
 
+    function waitForMenuAndAdd(callback, retries = 10) {
+        const menu = $('.menu__list').eq(0);
+        if (menu.length) {
+            callback(menu);
+        } else if (retries > 0) {
+            setTimeout(() => waitForMenuAndAdd(callback, retries - 1), 500);
+        } else {
+            console.warn('Не удалось найти .menu__list');
+        }
+    }
+
     function addToMenuList() {
-        const button = $('<li class="menu__item selector"><div class="menu__ico"><svg><use xlink:href="#icon-folder"></use></svg></div><div class="menu__text">' + SECTION_TITLE + '</div></li>');
+        waitForMenuAndAdd(menu => {
+            const button = $('<li class="menu__item selector"><div class="menu__ico"><svg><use xlink:href="#icon-folder"></use></svg></div><div class="menu__text">' + SECTION_TITLE + '</div></li>');
 
-        button.on('hover:enter', () => {
-            Lampa.Activity.push({
-                url: '',
-                title: SECTION_TITLE,
-                component: 'anime_uncensored'
+            button.on('hover:enter', () => {
+                Lampa.Activity.push({
+                    url: '',
+                    title: SECTION_TITLE,
+                    component: 'anime_uncensored'
+                });
             });
-        });
 
-        $('.menu__list').eq(0).append(button); // Вставляем в главное меню
+            menu.append(button);
+        });
     }
 
     Lampa.Component.add('anime_uncensored', AnimeComponent);
 
     Lampa.Listener.follow('app', e => {
         if (e.type === 'ready') {
-            addToMenuList();
+            setTimeout(addToMenuList, 1000); // Задержка в 1 секунду
         }
     });
 })();
