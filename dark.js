@@ -12,13 +12,13 @@
     function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
-            'background': '#121212'
+            'background': '#0d0d0d'
         });
 
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
-                'background-color': '#121212'
+                'background-color': '#0d0d0d'
             });
         });
 
@@ -165,7 +165,7 @@
             }
             
             .modal__content {
-                background-color: #121212 !important;
+                background-color: #0d0d0d !important;
             }			
             
             .card-more.focus .card-more__box::after {
@@ -193,19 +193,19 @@
             }
             
             .settings-input--free {
-                background-color: #121212;
+                background-color: #0d0d0d;
             }
 
             .settings-input__content {
-                background: #121212;
+                background: #0d0d0d;
             }
             
             .extensions {
-                background-color: #121212;
+                background-color: #0d0d0d;
             }
             
             .modal__content {
-                background-color: #121212;
+                background-color: #0d0d0d;
 				box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 51%);
 				max-height: 90vh;
 				overflow: hidden;
