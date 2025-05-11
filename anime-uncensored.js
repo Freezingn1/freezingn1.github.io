@@ -19,7 +19,13 @@
                 .then(json => {
                     let items = json.items || [];
 
+                    if (!items.length) {
+                        body.append(`<div class="empty">Список пуст</div>`);
+                    }
+
                     items.forEach(item => {
+                        let method = item.name ? 'tv' : 'movie';
+
                         let card = Template.get('card', {
                             title: item.title || item.name,
                             original_title: item.original_title || item.original_name,
@@ -38,7 +44,7 @@
                                 title: item.title || item.name,
                                 component: 'full',
                                 id: item.id,
-                                method: item.media_type === 'tv' ? 'tv' : 'movie'
+                                method: method
                             });
                         });
 
@@ -53,6 +59,7 @@
                 })
                 .catch(e => {
                     console.error('Ошибка загрузки:', e);
+                    body.append(`<div class="empty">Ошибка загрузки списка</div>`);
                     this.activity.loader(false);
                 });
         };
@@ -81,7 +88,14 @@
 
     function addToMenuList() {
         waitForMenuAndAdd(menu => {
-            const button = $('<li class="menu__item selector"><div class="menu__ico"><svg><use xlink:href="#icon-folder"></use></svg></div><div class="menu__text">' + SECTION_TITLE + '</div></li>');
+            const button = $(`
+                <li class="menu__item selector">
+                    <div class="menu__ico">
+                        <svg><use xlink:href="#icon-folder"></use></svg>
+                    </div>
+                    <div class="menu__text">${SECTION_TITLE}</div>
+                </li>
+            `);
 
             button.on('hover:enter', () => {
                 Lampa.Activity.push({
@@ -95,11 +109,13 @@
         });
     }
 
+    // Регистрируем компонент
     Lampa.Component.add('anime_uncensored', AnimeComponent);
 
+    // Добавляем меню с задержкой
     Lampa.Listener.follow('app', e => {
         if (e.type === 'ready') {
-            setTimeout(addToMenuList, 1000); // Задержка в 1 секунду
+            setTimeout(addToMenuList, 1000);
         }
     });
 })();
