@@ -24,6 +24,9 @@
                     }
 
                     items.forEach(item => {
+						console.log('Ответ TMDb:', json);
+						console.log('Элементы:', json.items);
+
                         let method = item.name ? 'tv' : 'movie';
 
                         let card = Template.get('card', {
