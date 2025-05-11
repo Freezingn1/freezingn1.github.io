@@ -1,6 +1,6 @@
 (function () {
     const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0';
-    const LIST_ID = '8202504'; // Рабочий публичный список с аниме
+    const LIST_ID = '8202504'; // Публичный список с аниме
 
     function AnimeUncensored() {
         let html;
@@ -59,26 +59,30 @@
         this.destroy = function () {};
     }
 
-    // Правильное добавление в меню
-    function addToMainMenu() {
-        Lampa.Menu.listener.follow('ready', () => {
-            const menuItems = Lampa.Menu.get();
-            const exists = menuItems.some(i => i.action === 'anime_uncensored');
+    // Новый безопасный способ добавить в меню
+    function addToMenu() {
+        let added = false;
 
-            if (!exists) {
-                menuItems.push({
-                    title: 'Аниме (Uncensored)',
-                    action: 'anime_uncensored',
-                    component: 'anime_uncensored',
-                    type: 'category'
-                });
+        Lampa.Listener.follow('app', function (event) {
+            if (event.type === 'ready' && !added) {
+                const menu = Lampa.Menu.get();
+                const exists = menu.find(i => i.action === 'anime_uncensored');
 
-                Lampa.Menu.update();
+                if (!exists) {
+                    menu.push({
+                        title: 'Аниме (Uncensored)',
+                        action: 'anime_uncensored',
+                        component: 'anime_uncensored',
+                        type: 'category'
+                    });
+
+                    Lampa.Menu.update();
+                    added = true;
+                }
             }
         });
     }
 
     Lampa.Component.add('anime_uncensored', AnimeUncensored);
-
-    setTimeout(addToMainMenu, 500); // задержка для надёжности
+    addToMenu();
 })();
