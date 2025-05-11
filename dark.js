@@ -15,12 +15,7 @@
             'background': '#0d0d0d'
         });
 
-        // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
-        document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
-            safeAddStyle(el, {
-                'background-color': '#0d0d0d'
-            });
-        });
+
 
         // 2. Полупрозрачный фон для папки закладок
         const bookmarkFolder = document.querySelector('.bookmarks-folder__layer');
