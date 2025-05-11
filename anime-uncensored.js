@@ -1,123 +1,94 @@
-(() => {
-    const API_KEY = '4ef0d7355d9ffb5151e987764708ce96';
-    const LIST_ID = '146567';
-    const SECTION_TITLE = 'Аниме (Uncensored)';
+(function () {
+    const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0'; // ваш TMDb API ключ
+    const LIST_ID = '8202504'; // рабочий публичный список с аниме (пример)
 
-    function AnimeComponent() {
-        let html = Template.js();
-        let scroll = new Scroll({ mask: true });
-        let body = $('<div class="scroll__content"></div>');
+    function AnimeUncensored() {
+        let scroll = new Lampa.Scroll({ mask: true });
+        let html = Template.get('items');
+        let body = html.querySelector('.items__body');
 
-        scroll.body().append(body);
-        html.find('.content__body').append(scroll.render());
-
-        this.create = () => {
+        this.create = function () {
             this.activity.loader(true);
 
-            Lampa.Api.request('list/' + LIST_ID, {
-                api_key: API_KEY,
-                language: 'ru-RU'
-            }, (json) => {
-                let items = json.items || [];
+            network.silent(`https://api.themoviedb.org/3/list/${LIST_ID}?api_key=${API_KEY}&language=ru-RU`, (data) => {
+                this.activity.loader(false);
 
-                console.log('Загружено через Lampa.Api:', items);
+                if (data && data.items && data.items.length) {
+                    data.items.forEach(element => {
+                        let card = Template.get('card', element);
+                        card.addEventListener('hover:focus', () => {
+                            Lampa.Controller.collectionSet(this.render());
+                            Lampa.Controller.collectionFocus(card);
+                        });
 
-                if (!items.length) {
-                    body.append(`<div class="empty">Список пуст</div>`);
-                    this.activity.loader(false);
-                    return;
+                        card.addEventListener('hover:enter', () => {
+                            Lampa.Activity.push({
+                                url: '',
+                                component: 'full',
+                                id: element.id,
+                                method: element.media_type || 'tv',
+                                card: element
+                            });
+                        });
+
+                        body.appendChild(card);
+                    });
+
+                    scroll.append(html);
+                    this.activity.render(scroll.render());
+                    Lampa.Controller.enable('content');
+                } else {
+                    this.empty();
                 }
+            }, () => {
+                this.empty();
+            });
+        };
 
-                items.forEach(item => {
-                    let method = item.name ? 'tv' : 'movie';
+        this.empty = function () {
+            let empty = Template.get('empty');
+            empty.querySelector('.empty__title').textContent = 'Здесь пусто';
+            empty.querySelector('.empty__descr').textContent = 'Не удалось загрузить список.';
+            this.activity.render(empty);
+        };
 
-                    let card = Template.get('card', {
-                        title: item.title || item.name,
-                        original_title: item.original_title || item.original_name,
-                        release_date: item.release_date || item.first_air_date,
-                        vote_average: item.vote_average,
-                        poster: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : ''
-                    });
+        this.render = function () {
+            return scroll.render();
+        };
 
-                    card.on('hover:focus', () => {
-                        Background.change(item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : '');
-                    });
+        this.destroy = function () {
+            scroll.destroy();
+            html.remove();
+            scroll = null;
+            html = null;
+        };
+    }
 
-                    card.on('hover:enter', () => {
+    function addToMenu() {
+        Lampa.Settings.listener.follow('open', (e) => {
+            if (e.name === 'main') {
+                let menu = e.body.querySelector('.menu__list');
+                if (!menu.querySelector('[data-action="anime_uncensored"]')) {
+                    let item = document.createElement('li');
+                    item.className = 'menu__item';
+                    item.innerHTML = '<span>Аниме (Uncensored)</span>';
+                    item.dataset.action = 'anime_uncensored';
+
+                    item.addEventListener('click', () => {
                         Lampa.Activity.push({
                             url: '',
-                            title: item.title || item.name,
-                            component: 'full',
-                            id: item.id,
-                            method: method
+                            title: 'Аниме (Uncensored)',
+                            component: 'anime_uncensored',
+                            page: 1
                         });
                     });
 
-                    body.append(card);
-                });
-
-                this.activity.loader(false);
-                this.activity.toggle();
-                scroll.render();
-                scroll.update();
-                Controller.enable('content');
-            }, () => {
-                body.append(`<div class="empty">Ошибка загрузки</div>`);
-                this.activity.loader(false);
-            });
-        };
-
-        this.pause = () => {};
-        this.stop = () => {};
-        this.destroy = () => {
-            scroll.destroy();
-            html.remove();
-            body.remove();
-        };
-
-        this.render = () => html;
-    }
-
-    function waitForMenuAndAdd(callback, retries = 10) {
-        const menu = $('.menu__list').eq(0);
-        if (menu.length) {
-            callback(menu);
-        } else if (retries > 0) {
-            setTimeout(() => waitForMenuAndAdd(callback, retries - 1), 500);
-        } else {
-            console.warn('Не удалось найти .menu__list');
-        }
-    }
-
-    function addToMenuList() {
-        waitForMenuAndAdd(menu => {
-            const button = $(`
-                <li class="menu__item selector">
-                    <div class="menu__ico">
-                        <svg><use xlink:href="#icon-folder"></use></svg>
-                    </div>
-                    <div class="menu__text">${SECTION_TITLE}</div>
-                </li>
-            `);
-
-            button.on('hover:enter', () => {
-                Lampa.Activity.push({
-                    url: '',
-                    title: SECTION_TITLE,
-                    component: 'anime_uncensored'
-                });
-            });
-
-            menu.append(button);
+                    menu.appendChild(item);
+                }
+            }
         });
     }
 
-    Lampa.Component.add('anime_uncensored', AnimeComponent);
-
-    Lampa.Listener.follow('app', e => {
-        if (e.type === 'ready') {
-            setTimeout(addToMenuList, 1000);
-        }
-    });
+    Lampa.Component.add('anime_uncensored', AnimeUncensored);
+    setTimeout(addToMenu, 1000); // задержка для корректной инициализации
 })();
-146567
