@@ -3,7 +3,7 @@
     const LIST_ID = '146567';
     const SECTION_TITLE = 'Аниме (Uncensored)';
 
-    function createComponent() {
+    function AnimeComponent() {
         let html = Template.js();
         let scroll = new Scroll({ mask: true });
         let body = $('<div class="scroll__content"></div>');
@@ -68,29 +68,25 @@
         this.render = () => html;
     }
 
-    // Добавляем пункт в главное меню через "Категории"
-    function addToMainMenu() {
-        Lampa.Settings.main().update([
-            {
+    function addToMenuList() {
+        const button = $('<li class="menu__item selector"><div class="menu__ico"><svg><use xlink:href="#icon-folder"></use></svg></div><div class="menu__text">' + SECTION_TITLE + '</div></li>');
+
+        button.on('hover:enter', () => {
+            Lampa.Activity.push({
+                url: '',
                 title: SECTION_TITLE,
-                onClick: () => {
-                    Lampa.Activity.push({
-                        url: '',
-                        title: SECTION_TITLE,
-                        component: 'anime_uncensored'
-                    });
-                }
-            }
-        ]);
+                component: 'anime_uncensored'
+            });
+        });
+
+        $('.menu__list').eq(0).append(button); // Вставляем в главное меню
     }
 
-    // Регистрируем компонент
-    Lampa.Component.add('anime_uncensored', createComponent);
+    Lampa.Component.add('anime_uncensored', AnimeComponent);
 
-    // Ждём, пока приложение будет готово
     Lampa.Listener.follow('app', e => {
         if (e.type === 'ready') {
-            addToMainMenu();
+            addToMenuList();
         }
     });
 })();
