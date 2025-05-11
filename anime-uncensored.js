@@ -1,6 +1,6 @@
 (function () {
     const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0';
-    const LIST_ID = '8202504'; // ID публичного списка аниме на TMDb
+    const LIST_ID = '146567'; // ID публичного списка аниме на TMDb
 
     function AnimeUncensored() {
         let html;
