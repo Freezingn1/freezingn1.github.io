@@ -1,6 +1,6 @@
 (function () {
     const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0';
-    const LIST_ID = '8202504'; // Публичный список аниме
+    const LIST_ID = '8202504'; // Рабочий публичный список с аниме
 
     function AnimeUncensored() {
         let html;
@@ -10,7 +10,10 @@
             this.activity.loader(true);
             this.activity.backdrop = true;
 
-            Api.list(LIST_ID, (result) => {
+            Lampa.Api.request(`list/${LIST_ID}`, {
+                api_key: API_KEY,
+                language: 'ru-RU'
+            }, (result) => {
                 this.activity.loader(false);
 
                 if (result && result.items && result.items.length) {
@@ -24,11 +27,7 @@
                         title: 'Аниме (Uncensored)',
                         items: items,
                         url: '',
-                        page: 1,
-                        card_render: {
-                            url: (item) => item.poster_path
-                        },
-                        card_type: 'card'
+                        page: 1
                     });
 
                     view.visible();
@@ -47,47 +46,39 @@
         this.empty = function () {
             let empty = Template.get('empty');
             empty.querySelector('.empty__title').textContent = 'Здесь пусто';
-            empty.querySelector('.empty__descr').textContent = 'Список не содержит элементов.';
+            empty.querySelector('.empty__descr').textContent = 'Не удалось загрузить список.';
             this.activity.render(empty);
         };
 
-        this.pause = function () {}
-        this.stop = function () {}
         this.render = function () {
             return html;
         };
-        this.destroy = function () {}
+
+        this.pause = function () {};
+        this.stop = function () {};
+        this.destroy = function () {};
     }
 
-    function addToMenu() {
-        let added = false;
+    // Правильное добавление в меню
+    function addToMainMenu() {
+        Lampa.Menu.listener.follow('ready', () => {
+            const menuItems = Lampa.Menu.get();
+            const exists = menuItems.some(i => i.action === 'anime_uncensored');
 
-        Lampa.Settings.listener.follow('open', (e) => {
-            if (e.name === 'main' && !added) {
-                let menu = e.body.querySelector('.menu__list');
-                if (menu && !menu.querySelector('[data-action="anime_uncensored"]')) {
-                    let item = document.createElement('li');
-                    item.className = 'menu__item';
-                    item.dataset.action = 'anime_uncensored';
-                    item.innerHTML = '<span>Аниме (Uncensored)</span>';
+            if (!exists) {
+                menuItems.push({
+                    title: 'Аниме (Uncensored)',
+                    action: 'anime_uncensored',
+                    component: 'anime_uncensored',
+                    type: 'category'
+                });
 
-                    item.addEventListener('click', () => {
-                        Lampa.Activity.push({
-                            url: '',
-                            title: 'Аниме (Uncensored)',
-                            component: 'anime_uncensored',
-                            page: 1
-                        });
-                    });
-
-                    menu.appendChild(item);
-                    added = true;
-                }
+                Lampa.Menu.update();
             }
         });
     }
 
     Lampa.Component.add('anime_uncensored', AnimeUncensored);
 
-    setTimeout(addToMenu, 1000);
+    setTimeout(addToMainMenu, 500); // задержка для надёжности
 })();
