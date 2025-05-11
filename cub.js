@@ -1,49 +1,33 @@
 (function() {
-    // Проверяем, существует ли Lampa
-    if (typeof Lampa === 'undefined') {
-        console.error('Lampa не найдена!');
-        return;
-    }
 
-    // Сохраняем оригинальный метод поиска
-    const originalSearch = Lampa.Search.search;
+    console.log('Активирован плагин "Auto CUB Search"');
 
-    // Переопределяем поиск
-    Lampa.Search.search = function(params) {
-        // Если запрос пустой, возвращаем оригинальный поиск
-        if (!params.query) {
-            return originalSearch.call(this, params);
-        }
+    // 1. Перехватываем открытие поиска
+    const originalSearchShow = Lampa.Search.show;
+    Lampa.Search.show = function() {
+        originalSearchShow.apply(this, arguments);
+        
+        // 2. Ждём, пока появится селектор источников
+        setTimeout(() => {
+            const sourceSelector = document.querySelector('.search-source-selector select');
+            if (!sourceSelector) {
+                console.warn('Не найден search-source-selector!');
+                return;
+            }
 
-        console.log('Используем поиск через CUB вместо стандартного');
+            // 3. Находим опцию CUB (может называться "cub", "CUB" или иначе)
+            const cubOption = Array.from(sourceSelector.options).find(
+                opt => opt.value.toLowerCase().includes('cub')
+            );
 
-        // Подменяем запрос на CUB
-        params.source = 'cub'; // Или другой идентификатор CUB
-        // Либо можно полностью заменить логику:
-        return Lampa.Request.json('cub://search?query=' + encodeURIComponent(params.query))
-            .then((data) => {
-                // Преобразуем ответ CUB в формат Lampa
-                const results = (data.results || []).map(item => ({
-                    title: item.title,
-                    year: item.year,
-                    description: item.description || '',
-                    poster: item.poster || '',
-                    link: item.link || '',
-                    // Дополнительные поля, если нужны
-                }));
-
-                // Возвращаем результаты в нужном формате
-                return {
-                    results: results,
-                    hasMore: data.has_more || false
-                };
-            })
-            .catch((error) => {
-                console.error('Ошибка поиска через CUB:', error);
-                // Возвращаем оригинальный поиск в случае ошибки
-                return originalSearch.call(this, params);
-            });
+            if (cubOption) {
+                // 4. Принудительно выбираем CUB
+                sourceSelector.value = cubOption.value;
+                sourceSelector.dispatchEvent(new Event('change'));
+                console.log('Автоматически выбран источник:', cubOption.value);
+            } else {
+                console.warn('CUB не найден в списке источников!');
+            }
+        }, 300); // Задержка для прогрузки интерфейса
     };
-
-    console.log('Плагин "CUB Search" успешно активирован!');
 })();
