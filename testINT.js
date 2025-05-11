@@ -482,9 +482,6 @@
                 height: auto;
             }
             
-            .full-start__pg, .full-start__status {
-                font-size: 0.9em;
-            }
             
             .new-interface-info__details {
                 margin-bottom: 1.6em;
