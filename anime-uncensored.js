@@ -1,5 +1,4 @@
 (function () {
-    const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0';
     const LIST_ID = '8202504';
 
     function AnimeUncensored() {
@@ -10,10 +9,7 @@
             this.activity.loader(true);
             this.activity.backdrop = true;
 
-            Lampa.Api.request(`list/${LIST_ID}`, {
-                api_key: API_KEY,
-                language: 'ru-RU'
-            }, (result) => {
+            TMDB.list(LIST_ID, (result) => {
                 this.activity.loader(false);
 
                 if (result && result.items && result.items.length) {
@@ -56,14 +52,11 @@
         this.pause = function () {};
         this.stop = function () {};
         this.destroy = function () {};
-
-        // ВАЖНО: метод start обязателен
         this.start = function () {
             this.create();
         };
     }
 
-    // Добавление пункта в меню вручную
     function injectMenuItem() {
         const checkMenu = setInterval(() => {
             const menuList = document.querySelector('.menu__list');
