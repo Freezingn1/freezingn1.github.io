@@ -1,6 +1,6 @@
 (function () {
     const API_KEY = 'f83446fde4dacae2924b41ff789d2bb0';
-    const LIST_ID = '8202504'; // Публичный список с аниме
+    const LIST_ID = '8202504';
 
     function AnimeUncensored() {
         let html;
@@ -31,7 +31,6 @@
                     });
 
                     view.visible();
-
                     html = view.render();
                     this.activity.render(html);
                 } else {
@@ -59,30 +58,33 @@
         this.destroy = function () {};
     }
 
-    // Новый безопасный способ добавить в меню
-    function addToMenu() {
-        let added = false;
+    // Добавление пункта в DOM меню вручную
+    function injectMenuItem() {
+        const checkMenu = setInterval(() => {
+            const menuList = document.querySelector('.menu__list');
 
-        Lampa.Listener.follow('app', function (event) {
-            if (event.type === 'ready' && !added) {
-                const menu = Lampa.Menu.get();
-                const exists = menu.find(i => i.action === 'anime_uncensored');
+            if (menuList && !menuList.querySelector('[data-action="anime_uncensored"]')) {
+                const item = document.createElement('li');
+                item.className = 'menu__item selector';
+                item.setAttribute('data-action', 'anime_uncensored');
+                item.textContent = 'Аниме (Uncensored)';
 
-                if (!exists) {
-                    menu.push({
+                item.addEventListener('click', () => {
+                    Lampa.Activity.push({
+                        url: '',
                         title: 'Аниме (Uncensored)',
-                        action: 'anime_uncensored',
                         component: 'anime_uncensored',
-                        type: 'category'
+                        page: 1
                     });
+                });
 
-                    Lampa.Menu.update();
-                    added = true;
-                }
+                menuList.appendChild(item);
+                clearInterval(checkMenu);
             }
-        });
+        }, 500);
     }
 
+    // Регистрируем компонент и вставляем меню
     Lampa.Component.add('anime_uncensored', AnimeUncensored);
-    addToMenu();
+    injectMenuItem();
 })();
