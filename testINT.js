@@ -1,11 +1,23 @@
 (function () {
     'use strict';
 
+	Lampa.Lang.add({
+		name_plugin: {
+			ru: 'Стильный интерфейс',
+		},
+		plugin_description: {
+			ru: 'Настройки главного экрана',
+		}
+	});
+
     function create() {
       var html;
       var timer;
       var network = new Lampa.Reguest();
       var loaded = {};
+	  name: Lampa.Lang.translate('name_plugin'),
+	  description: Lampa.Lang.translate('plugin_description'),
+	  component: 'head_filter',
 
       this.create = function () {
         html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
@@ -392,7 +404,7 @@
             return new use(object);
         };
 		
-		Lampa.SettingsApi.addComponent({
+		/*Lampa.SettingsApi.addComponent({
     component: 'styleint',
     name: Lampa.Lang.translate('Стильный интерфейс'),
     icon: `
@@ -401,7 +413,25 @@
 		<path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
 		</svg>
 		`
-		});
+		});*/
+
+		Lampa.SettingsApi.addParam({
+			component: 'interface',
+			param: {
+				type: 'button'
+			},
+			field: {
+				name: Lampa.Lang.translate('name_plugin'),
+				description: Lampa.Lang.translate('plugin_description')
+			},
+			onChange: ()=>{
+				Lampa.Settings.create('head_filter',{
+					onBack: ()=>{
+						Lampa.Settings.create('interface')
+					}
+				})
+			}
+		})   
 
 
         Lampa.SettingsApi.addParam({
