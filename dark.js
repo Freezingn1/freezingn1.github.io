@@ -243,7 +243,10 @@
 				box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
 			}
 			
-			
+			.card--tv .card__type {
+				background: #c22222;
+			}
+						
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
                 background: -webkit-linear-gradient(66.47deg, rgb(192, 254, 207) -15.94%, rgb(30, 213, 169) 62.41%);
