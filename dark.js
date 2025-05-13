@@ -282,6 +282,14 @@
             background-color: #c22222;
             color: #fff;
         }
+		
+		.settings__content {
+			background: #0d0d0d;
+		}
+		
+		.selectbox__content {
+			background: #0d0d0d;
+		}
     `;
 
     // Добавляем стили в head документа
