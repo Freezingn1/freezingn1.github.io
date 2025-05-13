@@ -73,9 +73,14 @@
         }
 
         if (html) {
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+            Lampa.Background.change(this.proxyImage(data.backdrop_path, 'w200'));
             this.load(data);
         }
+      };
+      
+      this.proxyImage = function(path, size) {
+          if (!path) return '';
+          return `http://tmdbimg.bylampa.online/t/p/${size}${path}`;
       };
       
       this.applyLogo = function(data, logo) {
@@ -85,7 +90,7 @@
           if (!titleElement.length) return;
           
           if (logo && logo.file_path) {
-              const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+              const imageUrl = this.proxyImage(logo.file_path, "w500");
               titleElement.html(
                   `<img class="new-interface-logo" 
                    src="${imageUrl}" 
@@ -238,7 +243,7 @@
         };
 
         this.background = function (elem) {
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+            var new_background = this.proxyImage(elem.backdrop_path, 'w1280');
             clearTimeout(background_timer);
             if (new_background == background_last) return;
             
@@ -254,6 +259,11 @@
             };
             
             background_img[0].src = background_last;
+        };
+        
+        this.proxyImage = function(path, size) {
+            if (!path) return '';
+            return `http://tmdbimg.bylampa.online/t/p/${size}${path}`;
         };
 
         this.append = function (element) {
