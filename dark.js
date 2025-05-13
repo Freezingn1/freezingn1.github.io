@@ -246,6 +246,10 @@
 			.card--tv .card__type {
 				background: #c22222;
 			}
+			
+			body {
+				background: #0d0d0d;
+			}
 						
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
