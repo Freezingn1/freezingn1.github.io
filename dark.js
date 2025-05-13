@@ -9,7 +9,7 @@
     }
 
     // Основная функция для применения стилей
-    function applyStyles() {
+  /*  function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
             'background': '#0d0d0d'
@@ -29,7 +29,7 @@
                 'background': 'rgba(0, 0, 0, 0.3)'
             });
         }
-    }
+    } */
 
     // Добавляем CSS для карточек (разово, через <style>)
     function addCardStyles() {
