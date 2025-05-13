@@ -290,6 +290,10 @@
 		.selectbox__content {
 			background: #0d0d0d;
 		}
+		
+		.bookmarks-folder__layer {
+			background-color: rgba(0, 0, 0, 0.3);
+		}
     `;
 
     // Добавляем стили в head документа
