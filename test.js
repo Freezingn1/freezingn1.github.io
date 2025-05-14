@@ -1,24 +1,26 @@
 (function() {
     'use strict';
 
-    // Инициализация Lampa для TV
+    // 1. Активация TV-режима Lampa
     Lampa.Platform.tv();
 
-    // Проверка доступа и загрузка внешнего скрипта
-    var checkInterval = setInterval(function() {
+    // 2. Проверка загрузки Lampa
+    var initCheck = setInterval(function() {
         if (typeof Lampa !== 'undefined') {
-            clearInterval(checkInterval);
+            clearInterval(initCheck);
 
-            // Проверка уникального ID
-            var storedId = Lampa.Storage.get('lampac_unic_id', '');
-            if (storedId !== 'tyusdt') {
+            // 3. Проверка и установка lampac_unic_id
+            var currentId = Lampa.Storage.get('lampac_unic_id');
+            if (currentId !== 'tyusdt') {
                 Lampa.Storage.set('lampac_unic_id', 'tyusdt');
             }
 
-            // Загрузка внешнего скрипта
-            Lampa.Utils.putScriptAsync('https://freezingn1.github.io/Conline.js', function() {
-                console.log('Скрипт Conline.js загружен');
-            });
+            // 4. Загрузка внешнего скрипта (опционально)
+            Lampa.Utils.putScriptAsync('https://freezingn1.github.io/Conline.js')
+                .catch(function(err) {
+                    console.error('Ошибка загрузки скрипта:', err);
+                    Lampa.Noty.show('Ошибка загрузки плагина');
+                });
         }
     }, 200);
 })();
