@@ -53,7 +53,7 @@
         window.logoplugin = true;
 
         const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
-        const TMDB_API_URL = "https://api.themoviedb.org/3";
+        const TMDB_API_URL = "${TMDB_API_URL}/$";
         const titleCache = new Map();
 
         // Функция для выбора лучшего логотипа
