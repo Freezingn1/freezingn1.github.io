@@ -211,7 +211,7 @@
         }
         
         body {
-            background: #0d0d0d;
+            background: #141414;
         }
                     
         /* Градиентный текст для рейтинга */
@@ -284,11 +284,11 @@
         }
 		
 		.settings__content {
-			background: #0d0d0d;
+			background: #141414;
 		}
 		
 		.selectbox__content {
-			background: #0d0d0d;
+			background: #141414;
 		}
 		
 		.bookmarks-folder__layer {
