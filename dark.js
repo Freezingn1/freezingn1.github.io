@@ -128,7 +128,7 @@
         }
         
         .modal__content {
-            background-color: #0d0d0d !important;
+            background-color: #121212 !important;
         }			
         
         .card-more.focus .card-more__box::after {
@@ -156,19 +156,19 @@
         }
         
         .settings-input--free {
-            background-color: #0d0d0d;
+            background-color: #121212;
         }
 
         .settings-input__content {
-            background: #0d0d0d;
+            background: #121212;
         }
         
         .extensions {
-            background-color: #0d0d0d;
+            background-color: #121212;
         }
         
         .modal__content {
-            background-color: #0d0d0d;
+            background-color: #121212;
             box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 51%);
             max-height: 90vh;
             overflow: hidden;
@@ -211,7 +211,7 @@
         }
         
         body {
-            background: #0d0d0d;
+            background: #141414;
         }
                     
         /* Градиентный текст для рейтинга */
@@ -284,11 +284,11 @@
         }
 		
 		.settings__content {
-			background: #0d0d0d;
+			background: #141414;
 		}
 		
 		.selectbox__content {
-			background: #0d0d0d;
+			background: #141414;
 		}
 		
 		.bookmarks-folder__layer {
