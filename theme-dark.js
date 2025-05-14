@@ -2,7 +2,7 @@
     'use strict';
 
     Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/dark_style.js'], function () { });
-	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/logo.js'], function () { });
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/logo_title.js'], function () { });
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/cardify.js'], function () { });
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/interface.js'], function () { });
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/Fpubtorr.js'], function () { });
