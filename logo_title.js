@@ -191,31 +191,12 @@
                 }
 
                 function showTextTitle() {
-    // Получаем оригинальное название из данных фильма/сериала
-    const originalTitle = movie.title || movie.name;
-    
-    // Используем шаблон full_start_new для рендеринга названия
-    const titleHtml = Lampa.Template.get('full_start_new', { 
-        title: originalTitle 
-    }, true);
-
-    // Извлекаем только текст названия из шаблона (если нужно)
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = titleHtml;
-    const titleElementFromTemplate = tempDiv.querySelector('.full-start-new__title');
-    const formattedTitle = titleElementFromTemplate ? titleElementFromTemplate.innerHTML : originalTitle;
-
-    // Устанавливаем HTML в текущий элемент
-    titleElement.html(formattedTitle);
-
-    // Для аниме применяем дополнительные стили
-    if (isAnime) {
-        titleElement.find('span').css({
-            'font-family': "'Anime Ace', sans-serif",
-            'color': '#ff6b6b'
-        });
-    }
-}
+                    if (isAnime) {
+                        titleElement.html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${originalTitle}</span>`);
+                    } else {
+                        titleElement.text(originalTitle);
+                    }
+                }
             } catch (error) {
                 console.error("Ошибка в обработчике full:", error);
             }
