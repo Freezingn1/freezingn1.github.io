@@ -52,7 +52,7 @@
     if (!window.logoplugin) {
         window.logoplugin = true;
 
-        const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
+        const TMDB_API_KEY = "f83446fde4dacae2924b41ff789d2bb0";
         const titleCache = new Map();
 
         // Функция для выбора лучшего логотипа
