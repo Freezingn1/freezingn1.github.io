@@ -1,36 +1,31 @@
 (function() {
-    const PLUGIN_NAME = "AutoClickPlayButton";
+    const PLUGIN_NAME = "AutoClickSearchSource";
     console.log(`[${PLUGIN_NAME}] Плагин запущен`);
 
     // Наблюдатель за изменениями DOM
     const observer = new MutationObserver(function() {
-        checkButton();
+        clickSearchSource();
     });
 
-    // Начинаем наблюдение
+    // Настройки наблюдателя
     observer.observe(document.body, {
         childList: true,
-        subtree: true
+        subtree: true,
+        attributes: true, // На случай, если меняется класс active
     });
 
-    // Функция для проверки и клика
-    function checkButton() {
-        const button = document.querySelector('.button--play:not(.clicked)');
+    // Функция для клика по элементу
+    function clickSearchSource() {
+        const targetElement = document.querySelector('.search-source.selector.active');
         
-        if (button) {
+        if (targetElement) {
             setTimeout(() => {
-                button.click();
-                console.log(`[${PLUGIN_NAME}] Кнопка "Play" нажата!`);
-                
-                // Сбрасываем метку через 1 секунду (чтобы можно было кликнуть снова)
-                button.classList.add('clicked');
-                setTimeout(() => {
-                    button.classList.remove('clicked');
-                }, 1000);
-            }, 300); // Задержка для надёжности
+                targetElement.click();
+                console.log(`[${PLUGIN_NAME}] Элемент "CUB" нажат!`);
+            }, 300); // Задержка для стабильности
         }
     }
 
-    // Первая проверка через 1 сек после загрузки
-    setTimeout(checkButton, 1000);
+    // Первая проверка через 1 секунду
+    setTimeout(clickSearchSource, 1000);
 })();
