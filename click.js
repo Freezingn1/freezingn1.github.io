@@ -15,14 +15,14 @@
 
         // Функция для клика по элементу
         function clickOnline() {
-            const onlineElements = document.querySelectorAll('.view--online');
+            const onlineElements = document.querySelectorAll('.button--play');
             
             if (onlineElements.length > 0) {
                 console.log(`[${PLUGIN_NAME}] Найдено элементов: ${onlineElements.length}`);
                 onlineElements[0].click(); // Клик по первому элементу
                 console.log(`[${PLUGIN_NAME}] Клик выполнен!`);
             } else {
-                console.warn(`[${PLUGIN_NAME}] Элементы .view--online не найдены!`);
+                console.warn(`[${PLUGIN_NAME}] Элементы .button--play не найдены!`);
             }
         }
     }
