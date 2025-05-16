@@ -2,34 +2,31 @@
     const PLUGIN_NAME = "AutoClickPlayButton";
     console.log(`[${PLUGIN_NAME}] Плагин запущен`);
 
-    // Наблюдатель за изменениями DOM (MutationObserver)
+    // Отслеживаем только добавление элементов, избегая рекурсии
     const observer = new MutationObserver(function(mutations) {
-        checkButton();
+        mutations.forEach(mutation => {
+            if (mutation.addedNodes.length > 0) {
+                const button = document.querySelector('.button--play:not(.clicked)');
+                if (button) {
+                    button.click();
+                    button.classList.add('clicked'); // Помечаем кнопку как обработанную
+                    console.log(`[${PLUGIN_NAME}] Кнопка "Play" нажата!`);
+                }
+            }
+        });
     });
 
-    // Настройки наблюдателя: следим за добавлением элементов
-    const observerConfig = {
+    // Наблюдаем только за body и его дочерними элементами
+    observer.observe(document.body, {
         childList: true,
         subtree: true
-    };
+    });
 
-    // Функция проверки кнопки
-    function checkButton() {
-        const button = document.querySelector('.button--play');
-        if (button) {
-            button.click();
-            console.log(`[${PLUGIN_NAME}] Кнопка "Play" нажата!`);
-        }
-    }
-
-    // Запуск при полной загрузке страницы
-    if (document.readyState === "complete") {
-        observer.observe(document.body, observerConfig);
-        checkButton(); // Первая проверка
-    } else {
-        window.addEventListener("load", function() {
-            observer.observe(document.body, observerConfig);
-            checkButton(); // Первая проверка
-        });
+    // Первая проверка при загрузке
+    const initialButton = document.querySelector('.button--play');
+    if (initialButton) {
+        initialButton.click();
+        initialButton.classList.add('clicked');
+        console.log(`[${PLUGIN_NAME}] Кнопка найдена при загрузке!`);
     }
 })();
