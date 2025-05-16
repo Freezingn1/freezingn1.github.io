@@ -2,33 +2,35 @@
     const PLUGIN_NAME = "AutoClickPlayButton";
     console.log(`[${PLUGIN_NAME}] Плагин запущен`);
 
-    // Наблюдаем за изменениями DOM, но с задержкой
+    // Наблюдатель за изменениями DOM
     const observer = new MutationObserver(function() {
         checkButton();
     });
 
-    // Настройки наблюдателя
+    // Начинаем наблюдение
     observer.observe(document.body, {
         childList: true,
         subtree: true
     });
 
-    // Проверяем кнопку с задержкой и флагом
-    let isClicked = false;
+    // Функция для проверки и клика
     function checkButton() {
         const button = document.querySelector('.button--play:not(.clicked)');
         
-        if (button && !isClicked) {
-            // Добавляем небольшую задержку (если кнопка появляется с анимацией)
+        if (button) {
             setTimeout(() => {
                 button.click();
-                button.classList.add('clicked'); // Помечаем, чтобы не кликать повторно
-                isClicked = true;
-                console.log(`[${PLUGIN_NAME}] Кнопка "Play" успешно нажата!`);
-            }, 300); // Задержка 300 мс (можно увеличить до 500-1000, если нужно)
+                console.log(`[${PLUGIN_NAME}] Кнопка "Play" нажата!`);
+                
+                // Сбрасываем метку через 1 секунду (чтобы можно было кликнуть снова)
+                button.classList.add('clicked');
+                setTimeout(() => {
+                    button.classList.remove('clicked');
+                }, 1000);
+            }, 300); // Задержка для надёжности
         }
     }
 
-    // Первая проверка при загрузке
-    setTimeout(checkButton, 1000); // Проверяем через 1 сек после загрузки
+    // Первая проверка через 1 сек после загрузки
+    setTimeout(checkButton, 1000);
 })();
