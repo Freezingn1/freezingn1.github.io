@@ -1,7 +1,7 @@
 (function() {
     const TARGET_TAB_NAME = "CUB";
-    const CLICK_DELAY = 800;    // Задержка перед кликом (увеличено с 300 до 800 мс)
-    const INITIAL_DELAY = 1500; // Первая проверка через 1.5 сек после загрузки (увеличено с 1000)
+    const CLICK_DELAY = 1500;    // Задержка перед кликом (увеличено с 300 до 800 мс)
+    const INITIAL_DELAY = 3000; // Первая проверка через 1.5 сек после загрузки (увеличено с 1000)
     
     console.log(`⌛ Автокликер "${TARGET_TAB_NAME}" запущен (задержки: ${CLICK_DELAY}мс + ${INITIAL_DELAY}мс)`);
 
