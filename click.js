@@ -1,63 +1,34 @@
 (function() {
-    // Проверяем, работает ли скрипт в TV-режиме
-    const isTV = typeof Lampa !== 'undefined' && Lampa.Platform.tv();
     const TARGET_TAB_NAME = "CUB";
-    const DELAY = {
-        INITIAL: isTV ? 3000 : 1000, // На TV ждём дольше
-        CLICK: isTV ? 1000 : 300,
-        INTERVAL: 2000
-    };
+    const CLICK_DELAY = 800;    // Задержка перед кликом (увеличено с 300 до 800 мс)
+    const INITIAL_DELAY = 1500; // Первая проверка через 1.5 сек после загрузки (увеличено с 1000)
+    
+    console.log(`⌛ Автокликер "${TARGET_TAB_NAME}" запущен (задержки: ${CLICK_DELAY}мс + ${INITIAL_DELAY}мс)`);
 
-    console.log(`📺 [${isTV ? 'TV' : 'Web'}] Автокликер для "${TARGET_TAB_NAME}" запущен`);
-
-    // TV-совместимый клик
-    function tvSafeClick(element) {
-        if (!element) return;
-
-        // 1. Фокусировка (обязательно для TV)
-        element.focus();
+    function clickCubIfInactive() {
+        const inactiveTabs = document.querySelectorAll('.search-source.selector:not(.active)');
         
-        // 2. Имитация нажатия OK на пульте
-        const enterEvent = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            bubbles: true
-        });
-        element.dispatchEvent(enterEvent);
-
-        // 3. Обычный клик (для совместимости)
-        setTimeout(() => element.click(), 200);
-    }
-
-    // Поиск нужной вкладки
-    function findTab() {
-        const tabs = document.querySelectorAll('.search-source.selector:not(.active)');
-        for (const tab of tabs) {
+        for (const tab of inactiveTabs) {
             const title = tab.querySelector('.search-source__tab');
-            if (title?.textContent?.trim() === TARGET_TAB_NAME) {
-                return tab;
+            if (title && title.textContent.trim() === TARGET_TAB_NAME) {
+                setTimeout(() => {
+                    tab.click();
+                    console.log(`✅ [${new Date().toLocaleTimeString()}] "${TARGET_TAB_NAME}" активирована`);
+                }, CLICK_DELAY);
+                return; // Прекращаем после первого найденного совпадения
             }
         }
-        return null;
     }
 
-    // Основная функция
-    function checkAndClick() {
-        const tab = findTab();
-        if (tab) {
-            console.log(`🔍 Найдена вкладка "${TARGET_TAB_NAME}", кликаем...`);
-            tvSafeClick(tab);
-        }
-    }
+    // Наблюдатель с фильтром по классам
+    const observer = new MutationObserver(clickCubIfInactive);
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+    });
 
-    // Запуск
-    setTimeout(checkAndClick, DELAY.INITIAL);
-    setInterval(checkAndClick, DELAY.INTERVAL);
-
-    // Инициализация Lampa TV API (если доступно)
-    if (isTV) {
-        Lampa.Listener.follow('app', (e) => {
-            if (e.type === 'ready') checkAndClick(); // Повторная проверка при запуске
-        });
-    }
+    // Первая проверка с увеличенной задержкой
+    setTimeout(clickCubIfInactive, INITIAL_DELAY);
 })();
