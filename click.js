@@ -1,32 +1,23 @@
 (function() {
-    // Название плагина (можно изменить)
-    const PLUGIN_NAME = "AutoClickOnline";
-    
-    // Основная функция плагина
-    function initPlugin() {
-        console.log(`[${PLUGIN_NAME}] Плагин запущен`);
+    const PLUGIN_NAME = "AutoClickPlayButton";
+    console.log(`[${PLUGIN_NAME}] Плагин запущен`);
 
-        // Ждём загрузки DOM
-        if (document.readyState === "complete") {
-            clickOnline();
+    // Ждём загрузки страницы и появления кнопки
+    function waitAndClick() {
+        const button = document.querySelector('.button--play');
+        
+        if (button) {
+            button.click();
+            console.log(`[${PLUGIN_NAME}] Кнопка "Play" найдена, клик выполнен!`);
         } else {
-            window.addEventListener("load", clickOnline);
-        }
-
-        // Функция для клика по элементу
-        function clickOnline() {
-            const onlineElements = document.querySelectorAll('.button--play');
-            
-            if (onlineElements.length > 0) {
-                console.log(`[${PLUGIN_NAME}] Найдено элементов: ${onlineElements.length}`);
-                onlineElements[0].click(); // Клик по первому элементу
-                console.log(`[${PLUGIN_NAME}] Клик выполнен!`);
-            } else {
-                console.warn(`[${PLUGIN_NAME}] Элементы .button--play не найдены!`);
-            }
+            setTimeout(waitAndClick, 500); // Проверяем каждые 500 мс
         }
     }
 
-    // Запускаем плагин
-    initPlugin();
+    // Запускаем после полной загрузки DOM
+    if (document.readyState === "complete") {
+        waitAndClick();
+    } else {
+        window.addEventListener("load", waitAndClick);
+    }
 })();
