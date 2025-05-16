@@ -1,34 +1,51 @@
 (function() {
-    const TARGET_TAB_NAME = "CUB";
-    const CLICK_DELAY = 800;    // Задержка перед кликом (увеличено с 300 до 800 мс)
-    const INITIAL_DELAY = 1500; // Первая проверка через 1.5 сек после загрузки (увеличено с 1000)
+    const TARGET_NAME = "CUB";
+    const DELAY = {
+        INITIAL: 5000,
+        CLICK: 2000,
+        INTERVAL: 3000
+    };
     
-    console.log(`⌛ Автокликер "${TARGET_TAB_NAME}" запущен (задержки: ${CLICK_DELAY}мс + ${INITIAL_DELAY}мс)`);
-
-    function clickCubIfInactive() {
-        const inactiveTabs = document.querySelectorAll('.search-source.selector:not(.active)');
+    console.log(`📺 TV-кликер для "${TARGET_NAME}" запущен`);
+    
+    function findCubTab() {
+        // Расширенные селекторы для TV
+        const selectors = [
+            '.search-source.selector:not(.active)',
+            '.tv-source-item', // Альтернативные классы
+            '[data-testid="source-tab"]'
+        ];
         
-        for (const tab of inactiveTabs) {
-            const title = tab.querySelector('.search-source__tab');
-            if (title && title.textContent.trim() === TARGET_TAB_NAME) {
-                setTimeout(() => {
-                    tab.click();
-                    console.log(`✅ [${new Date().toLocaleTimeString()}] "${TARGET_TAB_NAME}" активирована`);
-                }, CLICK_DELAY);
-                return; // Прекращаем после первого найденного совпадения
+        for (const selector of selectors) {
+            const tabs = document.querySelectorAll(selector);
+            for (const tab of tabs) {
+                const title = tab.querySelector('.title, .search-source__tab');
+                if (title?.textContent?.trim() === TARGET_NAME) {
+                    return tab;
+                }
             }
         }
+        return null;
     }
-
-    // Наблюдатель с фильтром по классам
-    const observer = new MutationObserver(clickCubIfInactive);
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['class']
-    });
-
-    // Первая проверка с увеличенной задержкой
-    setTimeout(clickCubIfInactive, INITIAL_DELAY);
+    
+    function tvClick(element) {
+        element.focus();
+        setTimeout(() => {
+            element.click();
+            const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+            element.dispatchEvent(enterEvent);
+        }, DELAY.CLICK);
+    }
+    
+    function check() {
+        const cubTab = findCubTab();
+        if (cubTab) {
+            console.log('Найдена вкладка CUB, пытаемся кликнуть...');
+            tvClick(cubTab);
+        }
+    }
+    
+    // Запуск
+    setTimeout(check, DELAY.INITIAL);
+    setInterval(check, DELAY.INTERVAL);
 })();
