@@ -1,51 +1,63 @@
 (function() {
-    const TARGET_NAME = "CUB";
+    // Проверяем, работает ли скрипт в TV-режиме
+    const isTV = typeof Lampa !== 'undefined' && Lampa.Platform.tv();
+    const TARGET_TAB_NAME = "CUB";
     const DELAY = {
-        INITIAL: 5000,
-        CLICK: 2000,
-        INTERVAL: 3000
+        INITIAL: isTV ? 3000 : 1000, // На TV ждём дольше
+        CLICK: isTV ? 1000 : 300,
+        INTERVAL: 2000
     };
-    
-    console.log(`📺 TV-кликер для "${TARGET_NAME}" запущен`);
-    
-    function findCubTab() {
-        // Расширенные селекторы для TV
-        const selectors = [
-            '.search-source.selector:not(.active)',
-            '.tv-source-item', // Альтернативные классы
-            '[data-testid="source-tab"]'
-        ];
+
+    console.log(`📺 [${isTV ? 'TV' : 'Web'}] Автокликер для "${TARGET_TAB_NAME}" запущен`);
+
+    // TV-совместимый клик
+    function tvSafeClick(element) {
+        if (!element) return;
+
+        // 1. Фокусировка (обязательно для TV)
+        element.focus();
         
-        for (const selector of selectors) {
-            const tabs = document.querySelectorAll(selector);
-            for (const tab of tabs) {
-                const title = tab.querySelector('.title, .search-source__tab');
-                if (title?.textContent?.trim() === TARGET_NAME) {
-                    return tab;
-                }
+        // 2. Имитация нажатия OK на пульте
+        const enterEvent = new KeyboardEvent('keydown', {
+            key: 'Enter',
+            code: 'Enter',
+            bubbles: true
+        });
+        element.dispatchEvent(enterEvent);
+
+        // 3. Обычный клик (для совместимости)
+        setTimeout(() => element.click(), 200);
+    }
+
+    // Поиск нужной вкладки
+    function findTab() {
+        const tabs = document.querySelectorAll('.search-source.selector:not(.active)');
+        for (const tab of tabs) {
+            const title = tab.querySelector('.search-source__tab');
+            if (title?.textContent?.trim() === TARGET_TAB_NAME) {
+                return tab;
             }
         }
         return null;
     }
-    
-    function tvClick(element) {
-        element.focus();
-        setTimeout(() => {
-            element.click();
-            const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
-            element.dispatchEvent(enterEvent);
-        }, DELAY.CLICK);
-    }
-    
-    function check() {
-        const cubTab = findCubTab();
-        if (cubTab) {
-            console.log('Найдена вкладка CUB, пытаемся кликнуть...');
-            tvClick(cubTab);
+
+    // Основная функция
+    function checkAndClick() {
+        const tab = findTab();
+        if (tab) {
+            console.log(`🔍 Найдена вкладка "${TARGET_TAB_NAME}", кликаем...`);
+            tvSafeClick(tab);
         }
     }
-    
+
     // Запуск
-    setTimeout(check, DELAY.INITIAL);
-    setInterval(check, DELAY.INTERVAL);
+    setTimeout(checkAndClick, DELAY.INITIAL);
+    setInterval(checkAndClick, DELAY.INTERVAL);
+
+    // Инициализация Lampa TV API (если доступно)
+    if (isTV) {
+        Lampa.Listener.follow('app', (e) => {
+            if (e.type === 'ready') checkAndClick(); // Повторная проверка при запуске
+        });
+    }
 })();
