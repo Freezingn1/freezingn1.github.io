@@ -1,83 +1,108 @@
 (function() {
-    const TARGET_TAB_NAME = "CUB";
-    const DELAY_BETWEEN_ATTEMPTS = 2000; // 2 сек
-    const MAX_ATTEMPTS = 10;
-    let found = false;
+    const TARGET_TAB = "CUB"; // Можно поменять на точное название
+    const DELAY = 2000; // Интервал проверки
+    const MAX_ATTEMPTS = 15;
+    let attempts = 0;
 
-    console.log(`🔍 Ищем вкладку "${TARGET_TAB_NAME}"...`);
+    console.log(`🔧 Автокликер v4 запущен (ищем "${TARGET_TAB}")`);
 
-    function tryActivateTab(attempt = 1) {
-        if (found || attempt > MAX_ATTEMPTS) return;
-
-        // 1. Ищем все возможные элементы, похожие на вкладки
-        const potentialTabs = document.querySelectorAll(`
-            [class*="tab"], 
-            [role="tab"], 
-            [class*="source"],
-            [class*="selector"],
-            [data-testid*="tab"]
-        `);
-
-        // 2. Перебираем все найденные элементы
-        for (const tab of potentialTabs) {
-            const tabText = (
-                tab.textContent?.trim() || 
-                tab.getAttribute('aria-label') || 
-                tab.getAttribute('title') || 
-                ''
-            ).toUpperCase();
-
-            if (tabText.includes(TARGET_TAB_NAME)) {
-                // 3. Пытаемся активировать разными способами
-                const activate = () => {
-                    console.log(`✅ Найдена вкладка: "${tabText.trim()}"`);
-                    
-                    // Способ 1: Стандартный клик
-                    if (typeof tab.click === 'function') {
-                        tab.click();
-                        console.log("→ Использован .click()");
-                        return true;
-                    }
-
-                    // Способ 2: Фокус + эмуляция Enter (для TV)
-                    tab.focus?.();
-                    const keyboardEvent = new KeyboardEvent('keydown', {
-                        key: 'Enter',
-                        code: 'Enter',
-                        keyCode: 13,
-                        bubbles: true
-                    });
-                    tab.dispatchEvent(keyboardEvent);
-                    console.log("→ Использован Enter через фокус");
-
-                    // Способ 3: Программное событие
-                    const mouseEvent = new MouseEvent('click', {
-                        bubbles: true,
-                        view: window
-                    });
-                    tab.dispatchEvent(mouseEvent);
-                    return true;
-                };
-
-                if (activate()) {
-                    found = true;
-                    return;
-                }
-            }
+    function findAndActivate() {
+        attempts++;
+        if (attempts > MAX_ATTEMPTS) {
+            console.warn("❌ Превышено максимальное число попыток");
+            return;
         }
 
-        // 4. Если не нашли - повторяем через время
-        console.log(`🔄 Попытка ${attempt}/${MAX_ATTEMPTS}`);
-        setTimeout(() => tryActivateTab(attempt + 1), DELAY_BETWEEN_ATTEMPTS);
+        // 1. Альтернативные названия для поиска
+        const targetVariants = [
+            TARGET_TAB,
+            TARGET_TAB.toUpperCase(),
+            TARGET_TAB.toLowerCase()
+        ];
+
+        // 2. Все возможные селекторы вкладок
+        const tabSelectors = [
+            '[class*="tab"]',
+            '[role="tab"]',
+            '[class*="source"]',
+            '[class*="selector"]',
+            '[data-testid*="tab"]',
+            '[aria-label*="tab"]',
+            'button, div, a, li' // Крайний случай
+        ].join(',');
+
+        // 3. Поиск элемента
+        const tabs = document.querySelectorAll(tabSelectors);
+        
+        tabs.forEach(tab => {
+            // 4. Проверка текста разными способами
+            const textSources = [
+                tab.textContent,
+                tab.innerText,
+                tab.getAttribute('aria-label'),
+                tab.getAttribute('title'),
+                tab.getAttribute('data-name')
+            ].filter(Boolean);
+
+            const isTargetTab = textSources.some(text => 
+                targetVariants.some(variant => 
+                    String(text).trim().toUpperCase().includes(variant.toUpperCase())
+                )
+            );
+
+            // 5. Активация при нахождении
+            if (isTargetTab) {
+                console.log("🎯 Найден подходящий элемент:", tab);
+                
+                // Основные методы активации
+                const activationMethods = [
+                    () => tab.click(), // 1. Стандартный клик
+                    () => { // 2. Фокус + Enter
+                        tab.focus();
+                        tab.dispatchEvent(new KeyboardEvent('keydown', {
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            bubbles: true
+                        }));
+                    },
+                    () => { // 3. Событие мыши
+                        tab.dispatchEvent(new MouseEvent('click', {
+                            bubbles: true,
+                            view: window
+                        }));
+                    }
+                ];
+
+                // Пробуем все методы
+                activationMethods.forEach((method, i) => {
+                    setTimeout(() => {
+                        try {
+                            method();
+                            console.log(`⚡ Метод ${i+1} применён`);
+                        } catch (e) {
+                            console.warn(`⚠️ Метод ${i+1} не сработал:`, e.message);
+                        }
+                    }, i * 1000); // Растягиваем попытки по времени
+                });
+
+                return;
+            }
+        });
+
+        // Повторная проверка
+        setTimeout(findAndActivate, DELAY);
     }
 
-    // Запускаем первый раз сразу, затем при изменениях DOM
-    tryActivateTab();
-    
-    const observer = new MutationObserver(tryActivateTab);
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true
-    });
+    // Запуск
+    findAndActivate();
+
+    // Наблюдатель для динамического контента
+    new MutationObserver(findAndActivate)
+        .observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style', 'aria-selected']
+        });
 })();
