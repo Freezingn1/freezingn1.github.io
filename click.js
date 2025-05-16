@@ -1,79 +1,83 @@
 (function() {
     const TARGET_TAB_NAME = "CUB";
-    const CLICK_DELAY = 1500;
-    const INITIAL_DELAY = 3000;
-    const MAX_ATTEMPTS = 15; // Больше попыток для TV
-    let attempts = 0;
+    const DELAY_BETWEEN_ATTEMPTS = 2000; // 2 сек
+    const MAX_ATTEMPTS = 10;
+    let found = false;
 
-    console.log(`📺 [TV-Web Autoclicker] Ищу вкладку "${TARGET_TAB_NAME}"...`);
+    console.log(`🔍 Ищем вкладку "${TARGET_TAB_NAME}"...`);
 
-    function activateTab() {
-        attempts++;
-        if (attempts > MAX_ATTEMPTS) {
-            console.log("❌ Превышено максимальное число попыток. Проверьте структуру DOM.");
-            return;
-        }
+    function tryActivateTab(attempt = 1) {
+        if (found || attempt > MAX_ATTEMPTS) return;
 
-        // Ищем табы разными способами (под разные версии интерфейса)
-        const tabs = document.querySelectorAll(`
-            .search-source.selector:not(.active),
-            [class*="tab"]:not([class*="active"]),
-            [role="tab"]:not([aria-selected="true"]),
-            [data-testid*="tab"]:not([aria-selected="true"])
+        // 1. Ищем все возможные элементы, похожие на вкладки
+        const potentialTabs = document.querySelectorAll(`
+            [class*="tab"], 
+            [role="tab"], 
+            [class*="source"],
+            [class*="selector"],
+            [data-testid*="tab"]
         `);
 
-        for (const tab of tabs) {
-            const tabName = tab.textContent?.trim() || tab.getAttribute('aria-label') || '';
-            if (tabName.toUpperCase().includes(TARGET_TAB_NAME)) {
-                setTimeout(() => {
-                    console.log(`🎯 Найдена вкладка: "${tabName}"`);
+        // 2. Перебираем все найденные элементы
+        for (const tab of potentialTabs) {
+            const tabText = (
+                tab.textContent?.trim() || 
+                tab.getAttribute('aria-label') || 
+                tab.getAttribute('title') || 
+                ''
+            ).toUpperCase();
 
-                    // Способ 1: Обычный клик (для Web)
+            if (tabText.includes(TARGET_TAB_NAME)) {
+                // 3. Пытаемся активировать разными способами
+                const activate = () => {
+                    console.log(`✅ Найдена вкладка: "${tabText.trim()}"`);
+                    
+                    // Способ 1: Стандартный клик
                     if (typeof tab.click === 'function') {
                         tab.click();
-                        console.log("🖱️ Клик выполнен (Web-версия)");
-                        return;
+                        console.log("→ Использован .click()");
+                        return true;
                     }
 
-                    // Способ 2: Фокус + Enter (для TV)
-                    if (typeof tab.focus === 'function') {
-                        tab.focus();
-                        console.log("🔍 Установлен фокус (TV)");
+                    // Способ 2: Фокус + эмуляция Enter (для TV)
+                    tab.focus?.();
+                    const keyboardEvent = new KeyboardEvent('keydown', {
+                        key: 'Enter',
+                        code: 'Enter',
+                        keyCode: 13,
+                        bubbles: true
+                    });
+                    tab.dispatchEvent(keyboardEvent);
+                    console.log("→ Использован Enter через фокус");
 
-                        // Эмулируем нажатие Enter
-                        const enterEvent = new KeyboardEvent('keydown', {
-                            key: 'Enter',
-                            code: 'Enter',
-                            keyCode: 13,
-                            bubbles: true,
-                        });
-                        tab.dispatchEvent(enterEvent);
-                        console.log("⌨️ Симуляция Enter (TV)");
-                        return;
-                    }
+                    // Способ 3: Программное событие
+                    const mouseEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        view: window
+                    });
+                    tab.dispatchEvent(mouseEvent);
+                    return true;
+                };
 
-                    // Способ 3: Программный триггер события (если не сработало)
-                    const event = new MouseEvent('click', { bubbles: true });
-                    tab.dispatchEvent(event);
-                    console.log("⚡ Использован программный клик");
-                }, CLICK_DELAY);
-                return;
+                if (activate()) {
+                    found = true;
+                    return;
+                }
             }
         }
 
-        // Если не нашли, повторяем через 1 сек
-        setTimeout(activateTab, 1000);
+        // 4. Если не нашли - повторяем через время
+        console.log(`🔄 Попытка ${attempt}/${MAX_ATTEMPTS}`);
+        setTimeout(() => tryActivateTab(attempt + 1), DELAY_BETWEEN_ATTEMPTS);
     }
 
-    // Наблюдаем за изменениями DOM (вдруг табы подгружаются динамически)
-    const observer = new MutationObserver(activateTab);
+    // Запускаем первый раз сразу, затем при изменениях DOM
+    tryActivateTab();
+    
+    const observer = new MutationObserver(tryActivateTab);
     observer.observe(document.body, {
         childList: true,
         subtree: true,
-        attributes: true,
-        attributeFilter: ['class', 'style', 'aria-selected'],
+        attributes: true
     });
-
-    // Первый запуск
-    setTimeout(activateTab, INITIAL_DELAY);
 })();
