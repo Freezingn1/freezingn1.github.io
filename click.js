@@ -1,38 +1,39 @@
 (function() {
-    const TARGET_NAME = "CUB"; // Ищем именно эту вкладку
-    console.log(`Поиск кнопки "${TARGET_NAME}"...`);
+    const TARGET_TAB_NAME = "CUB"; // Ищем эту вкладку
+    const CHECK_DELAY = 300; // Задержка перед кликом (мс)
+    console.log(`Автокликер для вкладки "${TARGET_TAB_NAME}" запущен`);
 
-    // Основная функция поиска и клика
-    function clickCubTab() {
-        // Находим все элементы с нужным классом
-        const tabs = document.querySelectorAll('.search-source.selector');
+    // Функция для поиска и клика
+    function clickCubIfInactive() {
+        // Ищем все потенциальные вкладки
+        const allTabs = document.querySelectorAll('.search-source.selector:not(.active)');
         
-        // Ищем нужную вкладку по названию
-        const cubTab = Array.from(tabs).find(tab => {
-            const tabName = tab.querySelector('.search-source__tab');
-            return tabName && tabName.textContent.trim() === TARGET_NAME;
+        // Фильтруем по названию
+        const cubTab = Array.from(allTabs).find(tab => {
+            const titleElement = tab.querySelector('.search-source__tab');
+            return titleElement && titleElement.textContent.trim() === TARGET_TAB_NAME;
         });
 
-        // Если нашли и она не активна - кликаем
-        if (cubTab && !cubTab.classList.contains('active')) {
-            cubTab.click();
-            console.log(`✅ Вкладка "${TARGET_NAME}" успешно нажата!`);
+        // Если нашли неактивную вкладку CUB - кликаем
+        if (cubTab) {
+            setTimeout(() => {
+                cubTab.click();
+                console.log(`✅ Вкладка "${TARGET_TAB_NAME}" активирована`);
+            }, CHECK_DELAY);
         }
     }
 
     // Наблюдатель за изменениями DOM
-    const observer = new MutationObserver(function() {
-        clickCubTab();
-    });
+    const observer = new MutationObserver(clickCubIfInactive);
 
-    // Начинаем наблюдение
+    // Настройки наблюдателя
     observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true, // На случай изменения класса active
-        attributeFilter: ['class']
+        childList: true,    // Отслеживаем новые элементы
+        subtree: true,      // Проверяем все уровни вложенности
+        attributes: true,   // Следим за изменением атрибутов
+        attributeFilter: ['class'] // Только для изменений классов
     });
 
-    // Первая проверка с задержкой
-    setTimeout(clickCubTab, 1000);
+    // Первичная проверка после загрузки
+    setTimeout(clickCubIfInactive, 1000);
 })();
