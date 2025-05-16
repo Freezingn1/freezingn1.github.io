@@ -1,39 +1,34 @@
 (function() {
-    const TARGET_TAB_NAME = "CUB"; // Ищем эту вкладку
-    const CHECK_DELAY = 300; // Задержка перед кликом (мс)
-    console.log(`Автокликер для вкладки "${TARGET_TAB_NAME}" запущен`);
+    const TARGET_TAB_NAME = "CUB";
+    const CLICK_DELAY = 800;    // Задержка перед кликом (увеличено с 300 до 800 мс)
+    const INITIAL_DELAY = 1500; // Первая проверка через 1.5 сек после загрузки (увеличено с 1000)
+    
+    console.log(`⌛ Автокликер "${TARGET_TAB_NAME}" запущен (задержки: ${CLICK_DELAY}мс + ${INITIAL_DELAY}мс)`);
 
-    // Функция для поиска и клика
     function clickCubIfInactive() {
-        // Ищем все потенциальные вкладки
-        const allTabs = document.querySelectorAll('.search-source.selector:not(.active)');
+        const inactiveTabs = document.querySelectorAll('.search-source.selector:not(.active)');
         
-        // Фильтруем по названию
-        const cubTab = Array.from(allTabs).find(tab => {
-            const titleElement = tab.querySelector('.search-source__tab');
-            return titleElement && titleElement.textContent.trim() === TARGET_TAB_NAME;
-        });
-
-        // Если нашли неактивную вкладку CUB - кликаем
-        if (cubTab) {
-            setTimeout(() => {
-                cubTab.click();
-                console.log(`✅ Вкладка "${TARGET_TAB_NAME}" активирована`);
-            }, CHECK_DELAY);
+        for (const tab of inactiveTabs) {
+            const title = tab.querySelector('.search-source__tab');
+            if (title && title.textContent.trim() === TARGET_TAB_NAME) {
+                setTimeout(() => {
+                    tab.click();
+                    console.log(`✅ [${new Date().toLocaleTimeString()}] "${TARGET_TAB_NAME}" активирована`);
+                }, CLICK_DELAY);
+                return; // Прекращаем после первого найденного совпадения
+            }
         }
     }
 
-    // Наблюдатель за изменениями DOM
+    // Наблюдатель с фильтром по классам
     const observer = new MutationObserver(clickCubIfInactive);
-
-    // Настройки наблюдателя
     observer.observe(document.body, {
-        childList: true,    // Отслеживаем новые элементы
-        subtree: true,      // Проверяем все уровни вложенности
-        attributes: true,   // Следим за изменением атрибутов
-        attributeFilter: ['class'] // Только для изменений классов
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
     });
 
-    // Первичная проверка после загрузки
-    setTimeout(clickCubIfInactive, 1000);
+    // Первая проверка с увеличенной задержкой
+    setTimeout(clickCubIfInactive, INITIAL_DELAY);
 })();
