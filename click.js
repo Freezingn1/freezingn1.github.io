@@ -1,24 +1,40 @@
 (function () {
-    const TARGET_SOURCE_KEY = 'cub'; // ключ, не текст
-    const INITIAL_DELAY = 3000;
+    const TARGET_TAB_NAME = "CUB";
+    const DELAY = 3000;
 
-    function switchSourceDirectly() {
+    function forceActivateCubTab() {
         try {
-            if (typeof Lampa !== 'undefined' && Lampa.Activity && Lampa.Activity.loader) {
-                const loader = Lampa.Activity.loader();
-                if (loader && typeof loader.source === 'function') {
-                    loader.source(TARGET_SOURCE_KEY);
-                    console.log(`✅ Источник переключён напрямую на "${TARGET_SOURCE_KEY}"`);
-                } else {
-                    console.warn('⚠️ Lampa.Activity.loader().source недоступен');
+            const allTabs = document.querySelectorAll('.search-source.selector');
+            let found = false;
+
+            allTabs.forEach(tab => {
+                const titleEl = tab.querySelector('.search-source__tab');
+                const tabText = titleEl?.textContent?.trim();
+
+                // Снять активность со всех
+                tab.classList.remove('active');
+
+                // Активировать CUB
+                if (tabText === TARGET_TAB_NAME) {
+                    tab.classList.add('active');
+                    found = true;
+                    console.log(`✅ Вкладка "${TARGET_TAB_NAME}" активирована вручную (через classList)`);
                 }
+            });
+
+            if (!found) {
+                console.warn(`❌ Вкладка "${TARGET_TAB_NAME}" не найдена`);
             } else {
-                console.warn('⚠️ Lampa или Activity недоступны');
+                // Попробуем ещё вызвать событие, если требуется
+                if (typeof Lampa !== 'undefined' && Lampa.Events && typeof Lampa.Events.emit === 'function') {
+                    Lampa.Events.emit('search_source_change', TARGET_TAB_NAME.toLowerCase());
+                    console.log('📢 Событие search_source_change отправлено');
+                }
             }
         } catch (err) {
-            console.error('❌ Ошибка при попытке переключить источник:', err);
+            console.error('❌ Ошибка при ручной активации вкладки CUB:', err);
         }
     }
 
-    setTimeout(switchSourceDirectly, INITIAL_DELAY);
+    setTimeout(forceActivateCubTab, DELAY);
 })();
