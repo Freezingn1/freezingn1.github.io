@@ -1,40 +1,34 @@
-(function () {
+(function() {
     const TARGET_TAB_NAME = "CUB";
-    const DELAY = 3000;
+    const CLICK_DELAY = 1500;    // Задержка перед кликом 
+    const INITIAL_DELAY = 3000; // Первая проверка через 1.5 сек после загрузки 
+    
+    console.log(`⌛ Автокликер "${TARGET_TAB_NAME}" запущен (задержки: ${CLICK_DELAY}мс + ${INITIAL_DELAY}мс)`);
 
-    function forceActivateCubTab() {
-        try {
-            const allTabs = document.querySelectorAll('.search-source.selector');
-            let found = false;
-
-            allTabs.forEach(tab => {
-                const titleEl = tab.querySelector('.search-source__tab');
-                const tabText = titleEl?.textContent?.trim();
-
-                // Снять активность со всех
-                tab.classList.remove('active');
-
-                // Активировать CUB
-                if (tabText === TARGET_TAB_NAME) {
-                    tab.classList.add('active');
-                    found = true;
-                    console.log(`✅ Вкладка "${TARGET_TAB_NAME}" активирована вручную (через classList)`);
-                }
-            });
-
-            if (!found) {
-                console.warn(`❌ Вкладка "${TARGET_TAB_NAME}" не найдена`);
-            } else {
-                // Попробуем ещё вызвать событие, если требуется
-                if (typeof Lampa !== 'undefined' && Lampa.Events && typeof Lampa.Events.emit === 'function') {
-                    Lampa.Events.emit('search_source_change', TARGET_TAB_NAME.toLowerCase());
-                    console.log('📢 Событие search_source_change отправлено');
-                }
+    function clickCubIfInactive() {
+        const inactiveTabs = document.querySelectorAll('.search-source.selector:not(.active)');
+        
+        for (const tab of inactiveTabs) {
+            const title = tab.querySelector('.search-source__tab');
+            if (title && title.textContent.trim() === TARGET_TAB_NAME) {
+                setTimeout(() => {
+                    tab.click();
+                    console.log(`✅ [${new Date().toLocaleTimeString()}] "${TARGET_TAB_NAME}" активирована`);
+                }, CLICK_DELAY);
+                return; // Прекращаем после первого найденного совпадения
             }
-        } catch (err) {
-            console.error('❌ Ошибка при ручной активации вкладки CUB:', err);
         }
     }
 
-    setTimeout(forceActivateCubTab, DELAY);
+    // Наблюдатель с фильтром по классам
+    const observer = new MutationObserver(clickCubIfInactive);
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class']
+    });
+
+    // Первая проверка с увеличенной задержкой
+    setTimeout(clickCubIfInactive, INITIAL_DELAY);
 })();
