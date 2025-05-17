@@ -1,19 +1,30 @@
 (function () {
-    const TARGET = "cub"; // ключ источника, не текст (возможно, 'cub', 'CUB' — нужно проверить в DOM)
-    const DELAY = 3000;
+    const TARGET_TAB_NAME = "CUB";
+    const CLICK_DELAY = 1500;
+    const INITIAL_DELAY = 3000;
 
-    function switchToCub() {
-        if (window.Search) {
-            let sources = Lampa.Storage.get('search_source');
-            if (sources && sources !== TARGET) {
-                Lampa.Storage.set('search_source', TARGET);
-                Lampa.Events.emit('search_source_change', TARGET);
-                console.log('✅ Источник поиска переключён на CUB');
+    function simulateEnterOnCub() {
+        const tabs = document.querySelectorAll('.search-source.selector:not(.active)');
+        for (const tab of tabs) {
+            const label = tab.querySelector('.search-source__tab');
+            if (label && label.textContent.trim().toUpperCase() === TARGET_TAB_NAME) {
+                setTimeout(() => {
+                    tab.focus(); // Эмуляция наведения с пульта
+                    const event = new KeyboardEvent('keydown', {
+                        key: 'Enter',
+                        code: 'Enter',
+                        keyCode: 13,
+                        which: 13,
+                        bubbles: true,
+                    });
+                    tab.dispatchEvent(event);
+                    console.log(`✅ Фокус + Enter отправлены на "${TARGET_TAB_NAME}"`);
+                }, CLICK_DELAY);
+                return;
             }
-        } else {
-            console.log('⌛ Ожидание инициализации Search...');
         }
     }
 
-    setTimeout(switchToCub, DELAY);
+    // Старая логика + фокус
+    setTimeout(simulateEnterOnCub, INITIAL_DELAY);
 })();
