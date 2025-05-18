@@ -2,92 +2,106 @@
   // Конфигурация
   const CLICK_DELAY = 1000;
   const OPEN_DELAY = 1300;
-  
-  // Универсальная функция клика
+  let currentFocusedIndex = 0;
+  let sourceElements = [];
+
+  // Инициализация элементов
+  function initSources() {
+    sourceElements = Array.from(document.querySelectorAll('.search-source.selector'));
+    if (sourceElements.length > 0) {
+      updateFocus();
+    }
+  }
+
+  // Обновление фокуса
+  function updateFocus() {
+    sourceElements.forEach((el, index) => {
+      el.classList.toggle('focused', index === currentFocusedIndex);
+      el.classList.toggle('active', index === currentFocusedIndex);
+    });
+  }
+
+  // Универсальный клик
   function triggerClick(element) {
     if (!element) return;
     
-    // 1. Попытка стандартного клика
-    try {
-      element.click();
-      console.log('Стандартный клик выполнен');
-      return;
-    } catch (e) {}
-    
-    // 2. Создание MouseEvent
-    try {
-      const mouseEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-      element.dispatchEvent(mouseEvent);
-      console.log('MouseEvent клик выполнен');
-      return;
-    } catch (e) {}
-    
-    // 3. Создание TouchEvent (для некоторых TV)
-    try {
-      const touchEvent = new TouchEvent('touchend', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-      element.dispatchEvent(touchEvent);
-      console.log('TouchEvent клик выполнен');
-      return;
-    } catch (e) {}
-    
-    // 4. Активация через focus+keydown (крайний случай)
-    try {
-      element.focus();
-      const keyboardEvent = new KeyboardEvent('keydown', {
-        key: 'Enter',
-        code: 'Enter',
-        keyCode: 13,
-        bubbles: true
-      });
-      element.dispatchEvent(keyboardEvent);
-      console.log('KeyboardEvent клик выполнен');
-    } catch (e) {
-      console.error('Все методы клика не сработали', e);
+    // Все возможные методы активации
+    const methods = [
+      () => element.click(),
+      () => element.dispatchEvent(new MouseEvent('click', {bubbles: true})),
+      () => element.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true})),
+      () => {
+        element.focus();
+        element.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', code: 'Enter', keyCode: 13}));
+      }
+    ];
+
+    for (const method of methods) {
+      try {
+        method();
+        console.log('Клик выполнен методом:', method.name);
+        return;
+      } catch (e) {}
     }
   }
 
-  function switchSource() {
-    const firstInactive = document.querySelector('.search-source.selector:not(.active)');
-    if (!firstInactive) {
-      console.log('Не найдено неактивных элементов');
-      return;
+  // Навигация DPAD
+  function handleDPad(direction) {
+    if (sourceElements.length === 0) return;
+
+    const oldIndex = currentFocusedIndex;
+    
+    switch(direction) {
+      case 'up': 
+        currentFocusedIndex = Math.max(0, currentFocusedIndex - 1);
+        break;
+      case 'down':
+        currentFocusedIndex = Math.min(sourceElements.length - 1, currentFocusedIndex + 1);
+        break;
+      case 'left':
+        currentFocusedIndex = Math.max(0, currentFocusedIndex - 1);
+        break;
+      case 'right':
+        currentFocusedIndex = Math.min(sourceElements.length - 1, currentFocusedIndex + 1);
+        break;
     }
 
-    document.querySelectorAll('.search-source.selector.active').forEach(el => {
-      el.classList.remove('active');
-    });
-
-    firstInactive.classList.add('active');
-
-    setTimeout(() => {
-      triggerClick(firstInactive);
-      console.log('Автоматически переключено на:', 
-        firstInactive.querySelector('.search-source__tab')?.textContent || 'источник');
-    }, CLICK_DELAY);
+    if (oldIndex !== currentFocusedIndex) {
+      updateFocus();
+    }
   }
 
-  // Обработчик нажатий пульта
+  // Обработчик кнопок пульта
   function handleRemoteKey(event) {
-    // Enter/OK
-    if (event.key === 'Enter' || event.keyCode === 13 || event.key === 'OK') {
-      const activeElement = document.querySelector('.search-source.selector.active') || 
-                          document.querySelector('.search-source.selector:hover');
-      if (activeElement) {
-        setTimeout(() => triggerClick(activeElement), 300);
+    const key = event.key || event.keyCode;
+    
+    // Навигация
+    if ([37, 'ArrowLeft'].includes(key)) handleDPad('left');
+    if ([38, 'ArrowUp'].includes(key)) handleDPad('up');
+    if ([39, 'ArrowRight'].includes(key)) handleDPad('right');
+    if ([40, 'ArrowDown'].includes(key)) handleDPad('down');
+    
+    // Подтверждение выбора
+    if ([13, 'Enter', 'OK'].includes(key)) {
+      const focusedElement = sourceElements[currentFocusedIndex];
+      if (focusedElement) {
+        setTimeout(() => triggerClick(focusedElement), 300);
         event.preventDefault();
       }
     }
-    // Другие кнопки пульта при необходимости
   }
 
+  // Основная логика
+  function switchSource() {
+    initSources();
+    if (sourceElements.length > 0) {
+      currentFocusedIndex = 0;
+      updateFocus();
+      setTimeout(() => triggerClick(sourceElements[0]), CLICK_DELAY);
+    }
+  }
+
+  // Наблюдатель
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.target.classList.contains('open--search')) {
@@ -99,19 +113,8 @@
     });
   });
 
-  observer.observe(document.body, {
-    attributes: true,
-    attributeFilter: ['class'],
-    subtree: true
-  });
-
-  // Инициализация фокуса для TV
-  document.addEventListener('DOMContentLoaded', () => {
-    const firstElement = document.querySelector('.search-source.selector');
-    if (firstElement) {
-      setTimeout(() => firstElement.focus(), 2000);
-    }
-  });
-
-  console.log('TV-оптимизированный наблюдатель активирован');
+  // Инициализация
+  observer.observe(document.body, {attributes: true, attributeFilter: ['class'], subtree: true});
+  document.addEventListener('DOMContentLoaded', initSources);
+  console.log('TV-контроллер инициализирован (OK+DPAD поддержка)');
 })();
