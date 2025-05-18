@@ -1,66 +1,43 @@
 (function() {
-  // Функция для переключения источника
-  function switchSource() {
-    const firstInactive = document.querySelector('.search-source.selector:not(.active)');
-    if (!firstInactive) {
-      console.log('Не найдено неактивных элементов');
+  // Функция для активации первого найденного элемента
+  function activateFirstSource() {
+    // Находим первый элемент с классом search-source selector
+    const firstSource = document.querySelector('.search-source.selector');
+    
+    if (!firstSource) {
+      console.log('Элементы .search-source.selector не найдены');
       return;
     }
 
-    // Удаляем active у всех
+    // Удаляем active у всех элементов
     document.querySelectorAll('.search-source.selector.active').forEach(el => {
       el.classList.remove('active');
     });
 
-    // Активируем найденный элемент
-    firstInactive.classList.add('active');
+    // Добавляем active к найденному элементу
+    firstSource.classList.add('active');
 
-    // Эмулируем клик
-    setTimeout(() => {
-      const clickEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-      firstInactive.dispatchEvent(clickEvent);
-      
-      console.log('Автоматически переключено на:', 
-        firstInactive.querySelector('.search-source__tab')?.textContent || 'источник');
-    }, 300);
+    console.log('Активирован первый найденный элемент:', firstSource);
   }
 
-  // Обработчик нажатия Enter (TV-пульт)
-  function handleEnterKey(event) {
-    if (event.key === 'Enter' || event.keyCode === 13) {
-      const activeElement = document.querySelector('.search-source.selector.active');
-      if (activeElement) {
-        activeElement.click();
-        event.preventDefault();
-      }
-    }
-  }
-
-  // Наблюдаем за появлением open--search
+  // Наблюдаем за изменениями DOM
   const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.target.classList.contains('open--search')) {
-        setTimeout(switchSource, 500);
-        
-        // Добавляем обработчик Enter при открытии поиска
-        document.addEventListener('keydown', handleEnterKey);
-      } else {
-        // Убираем обработчик при закрытии
-        document.removeEventListener('keydown', handleEnterKey);
-      }
-    });
+    // Проверяем, появился ли нужный элемент
+    if (document.querySelector('.search-source.selector')) {
+      // Вызываем функцию активации с небольшой задержкой
+      setTimeout(activateFirstSource, 100);
+      
+      // Можно отключить наблюдатель после выполнения
+      observer.disconnect();
+      console.log('Наблюдатель отключен после активации элемента');
+    }
   });
 
-  // Начинаем наблюдение за body
-  observer.observe(document.body, {
-    attributes: true,
-    attributeFilter: ['class'],
+  // Начинаем наблюдение за всем документом
+  observer.observe(document.documentElement, {
+    childList: true,
     subtree: true
   });
 
-  console.log('Наблюдатель активирован, ждём открытия поиска...');
+  console.log('Наблюдатель активирован, ищем .search-source.selector...');
 })();
