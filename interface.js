@@ -523,6 +523,7 @@
                 object-fit: contain;
                 width: auto;
                 height: auto;
+				min-height: 1em;
             }
             
             .new-interface-info__details {
