@@ -1,78 +1,83 @@
 (function() {
-  // Конфигурация задержек
-  const CLICK_DELAY = 400;  // Оптимальная задержка для TV
-  const OPEN_DELAY = 600;
+  // Конфигурация задержек (в миллисекундах)
+  const INITIAL_CLICK_DELAY = 500;  // Первый клик после открытия
+  const SECOND_CLICK_DELAY = 800;   // Дополнительный клик
+  const KEYPRESS_DELAY = 300;       // Задержка для кнопок пульта
 
-  // Улучшенная функция клика для TV
-  function tvClick(element) {
+  // Функция для клика по элементу
+  function clickElement(element) {
     if (!element) return;
     
-    // 1. Создаем событие мыши
-    const mouseEvent = new MouseEvent('click', {
-      view: window,
+    const clickEvent = new MouseEvent('click', {
       bubbles: true,
-      cancelable: true
+      cancelable: true,
+      view: window
     });
+    element.dispatchEvent(clickEvent);
     
-    // 2. Добавляем дополнительные свойства для TV
-    mouseEvent.isTrusted = true;
-    mouseEvent.remote = false;
-    
-    // 3. Двойная проверка перед кликом
-    setTimeout(() => {
-      if (document.body.contains(element)) {
-        // 4. Триггерим все возможные события
-        element.dispatchEvent(new Event('mousedown'));
-        element.dispatchEvent(new Event('mouseup'));
-        element.dispatchEvent(mouseEvent);
-        
-        console.log('TV Click выполнен на:', element.textContent.trim());
-      }
-    }, CLICK_DELAY);
+    console.log('Произведен клик на:', 
+      element.querySelector('.search-source__tab')?.textContent || 'источник');
   }
 
+  // Функция для переключения источника
   function switchSource() {
     const firstInactive = document.querySelector('.search-source.selector:not(.active)');
-    if (!firstInactive) return;
+    if (!firstInactive) {
+      console.log('Не найдено неактивных элементов');
+      return;
+    }
 
+    // Удаляем active у всех
     document.querySelectorAll('.search-source.selector.active').forEach(el => {
       el.classList.remove('active');
     });
 
+    // Активируем найденный элемент
     firstInactive.classList.add('active');
-    tvClick(firstInactive);  // Используем улучшенный клик
+
+    // Первый клик после активации
+    setTimeout(() => clickElement(firstInactive), INITIAL_CLICK_DELAY);
+    
+    // Дополнительный клик через заданный интервал
+    setTimeout(() => clickElement(firstInactive), SECOND_CLICK_DELAY);
   }
 
-  // Обработчик TV-пульта
-  function handleRemoteKeys(event) {
-    if ([13, 32, 29443].includes(event.keyCode)) {  // Enter, Space, DPAD_CENTER
-      const target = document.querySelector('.search-source.selector.active') || 
-                    document.querySelector('.search-source.selector:hover');
-      if (target) {
-        tvClick(target);
+  // Улучшенный обработчик TV-пульта
+  function handleTVRemote(event) {
+    if (event.key === 'Enter' || event.keyCode === 13 || 
+        event.key === ' ' || event.keyCode === 32) {
+      let targetElement = document.querySelector('.search-source.selector.active') || 
+                         document.querySelector('.search-source.selector:hover');
+      
+      if (targetElement) {
+        // Клик с небольшой задержкой для TV
+        setTimeout(() => clickElement(targetElement), KEYPRESS_DELAY);
         event.preventDefault();
+        event.stopPropagation();
       }
     }
   }
 
-  // Наблюдатель с улучшенной логикой
-  const observer = new MutationObserver(() => {
-    if (document.body.classList.contains('open--search')) {
-      setTimeout(() => {
-        switchSource();
-        document.addEventListener('keydown', handleRemoteKeys);
-      }, OPEN_DELAY);
-    } else {
-      document.removeEventListener('keydown', handleRemoteKeys);
-    }
+  // Наблюдаем за появлением open--search
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.target.classList.contains('open--search')) {
+        // При открытии меню
+        setTimeout(switchSource, INITIAL_CLICK_DELAY);
+        document.addEventListener('keydown', handleTVRemote);
+      } else {
+        // При закрытии меню
+        document.removeEventListener('keydown', handleTVRemote);
+      }
+    });
   });
 
+  // Начинаем наблюдение
   observer.observe(document.body, {
     attributes: true,
     attributeFilter: ['class'],
-    childList: false,
-    subtree: false
+    subtree: true
   });
 
-  console.log('TV Interaction Handler готов');
+  console.log('TV-наблюдатель активирован. Ожидание открытия меню...');
 })();
