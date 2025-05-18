@@ -1,14 +1,20 @@
 (function() {
     console.log("[Lampa Safe Styles] Плагин запущен");
 
-    // Безопасное добавление стилей (сохраняет оригинальные свойства)
+    /**
+     * Безопасное добавление стилей с сохранением оригинальных свойств
+     * @param {HTMLElement} element - DOM элемент для применения стилей
+     * @param {Object} styles - Объект со стилями (ключ: значение)
+     */
     function safeAddStyle(element, styles) {
         Object.keys(styles).forEach(property => {
             element.style.setProperty(property, styles[property], 'important');
         });
     }
 
-    // Основная функция для применения стилей
+    /**
+     * Основная функция применения стилей к элементам интерфейса
+     */
     function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
@@ -31,7 +37,10 @@
         }
     }
 
-    // Добавляем CSS для карточек (разово, через <style>)
+    /**
+     * Добавляет CSS стили для карточек через тег <style>
+     * Стили добавляются только один раз
+     */
     function addCardStyles() {
         const styleId = 'lampa-safe-css';
         if (document.getElementById(styleId)) return;
@@ -206,51 +215,51 @@
             
             .modal__content {
                 background-color: #141414;
-				box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 51%);
-				max-height: 90vh;
-				overflow: hidden;
+                box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 51%);
+                max-height: 90vh;
+                overflow: hidden;
             }
                         
 
-			.extensions__block-empty.focus:after, .extensions__block-add.focus:after {
-				border: 0.3em solid #c22222;
-			}
-			
-			
+            .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
+                border: 0.3em solid #c22222;
+            }
             
-			.modal__title {
-				background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text !important;
-			}
-			
-			.notification-item {
-				border: 2px solid #c22222 !important;
-			}
-			
-			.notification-date {
-				background: #c22222 !important;
-			}
-			
-			.modal {
-				position: fixed;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				align-items: center;
-			}
-			
-			.noty__body {
-				box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
-			}
-			
-			.card--tv .card__type {
-				background: #c22222;
-			}
-			
-			body {
-				background: #141414;
-			}
-						
+            
+            
+            .modal__title {
+                background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text !important;
+            }
+            
+            .notification-item {
+                border: 2px solid #c22222 !important;
+            }
+            
+            .notification-date {
+                background: #c22222 !important;
+            }
+            
+            .modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                align-items: center;
+            }
+            
+            .noty__body {
+                box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
+            }
+            
+            .card--tv .card__type {
+                background: #c22222;
+            }
+            
+            body {
+                background: #141414;
+            }
+                        
             /* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
                 background: -webkit-linear-gradient(66.47deg, rgb(192, 254, 207) -15.94%, rgb(30, 213, 169) 62.41%);
@@ -323,7 +332,7 @@
         document.head.appendChild(style);
     }
 
-    // Первое применение
+    // Первое применение стилей
     applyStyles();
     addCardStyles();
 
@@ -337,7 +346,9 @@
         }
     }, 3000); // Проверяем реже (каждые 3 секунды)
 
-    // Функция остановки
+    /**
+     * Функция остановки плагина и восстановления оригинальных стилей
+     */
     window.stopLampaSafeStyles = () => {
         clearInterval(interval);
         const style = document.getElementById('lampa-safe-css');
