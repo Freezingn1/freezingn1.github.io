@@ -523,7 +523,8 @@
                 object-fit: contain;
                 width: auto;
                 height: auto;
-	            			min-height: 1em;
+				min-height: 1em;
+				filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
             }
             
             .new-interface-info__details {
