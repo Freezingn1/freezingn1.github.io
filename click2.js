@@ -1,24 +1,4 @@
 (function() {
-  // Конфигурация задержек (в миллисекундах)
-  const INITIAL_CLICK_DELAY = 500;  // Первый клик после открытия
-  const SECOND_CLICK_DELAY = 800;   // Дополнительный клик
-  const KEYPRESS_DELAY = 300;       // Задержка для кнопок пульта
-
-  // Функция для клика по элементу
-  function clickElement(element) {
-    if (!element) return;
-    
-    const clickEvent = new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      view: window
-    });
-    element.dispatchEvent(clickEvent);
-    
-    console.log('Произведен клик на:', 
-      element.querySelector('.search-source__tab')?.textContent || 'источник');
-  }
-
   // Функция для переключения источника
   function switchSource() {
     const firstInactive = document.querySelector('.search-source.selector:not(.active)');
@@ -35,25 +15,27 @@
     // Активируем найденный элемент
     firstInactive.classList.add('active');
 
-    // Первый клик после активации
-    setTimeout(() => clickElement(firstInactive), INITIAL_CLICK_DELAY);
-    
-    // Дополнительный клик через заданный интервал
-    setTimeout(() => clickElement(firstInactive), SECOND_CLICK_DELAY);
+    // Эмулируем клик
+    setTimeout(() => {
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      firstInactive.dispatchEvent(clickEvent);
+      
+      console.log('Автоматически переключено на:', 
+        firstInactive.querySelector('.search-source__tab')?.textContent || 'источник');
+    }, 300);
   }
 
-  // Улучшенный обработчик TV-пульта
-  function handleTVRemote(event) {
-    if (event.key === 'Enter' || event.keyCode === 13 || 
-        event.key === ' ' || event.keyCode === 32) {
-      let targetElement = document.querySelector('.search-source.selector.active') || 
-                         document.querySelector('.search-source.selector:hover');
-      
-      if (targetElement) {
-        // Клик с небольшой задержкой для TV
-        setTimeout(() => clickElement(targetElement), KEYPRESS_DELAY);
+  // Обработчик нажатия Enter (TV-пульт)
+  function handleEnterKey(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+      const activeElement = document.querySelector('.search-source.selector.active');
+      if (activeElement) {
+        activeElement.click();
         event.preventDefault();
-        event.stopPropagation();
       }
     }
   }
@@ -62,22 +44,23 @@
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.target.classList.contains('open--search')) {
-        // При открытии меню
-        setTimeout(switchSource, INITIAL_CLICK_DELAY);
-        document.addEventListener('keydown', handleTVRemote);
+        setTimeout(switchSource, 500);
+        
+        // Добавляем обработчик Enter при открытии поиска
+        document.addEventListener('keydown', handleEnterKey);
       } else {
-        // При закрытии меню
-        document.removeEventListener('keydown', handleTVRemote);
+        // Убираем обработчик при закрытии
+        document.removeEventListener('keydown', handleEnterKey);
       }
     });
   });
 
-  // Начинаем наблюдение
+  // Начинаем наблюдение за body
   observer.observe(document.body, {
     attributes: true,
     attributeFilter: ['class'],
     subtree: true
   });
 
-  console.log('TV-наблюдатель активирован. Ожидание открытия меню...');
+  console.log('Наблюдатель активирован, ждём открытия поиска...');
 })();
