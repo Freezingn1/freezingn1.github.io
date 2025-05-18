@@ -1,5 +1,4 @@
 (function() {
-  // Функция для переключения источника
   function switchSource() {
     const firstInactive = document.querySelector('.search-source.selector:not(.active)');
     if (!firstInactive) {
@@ -15,36 +14,63 @@
     // Активируем найденный элемент
     firstInactive.classList.add('active');
 
-    // Эмулируем клик
+    // Создаем более надежное событие клика
     setTimeout(() => {
-      const clickEvent = new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-        view: window
-      });
-      firstInactive.dispatchEvent(clickEvent);
+      // Попробуем разные методы клика
+      if (typeof firstInactive.click === 'function') {
+        firstInactive.click();
+        console.log('Использован нативный метод click()');
+      } else {
+        // Создаем более полное событие
+        const clickEvent = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true,
+          clientX: firstInactive.getBoundingClientRect().left + 10,
+          clientY: firstInactive.getBoundingClientRect().top + 10
+        });
+        
+        // Добавляем дополнительные свойства для TV
+        clickEvent.isTrusted = true;
+        
+        // Диспатчим событие
+        const result = firstInactive.dispatchEvent(clickEvent);
+        
+        console.log('Событие клика отправлено, результат:', result);
+      }
       
       console.log('Автоматически переключено на:', 
         firstInactive.querySelector('.search-source__tab')?.textContent || 'источник');
-    }, 300); // Задержка перед кликом
+    }, 500); // Увеличим задержку
   }
 
-  // Наблюдаем за появлением open--search
+  // Альтернативный подход для TV
+  function checkAndSwitch() {
+    const searchOpen = document.querySelector('.open--search');
+    if (searchOpen) {
+      switchSource();
+    } else {
+      setTimeout(checkAndSwitch, 1000);
+    }
+  }
+
+  // Наблюдатель + таймер для надежности
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.target.classList.contains('open--search')) {
-        // Небольшая задержка после открытия
-        setTimeout(switchSource, 500);
+        setTimeout(switchSource, 800);
       }
     });
   });
 
-  // Начинаем наблюдение за body
   observer.observe(document.body, {
     attributes: true,
     attributeFilter: ['class'],
     subtree: true
   });
 
-  console.log('Наблюдатель активирован, ждём открытия поиска...');
+  // Запускаем проверку через таймер на случай проблем с MutationObserver
+  setTimeout(checkAndSwitch, 3000);
+
+  console.log('Скрипт активирован, ожидание открытия поиска...');
 })();
