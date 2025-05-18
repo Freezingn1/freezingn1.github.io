@@ -589,6 +589,10 @@
             .new-interface .card.card--wide .card-watched {
                 display: none !important;
             }
+			.card__type
+			{
+				font-size:0.74em;
+			}
             
             body.light--version .new-interface-info__body {
                 width: 69%;
