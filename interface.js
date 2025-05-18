@@ -238,23 +238,29 @@
         };
 
         this.background = function (elem) {
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            clearTimeout(background_timer);
-            if (new_background == background_last) return;
-            
-            background_last = new_background;
-            background_img.removeClass('loaded');
-            
-            background_img[0].onload = function () {
-                background_img.addClass('loaded');
-            };
-            
-            background_img[0].onerror = function () {
-                background_img.removeClass('loaded');
-            };
-            
-            background_img[0].src = background_last;
-        };
+    var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+    clearTimeout(background_timer);
+    
+    // Всегда обновляем фон, даже если он такой же
+    background_last = new_background;
+    
+    // Создаем новое изображение для предзагрузки
+    var tempImg = new Image();
+    tempImg.onload = function() {
+        background_img[0].src = new_background;
+        background_img.addClass('loaded');
+    };
+    tempImg.onerror = function() {
+        background_img.removeClass('loaded');
+    };
+    tempImg.src = new_background;
+    
+    // На случай, если изображение уже в кеше
+    if (tempImg.complete) {
+        background_img[0].src = new_background;
+        background_img.addClass('loaded');
+    }
+};
 
         this.append = function (element) {
             var _this3 = this;
