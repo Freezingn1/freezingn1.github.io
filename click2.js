@@ -1,31 +1,50 @@
 (function() {
-  // 1. Находим первый неактивный элемент
-  const firstInactive = document.querySelector('.search-source.selector:not(.active)');
-  
-  if (!firstInactive) {
-    console.error('Не найдено неактивных элементов');
-    return;
+  // Функция для переключения источника
+  function switchSource() {
+    const firstInactive = document.querySelector('.search-source.selector:not(.active)');
+    if (!firstInactive) {
+      console.log('Не найдено неактивных элементов');
+      return;
+    }
+
+    // Удаляем active у всех
+    document.querySelectorAll('.search-source.selector.active').forEach(el => {
+      el.classList.remove('active');
+    });
+
+    // Активируем найденный элемент
+    firstInactive.classList.add('active');
+
+    // Эмулируем клик
+    setTimeout(() => {
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      firstInactive.dispatchEvent(clickEvent);
+      
+      console.log('Автоматически переключено на:', 
+        firstInactive.querySelector('.search-source__tab')?.textContent || 'источник');
+    }, 300); // Задержка перед кликом
   }
 
-  // 2. Удаляем active у всех
-  document.querySelectorAll('.search-source.selector.active').forEach(el => {
-    el.classList.remove('active');
+  // Наблюдаем за появлением open--search
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.target.classList.contains('open--search')) {
+        // Небольшая задержка после открытия
+        setTimeout(switchSource, 500);
+      }
+    });
   });
 
-  // 3. Добавляем active к найденному элементу
-  firstInactive.classList.add('active');
-
-  // 4. Эмулируем полноценный клик
-  const clickEvent = new MouseEvent('click', {
-    bubbles: true,
-    cancelable: true,
-    view: window
+  // Начинаем наблюдение за body
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class'],
+    subtree: true
   });
-  
-  firstInactive.dispatchEvent(clickEvent);
 
-  // 5. Результат в консоль
-  const tabName = firstInactive.querySelector('.search-source__tab')?.textContent || 'источник';
-  console.log(`✔ Сделан клик по "${tabName}"`);
-  return firstInactive;
+  console.log('Наблюдатель активирован, ждём открытия поиска...');
 })();
