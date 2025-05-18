@@ -1,6 +1,7 @@
 !function() {
     "use strict";
     
+    // Добавляем компонент в настройки Lampa
     Lampa.SettingsApi.addComponent({
         component: 'logo_nazvanie',
         name: Lampa.Lang.translate('Интерфейс карточек'),
@@ -11,7 +12,7 @@
         `
     });
 
-    // Настройки логотипов
+    // Настройки отображения логотипов
     Lampa.SettingsApi.addParam({
         component: "logo_nazvanie",
         param: {
@@ -30,7 +31,7 @@
         }
     });
 
-    // Настройки русских названий
+    // Настройки отображения русских названий
     Lampa.SettingsApi.addParam({
         component: "logo_nazvanie",
         param: {
@@ -49,18 +50,25 @@
         }
     });
 
+    // Проверяем, не был ли уже загружен плагин
     if (!window.logoplugin) {
         window.logoplugin = true;
 
         const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
-        const titleCache = new Map();
+        const titleCache = new Map(); // Кэш для хранения русских названий
 
-        // Функция для выбора лучшего логотипа
+        /**
+         * Выбирает лучший логотип в зависимости от настроек
+         * @param {Array} logos - Массив логотипов
+         * @param {string} setting - Настройка отображения логотипов
+         * @returns {Object|null} Лучший логотип или null
+         */
         function getBestLogo(logos, setting) {
             if (!logos || !logos.length) return null;
 
             let filteredLogos = [...logos];
             
+            // Фильтрация по русским логотипам, если выбрана соответствующая настройка
             if (setting === "ru_only") {
                 filteredLogos = filteredLogos.filter(l => l.iso_639_1 === 'ru');
             }
@@ -84,7 +92,11 @@
             })[0];
         }
 
-        // Получение русского названия
+        /**
+         * Получает русское название для карточки
+         * @param {Object} card - Объект карточки фильма/сериала
+         * @returns {Promise<string|null>} Русское название или null
+         */
         async function fetchRussianTitle(card) {
             try {
                 if (titleCache.has(card.id)) return titleCache.get(card.id);
@@ -108,7 +120,7 @@
             return null;
         }
 
-        // Обработка полной страницы
+        // Обработчик для полной страницы карточки
         Lampa.Listener.follow("full", function(event) {
             if (event.type !== "complite") return;
             if (!event.object || !event.object.activity || !event.object.activity.render) return;
@@ -126,6 +138,7 @@
                 const originalTitle = movie.title || movie.name;
                 if (!originalTitle) return;
                 
+                // Проверяем, является ли контент аниме
                 const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                                 || /аниме|anime/i.test(originalTitle);
                 const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
@@ -146,7 +159,7 @@
                 // Очищаем заголовок перед загрузкой
                 titleElement.empty();
 
-                // Загружаем все логотипы
+                // Загружаем все логотипы с TMDB
                 const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
 
                 $.get(tmdbUrl, function(data) {
@@ -175,6 +188,9 @@
                     showTextTitle();
                 });
 
+                /**
+                 * Показывает русское название под заголовком
+                 */
                 function showRussianTitle() {
                     fetchRussianTitle(movie).then(title => {
                         if (title && render && render.find) {
@@ -190,6 +206,9 @@
                     });
                 }
 
+                /**
+                 * Показывает текстовый заголовок (оригинальное название)
+                 */
                 function showTextTitle() {
                     if (isAnime) {
                         titleElement.html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${originalTitle}</span>`);
@@ -202,7 +221,7 @@
             }
         });
 
-        // Добавляем стили
+        // Добавляем CSS стили для плавного появления русских названий
         const style = document.createElement('style');
         style.textContent = `
             .ru-title-full {
