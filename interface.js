@@ -124,13 +124,6 @@
                     details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
                 }
             
-            // Добавление жанров (если не отключено в настройках)
-            if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
-                details.push(data.genres.map(function (item) {
-                    return Lampa.Utils.capitalizeFirstLetter(item.name);
-                }).join(' | '));
-            }
-            
             if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
             if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
             
@@ -451,19 +444,6 @@
             }
         }); 
 
-        // Добавление параметра настройки отображения жанров
-        Lampa.SettingsApi.addParam({
-            component: 'styleint',
-            param: {
-                name: 'new_interface_show_genres',
-                type: 'trigger',
-                default: true
-            },
-            field: {
-                name: 'Показывать жанры',
-                description: 'Отображать жанры фильмов/сериалов'
-            }
-        });
 
         // Добавление CSS стилей для нового интерфейса
         Lampa.Template.add('new_interface_style', `
