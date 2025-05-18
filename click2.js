@@ -1,116 +1,137 @@
-(function (global, factory) {
-  if (typeof define === 'function' && define.amd) {
-    define(['cub'], factory);
-  } else if (typeof exports !== 'undefined') {
-    module.exports = factory(require('cub'));
-  } else {
-    global.CUBSearchPlugin = factory(global.cub);
-  }
-})(this, function (CUB) {
-  'use strict';
-
-  // Плагин поисковой вкладки "cub"
-  function CUBSearchPlugin(element, options) {
-    this.element = element;
-    this.options = CUB.extend({
-      lazy: false,        // Ленивая загрузка (не показывать счётчик)
-      onSelect: null,     // Коллбэк при выборе элемента
-      onFinded: null,     // Коллбэк при нахождении результатов
-    }, options);
-
-    this.results = [];    // Массив результатов
-    this.active = null;   // Текущий активный источник
-    this.last = null;     // Последний элемент
-
-    this.init();
+class SearchSourceBuilder {
+  constructor() {
+    this.results = []; // Массив для хранения результатов
+    this.active = null; // Активный источник
+    this.last = null; // Последний элемент
+    this.listener = new EventEmitter(); // Для обработки событий
   }
 
-  // Инициализация плагина
-  CUBSearchPlugin.prototype.init = function () {
-    this.build();
-    this.bindEvents();
-  };
+  // Метод для создания вкладки и обработки событий
+  build(source) {
+    const _this = this;
 
-  // Создание вкладки "cub"
-  CUBSearchPlugin.prototype.build = function () {
-    var _this = this;
+    // Создаём вкладку с фиксированным названием "cub" вместо source.title
+    const tab = $(`
+      <div class="search-source selector">
+        <div class="search-source__tab">cub</div>
+        <div class="search-source__count">0</div>
+      </div>
+    `);
 
-    // Создаём вкладку с фиксированным названием "cub"
-    var tab = CUB.$(
-      '<div class="search-source selector">' +
-        '<div class="search-source__tab">cub</div>' +
-        '<div class="search-source__count">0</div>' +
-      '</div>'
-    );
-
-    // Имитация поискового источника (можно заменить на реальный API)
-    var result = {
-      data: [],
-      count: 0,
-      listener: new CUB.EventEmitter(),
-      create: function () {
-        console.log('CUB Source initialized');
-      },
-      render: function () {
-        return '<div class="cub-results">Results loaded: ' + this.count + '</div>';
-      }
+    // Создаём результат (заглушка, т.к. create$n не определён)
+    const result = {
+      create: function() { console.log("Source initialized:", source); },
+      listener: new EventEmitter(),
+      render: function() { return "<div>Results will appear here</div>"; }
     };
 
+    // Если источник "ленивый", убираем счётчик
+    if (source.params && source.params.lazy) {
+      tab.find('.search-source__count').remove();
+    }
+
     // Обработчики событий
-    result.listener.follow('start', function () {
+    result.listener.on('start', () => {
       tab.addClass('search-source--loading');
       tab.find('.search-source__count').html('&nbsp;');
     });
 
-    result.listener.follow('clear', function () {
+    result.listener.on('clear', () => {
       tab.find('.search-source__count').text('0');
     });
 
-    result.listener.follow('finded', function (e) {
+    result.listener.on('finded', (e) => {
       tab.removeClass('search-source--loading');
-      tab.find('.search-source__count').text(e.count);
+      tab.find('.search-source__count').text(e.count || 0);
+      
       if (_this.active === result) {
-        CUB.Layer.visible(result.render());
+        Layer.visible(result.render()); // Предполагается, что Layer существует
       }
 
-      if (_this.options.onFinded) {
-        _this.options.onFinded({
-          source: { title: 'cub' },
-          result: result,
-          count: e.count,
-          data: e.data
-        });
+      _this.listener.emit('finded', {
+        source: source,
+        result: result,
+        count: e.count,
+        data: e.data
+      });
+    });
+
+    result.listener.on('up', (e) => {
+      if (_this.results.length < 2) {
+        _this.listener.emit('up');
+      } else {
+        _this.toggle();
       }
     });
 
-    // Клик по вкладке активирует источник
-    tab.on('click', function () {
+    result.listener.on('select', (data) => _this.listener.emit('select', data));
+    result.listener.on('back', (data) => _this.listener.emit('back', data));
+    result.listener.on('toggle', (e) => {
+      _this.listener.emit('toggle', {
+        source: source,
+        result: e.result,
+        element: e.element
+      });
+    });
+
+    // Обработчики кликов и фокуса
+    tab.on('click', () => {
       _this.enable(result);
+    }).on('mouseenter', (e) => {
+      _this.last = e.target;
+      scroll.update($(e.target)); // Предполагается, что scroll существует
     });
 
-    // Добавляем в DOM (предполагается, что есть контейнер)
-    CUB.$('.search-container').append(tab);
+    // Добавляем вкладку в контейнер (замените `scroll` на ваш DOM-элемент)
+    $('#search-container').append(tab); // Пример с jQuery
+
     this.results.push(result);
-  };
+    this.listener.emit('create', { source, result });
+  }
 
-  // Активация источника
-  CUBSearchPlugin.prototype.enable = function (result) {
+  // Включение источника
+  enable(result) {
     this.active = result;
-    console.log('Active source: cub');
-  };
+    Layer.visible(result.render());
+  }
 
-  // Привязка событий
-  CUBSearchPlugin.prototype.bindEvents = function () {
-    var _this = this;
-    CUB.$(document).on('keydown', function (e) {
-      if (e.key === 'Enter' && _this.active) {
-        _this.active.listener.send('select');
-      }
-    });
-  };
+  // Переключение между источниками (заглушка)
+  toggle() {
+    console.log("Toggle between sources");
+  }
+}
 
-  // Регистрация плагина в CUB
-  CUB.plugin('search', CUBSearchPlugin);
+// Заглушка для EventEmitter, если его нет
+class EventEmitter {
+  constructor() {
+    this.events = {};
+  }
+  on(event, callback) {
+    if (!this.events[event]) this.events[event] = [];
+    this.events[event].push(callback);
+  }
+  emit(event, ...args) {
+    if (this.events[event]) {
+      this.events[event].forEach(callback => callback(...args));
+    }
+  }
+}
 
-  return CUBSearchPlugin;
-});
+// Пример использования:
+const builder = new SearchSourceBuilder();
+
+// Создаём источник (source.title не используется, т.к. заменён на "cub")
+const source = {
+  title: "example", // Не будет использоваться
+  params: { lazy: false }
+};
+
+builder.build(source);
+
+// Эмулируем событие "finded" через 2 секунды
+setTimeout(() => {
+  builder.results[0].listener.emit('finded', {
+    count: 42,
+    data: ["Result 1", "Result 2"]
+  });
+}, 2000);
