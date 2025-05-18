@@ -26,15 +26,31 @@
       
       console.log('Автоматически переключено на:', 
         firstInactive.querySelector('.search-source__tab')?.textContent || 'источник');
-    }, 300); // Задержка перед кликом
+    }, 300);
+  }
+
+  // Обработчик нажатия Enter (TV-пульт)
+  function handleEnterKey(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+      const activeElement = document.querySelector('.search-source.selector.active');
+      if (activeElement) {
+        activeElement.click();
+        event.preventDefault();
+      }
+    }
   }
 
   // Наблюдаем за появлением open--search
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.target.classList.contains('open--search')) {
-        // Небольшая задержка после открытия
         setTimeout(switchSource, 500);
+        
+        // Добавляем обработчик Enter при открытии поиска
+        document.addEventListener('keydown', handleEnterKey);
+      } else {
+        // Убираем обработчик при закрытии
+        document.removeEventListener('keydown', handleEnterKey);
       }
     });
   });
