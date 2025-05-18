@@ -1,159 +1,175 @@
 (function () {
     'use strict';
 
+    // Основная функция для создания интерфейса информации о контенте
     function create() {
-      var html;
-      var timer;
-      var network = new Lampa.Reguest();
-      var loaded = {};
+        var html;
+        var timer;
+        var network = new Lampa.Reguest();
+        var loaded = {}; // Кэш загруженных данных
 
-      this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
-      };
+        // Создание HTML-структуры интерфейса
+        this.create = function () {
+            html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+        };
 
-      this.update = function (data) {
-        if (!html) {
-            console.error('HTML element is not initialized');
-            return;
-        }
+        // Обновление данных интерфейса
+        this.update = function (data) {
+            if (!html) {
+                console.error('HTML element is not initialized');
+                return;
+            }
 
-        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+            // Получение настроек отображения логотипов
+            const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+            
+            // Если логотипы не скрыты в настройках
+            if (logoSetting !== 'hide') {
+                const type = data.name ? 'tv' : 'movie';
+                const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+
+                // Загрузка изображений (логотипов) с TMDB
+                network.silent(url, (images) => {
+                    if (!html) return;
+
+                    let bestLogo = null;
+                    
+                    // Поиск лучшего логотипа с учетом языковых предпочтений
+                    if (images.logos && images.logos.length > 0) {
+                        let bestRussianLogo = null;
+                        let bestEnglishLogo = null;
+                        let bestOtherLogo = null;
+
+                        images.logos.forEach(logo => {
+                            if (logo.iso_639_1 === 'ru') {
+                                if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
+                                    bestRussianLogo = logo;
+                                }
+                            }
+                            else if (logo.iso_639_1 === 'en') {
+                                if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
+                                    bestEnglishLogo = logo;
+                                }
+                            }
+                            else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
+                                bestOtherLogo = logo;
+                            }
+                        });
+
+                        bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
+
+                        // Если в настройках выбраны только русские логотипы и русского нет - не показываем ничего
+                        if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                            bestLogo = null;
+                        }
+                    }
+                    
+                    this.applyLogo(data, bestLogo);
+                }, () => {
+                    // Fallback: если не удалось загрузить логотипы, показываем просто текст
+                    if (html) {
+                        const titleElement = html.find('.new-interface-info__title');
+                        if (titleElement.length) {
+                            titleElement.text(data.title);
+                        }
+                    }
+                });
+            } else if (html) {
+                // Если логотипы скрыты в настройках - показываем просто текст
+                const titleElement = html.find('.new-interface-info__title');
+                if (titleElement.length) {
+                    titleElement.text(data.title);
+                }
+            }
+
+            if (html) {
+                Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+                this.load(data);
+            }
+        };
         
-        if (logoSetting !== 'hide') {
-            const type = data.name ? 'tv' : 'movie';
-            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
-
-            network.silent(url, (images) => {
-                if (!html) return;
-
-                let bestLogo = null;
-                
-                if (images.logos && images.logos.length > 0) {
-                    let bestRussianLogo = null;
-                    let bestEnglishLogo = null;
-                    let bestOtherLogo = null;
-
-                    images.logos.forEach(logo => {
-                        if (logo.iso_639_1 === 'ru') {
-                            if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
-                                bestRussianLogo = logo;
-                            }
-                        }
-                        else if (logo.iso_639_1 === 'en') {
-                            if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
-                                bestEnglishLogo = logo;
-                            }
-                        }
-                        else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
-                            bestOtherLogo = logo;
-                        }
-                    });
-
-                    bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-
-                    if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                        bestLogo = null;
-                    }
-                }
-                
-                this.applyLogo(data, bestLogo);
-            }, () => {
-                if (html) {
-                    const titleElement = html.find('.new-interface-info__title');
-                    if (titleElement.length) {
-                        titleElement.text(data.title);
-                    }
-                }
-            });
-        } else if (html) {
+        // Применение логотипа к интерфейсу
+        this.applyLogo = function(data, logo) {
+            if (!html) return;
+            
             const titleElement = html.find('.new-interface-info__title');
-            if (titleElement.length) {
+            if (!titleElement.length) return;
+            
+            if (logo && logo.file_path) {
+                const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+                titleElement.html(
+                    `<img class="new-interface-logo" 
+                     src="${imageUrl}" 
+                     alt="${data.title}"
+                     onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
+                );
+            } else {
                 titleElement.text(data.title);
             }
-        }
+        };
 
-        if (html) {
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
-        }
-      };
-      
-      this.applyLogo = function(data, logo) {
-          if (!html) return;
-          
-          const titleElement = html.find('.new-interface-info__title');
-          if (!titleElement.length) return;
-          
-          if (logo && logo.file_path) {
-              const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-              titleElement.html(
-                  `<img class="new-interface-logo" 
-                   src="${imageUrl}" 
-                   alt="${data.title}"
-                   onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
-              );
-          } else {
-              titleElement.text(data.title);
-          }
-      };
-
-      this.draw = function (data) {
-        var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-        var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
-        var head = [];
-        var details = [];
-        var countries = Lampa.Api.sources.tmdb.parseCountries(data);
-        var pg = Lampa.Api.sources.tmdb.parsePG(data);
-        
-        if (create !== '0000') head.push('<span>' + create + '</span>');
-        if (countries.length > 0) head.push(countries.join(', '));
-        if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-        if (data.number_of_episodes && data.number_of_episodes > 0) {
-                details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+        // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
+        this.draw = function (data) {
+            var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+            var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+            var head = [];
+            var details = [];
+            var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+            var pg = Lampa.Api.sources.tmdb.parsePG(data);
+            
+            if (create !== '0000') head.push('<span>' + create + '</span>');
+            if (countries.length > 0) head.push(countries.join(', '));
+            if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+            if (data.number_of_episodes && data.number_of_episodes > 0) {
+                    details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+                }
+            
+            // Добавление жанров (если не отключено в настройках)
+            if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
+                details.push(data.genres.map(function (item) {
+                    return Lampa.Utils.capitalizeFirstLetter(item.name);
+                }).join(' | '));
             }
-        
-        if (Lampa.Storage.get('new_interface_show_genres') !== false && data.genres && data.genres.length > 0) {
-            details.push(data.genres.map(function (item) {
-                return Lampa.Utils.capitalizeFirstLetter(item.name);
-            }).join(' | '));
-        }
-        
-        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-        
-        html.find('.new-interface-info__head').empty().append(head.join(', '));
-        html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
-      };
+            
+            if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+            if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+            
+            html.find('.new-interface-info__head').empty().append(head.join(', '));
+            html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+        };
 
-      this.load = function (data) {
-        var _this = this;
+        // Загрузка дополнительных данных о контенте
+        this.load = function (data) {
+            var _this = this;
 
-        clearTimeout(timer);
-        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-        if (loaded[url]) return this.draw(loaded[url]);
-        timer = setTimeout(function () {
-          network.clear();
-          network.timeout(5000);
-          network.silent(url, function (movie) {
-            loaded[url] = movie;
-            _this.draw(movie);
-          });
-        }, 600);
-      };
+            clearTimeout(timer);
+            var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
+            if (loaded[url]) return this.draw(loaded[url]);
+            timer = setTimeout(function () {
+                network.clear();
+                network.timeout(5000);
+                network.silent(url, function (movie) {
+                    loaded[url] = movie;
+                    _this.draw(movie);
+                });
+            }, 600);
+        };
 
-      this.render = function () {
-        return html;
-      };
+        this.render = function () {
+            return html;
+        };
 
-      this.empty = function () {};
+        this.empty = function () {};
 
-      this.destroy = function () {
-        html.remove();
-        loaded = {};
-        html = null;
-      };
+        // Очистка и уничтожение интерфейса
+        this.destroy = function () {
+            html.remove();
+            loaded = {};
+            html = null;
+        };
     }
 
+    // Основной компонент интерфейса
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -174,6 +190,7 @@
 
         this.create = function () {};
 
+        // Отображение пустого состояния
         this.empty = function () {
             var button;
 
@@ -194,6 +211,7 @@
             this.activity.toggle();
         };
 
+        // Загрузка следующей порции данных
         this.loadNext = function () {
             var _this = this;
 
@@ -211,6 +229,7 @@
 
         this.push = function () {};
 
+        // Построение интерфейса с полученными данными
         this.build = function (data) {
             var _this2 = this;
 
@@ -237,6 +256,7 @@
             this.activity.toggle();
         };
 
+        // Обновление фонового изображения
         this.background = function (elem) {
             var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
             clearTimeout(background_timer);
@@ -256,6 +276,7 @@
             background_img[0].src = background_last;
         };
 
+        // Добавление элемента в список
         this.append = function (element) {
             var _this3 = this;
 
@@ -296,10 +317,12 @@
             items.push(item);
         };
 
+        // Навигация назад
         this.back = function () {
             Lampa.Activity.backward();
         };
 
+        // Навигация вниз
         this.down = function () {
             active++;
             active = Math.min(active, items.length - 1);
@@ -308,6 +331,7 @@
             scroll.update(items[active].render());
         };
 
+        // Навигация вверх
         this.up = function () {
             active--;
 
@@ -320,6 +344,7 @@
             }
         };
 
+        // Инициализация управления
         this.start = function () {
             var _this4 = this;
 
@@ -363,6 +388,7 @@
             return html;
         };
 
+        // Очистка и уничтожение компонента
         this.destroy = function () {
             network.clear();
             Lampa.Arrays.destroy(items);
@@ -375,11 +401,13 @@
         };
     }
 
+    // Инициализация плагина
     function startPlugin() {
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
 
+        // Переопределение основного интерфейса
         Lampa.InteractionMain = function (object) {
             var use = new_interface;
 
@@ -391,19 +419,20 @@
 
             return new use(object);
         };
-		
-		Lampa.SettingsApi.addComponent({
-    component: 'styleint',
-    name: Lampa.Lang.translate('Стильный интерфейс'),
-    icon: `
-		<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="200" height="200">
-		<path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
-		<path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
-		</svg>
-		`
-		});
+        
+        // Добавление компонента в настройки
+        Lampa.SettingsApi.addComponent({
+            component: 'styleint',
+            name: Lampa.Lang.translate('Стильный интерфейс'),
+            icon: `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="200" height="200">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+                </svg>
+            `
+        });
 
-
+        // Добавление параметра настройки логотипов
         Lampa.SettingsApi.addParam({
             component: "styleint",
             param: {
@@ -422,6 +451,7 @@
             }
         }); 
 
+        // Добавление параметра настройки отображения жанров
         Lampa.SettingsApi.addParam({
             component: 'styleint',
             param: {
@@ -435,6 +465,7 @@
             }
         });
 
+        // Добавление CSS стилей для нового интерфейса
         Lampa.Template.add('new_interface_style', `
             <style>
             .new-interface .card--small.card--wide {
@@ -493,7 +524,6 @@
                 width: auto;
                 height: auto;
             }
-            
             
             .new-interface-info__details {
                 margin-bottom: 1.6em;
@@ -578,8 +608,10 @@
             </style>
         `);
         
+        // Добавление стилей в DOM
         $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
+    // Инициализация плагина, если он еще не был инициализирован
     if (!window.plugin_interface_ready) startPlugin();
 })();
