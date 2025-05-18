@@ -26,7 +26,7 @@
       
       console.log('Автоматически переключено на:', 
         firstInactive.querySelector('.search-source__tab')?.textContent || 'источник');
-    }, 300);
+    }, 1000);
   }
 
   // Обработчик нажатия Enter (TV-пульт)
@@ -44,7 +44,7 @@
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.target.classList.contains('open--search')) {
-        setTimeout(switchSource, 500);
+        setTimeout(switchSource, 1300);
         
         // Добавляем обработчик Enter при открытии поиска
         document.addEventListener('keydown', handleEnterKey);
