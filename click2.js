@@ -1,22 +1,31 @@
-function switchToFirstSearchSource() {
-  const searchSources = document.querySelectorAll('.search-source.selector');
+(function() {
+  // 1. Находим первый неактивный элемент
+  const firstInactive = document.querySelector('.search-source.selector:not(.active)');
   
-  if (searchSources.length > 0) {
-    searchSources.forEach(source => {
-      source.classList.remove('active');
-    });
-    
-    searchSources[0].classList.add('active');
-    console.log('Автоматически переключились на первый источник:', searchSources[0].textContent.trim());
-    return searchSources[0]; // Возвращаем выбранный элемент при необходимости
-  } else {
-    console.log('Не найдено элементов с классом "search-source selector"');
-    return null;
+  if (!firstInactive) {
+    console.error('Не найдено неактивных элементов');
+    return;
   }
-}
 
-// Вызываем функцию при загрузке страницы
-window.addEventListener('DOMContentLoaded', switchToFirstSearchSource);
+  // 2. Удаляем active у всех
+  document.querySelectorAll('.search-source.selector.active').forEach(el => {
+    el.classList.remove('active');
+  });
 
-// Или по клику на кнопку, например:
-// document.getElementById('someButton').addEventListener('click', switchToFirstSearchSource);
+  // 3. Добавляем active к найденному элементу
+  firstInactive.classList.add('active');
+
+  // 4. Эмулируем полноценный клик
+  const clickEvent = new MouseEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    view: window
+  });
+  
+  firstInactive.dispatchEvent(clickEvent);
+
+  // 5. Результат в консоль
+  const tabName = firstInactive.querySelector('.search-source__tab')?.textContent || 'источник';
+  console.log(`✔ Сделан клик по "${tabName}"`);
+  return firstInactive;
+})();
