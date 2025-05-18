@@ -1,43 +1,115 @@
 (function() {
-  // Функция для активации первого найденного элемента
-  function activateFirstSource() {
-    // Находим первый элемент с классом search-source selector
-    const firstSource = document.querySelector('.search-source.selector');
-    
-    if (!firstSource) {
-      console.log('Элементы .search-source.selector не найдены');
+  // Функция для переключения источника
+  function switchSource() {
+    const firstInactive = document.querySelector('.search-source.selector:not(.active)');
+    if (!firstInactive) {
+      console.log('Не найдено неактивных элементов');
       return;
     }
 
-    // Удаляем active у всех элементов
+    // Удаляем active у всех
     document.querySelectorAll('.search-source.selector.active').forEach(el => {
       el.classList.remove('active');
     });
 
-    // Добавляем active к найденному элементу
-    firstSource.classList.add('active');
+    // Активируем найденный элемент
+    firstInactive.classList.add('active');
 
-    console.log('Активирован первый найденный элемент:', firstSource);
+    // Функция для проверки видимости элемента
+    function isElementVisible(el) {
+      return el && el.offsetParent !== null && 
+             el.offsetWidth > 0 && 
+             el.offsetHeight > 0 &&
+             window.getComputedStyle(el).visibility !== 'hidden';
+    }
+
+    // Улучшенная функция клика с проверками
+    function performClick(element, attempts = 3, delay = 300) {
+      if (attempts <= 0) {
+        console.log('Превышено количество попыток клика');
+        return;
+      }
+
+      if (!isElementVisible(element)) {
+        console.log('Элемент не видим, повторная попытка...');
+        setTimeout(() => performClick(element, attempts - 1, delay), delay);
+        return;
+      }
+
+      // Создаем более полное событие клика
+      const mouseDownEvent = new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      
+      const mouseUpEvent = new MouseEvent('mouseup', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+
+      try {
+        element.dispatchEvent(mouseDownEvent);
+        element.dispatchEvent(mouseUpEvent);
+        element.dispatchEvent(clickEvent);
+        
+        console.log('Успешный клик на:', 
+          element.querySelector('.search-source__tab')?.textContent || 'источник');
+      } catch (e) {
+        console.log('Ошибка при клике:', e);
+        setTimeout(() => performClick(element, attempts - 1, delay), delay);
+      }
+    }
+
+    // Вызываем клик с задержкой
+    setTimeout(() => performClick(firstInactive), 500);
   }
 
-  // Наблюдаем за изменениями DOM
-  const observer = new MutationObserver((mutations) => {
-    // Проверяем, появился ли нужный элемент
-    if (document.querySelector('.search-source.selector')) {
-      // Вызываем функцию активации с небольшой задержкой
-      setTimeout(activateFirstSource, 100);
-      
-      // Можно отключить наблюдатель после выполнения
-      observer.disconnect();
-      console.log('Наблюдатель отключен после активации элемента');
+  // Обработчик нажатия Enter (TV-пульт)
+  function handleEnterKey(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+      const activeElement = document.querySelector('.search-source.selector.active');
+      if (activeElement) {
+        // Используем улучшенный клик
+        const clickEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        });
+        activeElement.dispatchEvent(clickEvent);
+        event.preventDefault();
+      }
     }
+  }
+
+  // Наблюдаем за появлением open--search
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.target.classList.contains('open--search')) {
+        setTimeout(switchSource, 500);
+        
+        // Добавляем обработчик Enter при открытии поиска
+        document.addEventListener('keydown', handleEnterKey);
+      } else {
+        // Убираем обработчик при закрытии
+        document.removeEventListener('keydown', handleEnterKey);
+      }
+    });
   });
 
-  // Начинаем наблюдение за всем документом
-  observer.observe(document.documentElement, {
-    childList: true,
+  // Начинаем наблюдение за body
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class'],
     subtree: true
   });
 
-  console.log('Наблюдатель активирован, ищем .search-source.selector...');
+  console.log('Наблюдатель активирован, ждём открытия поиска...');
 })();
