@@ -570,13 +570,7 @@
             
             .new-interface .card.card--wide .card-watched {
                 display: none !important;
-            }
-			
-			.card__type {
-				background: #c22222 !important;
-				margin-left: 0.1em !important;
-				font-size: 0.9em !important;
-			}
+            }					
             
             body.light--version .new-interface-info__body {
                 width: 69%;
@@ -594,24 +588,7 @@
                 animation: animation-trigger-enter 0.2s forwards
             }
             </style>
-        `);
-		
-		// Замена TV на Сериал и отслеживание динамических изменений
-		function modifyCardType() {
-			document.querySelectorAll('.card__type').forEach(el => {
-				if (el.textContent.trim() === 'TV') el.textContent = 'Сериал';
-			});
-		}
-
-		// Первичное применение
-		modifyCardType();
-
-		// Отслеживание динамических изменений в DOM
-		const observer = new MutationObserver(modifyCardType);
-		observer.observe(document.body, { 
-			childList: true, 
-			subtree: true 
-		});
+        `);				
         
         // Добавление стилей в DOM
         $('body').append(Lampa.Template.get('new_interface_style', {}, true));

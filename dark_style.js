@@ -180,7 +180,11 @@
             .card-more.focus .card-more__box::after {
                 border: 0.3em solid #c22222;
             }
-
+			
+			.card__type {
+				background: #c22222 !important;
+			}
+			
             .new-interface .card.card--wide+.card-more .card-more__box {
                 background: rgba(0, 0, 0, 0.3);
             }
