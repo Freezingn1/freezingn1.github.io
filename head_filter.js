@@ -135,7 +135,7 @@
                         var show_element = Lampa.Storage.get(key, head[key].default); 
                         showHideElement(head[key].element, show_element);     
                     });          
-                }, 100);
+                }, 500);
             } else if (event.name in head) {
                 var show_element = Lampa.Storage.get(event.name, head[event.name].default); 
                 showHideElement(head[event.name].element, show_element);     
