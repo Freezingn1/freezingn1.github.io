@@ -575,6 +575,7 @@
 			.card__type {
 				background: #c22222 !important;
 				margin-left: 0.1em !important;
+				font-size: 0.9em !important;
 			}
             
             body.light--version .new-interface-info__body {
