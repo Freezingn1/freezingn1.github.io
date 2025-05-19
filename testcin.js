@@ -1,46 +1,42 @@
 (function() {
-    'use strict';
+  'use strict';
 
-    function checkAndLoad() {
-        // Проверяем, что Lampa загружена
-        if (typeof Lampa === 'undefined') {
-            console.error('Lampa не загружена!');
-            return;
-        }
+  function loadScript(url, callback) {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = callback;
+    script.onerror = () => console.error("Ошибка загрузки скрипта:", url);
+    document.head.appendChild(script);
+  }
 
-        // Проверяем, что Lampa.Storage существует
-        if (!Lampa.Storage) {
-            console.error('Lampa.Storage не доступен!');
-            return;
-        }
-
-        // Получаем или устанавливаем ID
-        const storedId = Lampa.Storage.get("lampac_unic_id");
-        if (storedId !== "tyusdt") {
-            Lampa.Storage.set("lampac_unic_id", "tyusdt");
-        }
-
-        // Проверяем, что Lampa.Utils.putScriptAsync существует
-        if (!Lampa.Utils || !Lampa.Utils.putScriptAsync) {
-            console.error('Lampa.Utils.putScriptAsync не доступен!');
-            return;
-        }
-
-        // Загружаем скрипт (без .then, если метод не поддерживает Promise)
-        try {
-            Lampa.Utils.putScriptAsync("https://freezingn1.github.io/conline.js", function() {
-                console.log("Скрипт загружен");
-            });
-        } catch (err) {
-            console.error("Ошибка загрузки скрипта:", err);
-        }
+  function checkAndLoad() {
+    if (typeof Lampa === 'undefined') {
+      console.error("Lampa не загружена!");
+      return;
     }
 
-    // Проверяем загрузку Lampa с интервалом
-    const checkInterval = setInterval(function() {
-        if (typeof Lampa !== 'undefined') {
-            clearInterval(checkInterval);
-            checkAndLoad();
-        }
-    }, 200);
+    // Проверяем Storage
+    if (!Lampa.Storage) {
+      console.error("Lampa.Storage не доступен!");
+      return;
+    }
+
+    // Устанавливаем ID
+    if (Lampa.Storage.get("lampac_unic_id") !== "tyusdt") {
+      Lampa.Storage.set("lampac_unic_id", "tyusdt");
+    }
+
+    // Загружаем скрипт безопасно
+    loadScript("https://freezingn1.github.io/conline.js", () => {
+      console.log("Скрипт загружен");
+    });
+  }
+
+  // Ждем загрузки Lampa
+  const interval = setInterval(() => {
+    if (typeof Lampa !== 'undefined') {
+      clearInterval(interval);
+      checkAndLoad();
+    }
+  }, 200);
 })();
