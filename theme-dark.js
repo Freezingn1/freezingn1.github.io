@@ -10,6 +10,7 @@
 	Lampa.Utils.putScriptAsync(['https://reyohoho.space:4437/static/lampa.js'], function () { });
 	Lampa.Utils.putScriptAsync(['https://aviamovie.github.io/surs.js'], function () { });
 	Lampa.Utils.putScriptAsync(['https://and7ey.github.io/lampa/head_filter.js'], function () { });
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/lable_serial.js'], function () { });
 
 })();
 
