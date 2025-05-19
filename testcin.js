@@ -28,7 +28,7 @@
 
         // Загружаем скрипт (без .then, если метод не поддерживает Promise)
         try {
-            Lampa.Utils.putScriptAsync("https://freezingn1.github.io/Conline.js", function() {
+            Lampa.Utils.putScriptAsync("https://freezingn1.github.io/conline.js", function() {
                 console.log("Скрипт загружен");
             });
         } catch (err) {
