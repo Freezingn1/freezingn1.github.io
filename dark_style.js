@@ -252,9 +252,6 @@
                 box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
             }
             
-            .card--tv .card__type {
-                background: #c22222;
-            }
             
             body {
                 background: #141414;
