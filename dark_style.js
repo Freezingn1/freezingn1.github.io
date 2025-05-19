@@ -173,6 +173,10 @@
                 border: 0.3em solid #c22222;
             }
             
+			.wrap__left {
+				box-shadow: 20px 0px 20px 0px #141414 !important;
+			}
+			
             .modal__content {
                 background-color: #141414 !important;
             }			
