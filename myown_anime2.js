@@ -14,7 +14,7 @@
             var menuItem = $('<li class="menu__item selector" data-action="anime"><div class="menu__ico">' + anime_icon + '</div><div class="menu__text">Аниме</div></li>');
             menuItem.on("hover:enter", () => {
                 Lampa.Activity.push({
-                    title: 'Аниме (Shikimori)',
+                    title: 'Аниме',
                     component: 'main',
                     source: 'myown_anime'
                 });
