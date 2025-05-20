@@ -125,6 +125,14 @@
           var parts_limit = 6;
           var current_year = new Date().getFullYear();
           var parts_data = [
+		  // ТЕСТ
+            function (call) {
+              owner.get('discover/tv?with_original_language=ja&with_genres=16&without_genres=10762&first_air_date.gte=2020-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&vote_average.gte=7.0&vote_count.gte=20', params, function (json) {
+                json.title = 'ТЕСТ';
+
+                call(json);
+              }, call);
+            },  
            // Новинки
             function (call) {
               owner.get('discover/movie?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=primary_release_date.desc&vote_average.gte=5&vote_count.gte=5', params, function (json) {
