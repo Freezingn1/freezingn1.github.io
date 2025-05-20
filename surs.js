@@ -454,21 +454,6 @@ function startPlugin() {
                 });
             };
 
-            function getPopularPersons() {
-                return function (callback) {
-                    var baseUrl = 'person/popular';
-
-                    owner.get(baseUrl, params, function (json) {
-                        if (json.results) {
-                            json.results = json.results.filter(function (result) {
-                                return true;
-                            });
-                        }
-                        json.title = Lampa.Lang.translate('surs_popular_persons');
-                        callback(json);
-                    }, callback);
-                };
-            }
 
             CustomData.push(getPopularPersons());
 
