@@ -1,6 +1,15 @@
 (function (  ) {
     'use strict';
-   
+   if (!window.surs_patch_applied) {
+    window.surs_patch_applied = true;
+    
+    const originalPush = Lampa.Activity.push;
+    Lampa.Activity.push = function(params) {
+        params.title = params.title.split(' - ')[0]; // Удаляем всё после "-"
+        params.url = ''; // Чистим URL
+        return originalPush.call(this, params);
+    };
+}
 
 // Опции сортировки
 var allSortOptions = [
@@ -2153,8 +2162,6 @@ function softRefresh(source, isFromSourceChange) {
     Lampa.Activity.push({
         title: Lampa.Lang.translate('title_main'),
         component: 'main'
-        url: '', // Очищаем URL от параметров
-		source: '' // Убираем источник (но оставляем для внутренней работы)
     });
 
     if (isFromSourceChange) {
