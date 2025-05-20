@@ -135,7 +135,7 @@
             },  
            // Новинки
             function (call) {
-              owner.get('discover/movie?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=primary_release_date.desc&vote_average.gte=5&vote_count.gte=0', params, function (json) {
+              owner.get('discover/movie?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=primary_release_date.desc&vote_average.gte=5&vote_count.gte=1', params, function (json) {
                 json.title = 'Полнометражное - новинки';
 
                 call(json);
@@ -143,7 +143,7 @@
             },  
             // Новинки Сериалы
             function (call) {
-              owner.get('discover/tv?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=first_air_date.desc&vote_average.gte=5&vote_count.gte=0', params, function (json) {
+              owner.get('discover/tv?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=first_air_date.desc&vote_average.gte=5&vote_count.gte=1', params, function (json) {
                 json.title = 'Сериалы - новинки';
                 call(json);
               }, call);
