@@ -46,7 +46,7 @@
                 var parts_data = [
                     // Топ популярных аниме
                     function (call) {
-                        owner.get('https://api.jikan.moe/v4/top/anime?filter=bypopularity&limit=20', params, function (json) {
+                        owner.get('https://api.jikan.moe/v4/top/anime?filter=bypopularity&limit=20 ', params, function (json) {
                             json.title = 'Популярные аниме (MAL)';
                             json.results = owner._mapMalToLampa(json.data);
                             call(json);
@@ -54,7 +54,7 @@
                     },
                     // Топ рейтинговых аниме
                     function (call) {
-                        owner.get('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=20', params, function (json) {
+                        owner.get('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=20 ', params, function (json) {
                             json.title = 'Лучшие аниме (MAL)';
                             json.results = owner._mapMalToLampa(json.data);
                             call(json);
@@ -62,7 +62,7 @@
                     },
                     // Сейчас в эфире
                     function (call) {
-                        owner.get('https://api.jikan.moe/v4/seasons/now?limit=20', params, function (json) {
+                        owner.get('https://api.jikan.moe/v4/seasons/now?limit=20 ', params, function (json) {
                             json.title = 'Сейчас в эфире (MAL)';
                             json.results = owner._mapMalToLampa(json.data);
                             call(json);
