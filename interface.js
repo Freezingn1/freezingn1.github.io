@@ -90,23 +90,30 @@
         
         // Применение логотипа к интерфейсу
         this.applyLogo = function(data, logo) {
-            if (!html) return;
-            
-            const titleElement = html.find('.new-interface-info__title');
-            if (!titleElement.length) return;
-            
-            if (logo && logo.file_path) {
-                const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-                titleElement.html(
-                    `<img class="new-interface-logo" 
-                     src="${imageUrl}" 
-                     alt="${data.title}"
-                     onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
-                );
-            } else {
-                titleElement.text(data.title);
-            }
-        };
+			if (!html) return;
+    
+			const titleElement = html.find('.new-interface-info__title');
+			if (!titleElement.length) return;
+    
+			if (logo && logo.file_path) {
+				const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+        
+        // Создаем скрытое изображение для предзагрузки
+				const preloadImg = new Image();
+				preloadImg.src = imageUrl;
+        
+				titleElement.html(
+					`<img class="new-interface-logo" 
+					src="${imageUrl}" 
+					alt="${data.title}"
+					loading="eager" 
+					style="opacity: 1; transition: none;"
+					onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
+				);
+    } else {
+        titleElement.text(data.title);
+    }
+};
 
         // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
         this.draw = function (data) {
@@ -505,6 +512,8 @@
                 height: auto;
 				min-height: 1em;
 				filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+				opacity: 1 !important;
+				transition: none !important;
             }
             
             .new-interface-info__details {
@@ -535,6 +544,7 @@
             
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
+				transition: none !important;
             }
             
             .new-interface .full-start__background {
