@@ -17,11 +17,12 @@
     ];
 
     function startPlugin() {
+        if (window.plugin_myown_anime_ready) return;
         window.plugin_myown_anime_ready = true;
 
         // Класс для работы с Jikan API
-        var SourceMAL = function (parrent) {
-            this.network = new Lampa.Reguest();
+        var SourceMAL = function () {
+            this.network = new (Lampa.Reguest || window.Lampa.Reguest)();
             this.discovery = false;
 
             // Преобразуем данные MAL в формат Lampa
@@ -46,116 +47,142 @@
                 setTimeout(callback, 350); // 350 мс между запросами
             };
 
+            this.get = function (url, params, onSuccess, onError) {
+                this._delayRequest(() => {
+                    this.network.timeout(10000).get(url, (json) => {
+                        if (json && json.data) onSuccess(json);
+                        else onError(json || { error: 'Empty response' });
+                    }, onError);
+                });
+            };
+
             this.main = function (params, oncomplite, onerror) {
                 var owner = this;
                 var parts_limit = 6;
                 var parts_data = [
                     // Топ популярных аниме
                     function (call) {
-                        owner._delayRequest(function () {
-                            owner.network.timeout(10000).get('https://api.jikan.moe/v4/top/anime?filter=bypopularity&limit=20', function (json) {
-                                if (json && json.data) {
-                                    json.title = 'Популярные аниме (MAL)';
-                                    json.results = owner._mapMalToLampa(json.data);
-                                    call(json);
-                                } else {
-                                    console.error('Jikan API error:', json);
-                                    call({ results: [] });
-                                }
-                            }, function (error) {
-                                console.error('Jikan API request failed:', error);
+                        owner.get('https://api.jikan.moe/v4/top/anime?filter=bypopularity&limit=20', params, 
+                            (json) => {
+                                json.title = 'Популярные аниме (MAL)';
+                                json.results = owner._mapMalToLampa(json.data);
+                                call(json);
+                            }, 
+                            (err) => {
+                                console.error('Jikan API error (top):', err);
                                 call({ results: [] });
-                            });
-                        });
+                            }
+                        );
                     },
                     // Топ рейтинговых аниме
                     function (call) {
-                        owner._delayRequest(function () {
-                            owner.network.get('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=20', function (json) {
-                                if (json && json.data) {
-                                    json.title = 'Лучшие аниме (MAL)';
-                                    json.results = owner._mapMalToLampa(json.data);
-                                    call(json);
-                                } else {
-                                    call({ results: [] });
-                                }
-                            }, function () { call({ results: [] }); });
-                        });
+                        owner.get('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=20', params,
+                            (json) => {
+                                json.title = 'Лучшие аниме (MAL)';
+                                json.results = owner._mapMalToLampa(json.data);
+                                call(json);
+                            },
+                            (err) => {
+                                console.error('Jikan API error (favorite):', err);
+                                call({ results: [] });
+                            }
+                        );
                     },
                     // Сейчас в эфире
                     function (call) {
-                        owner._delayRequest(function () {
-                            owner.network.get('https://api.jikan.moe/v4/seasons/now?limit=20', function (json) {
-                                if (json && json.data) {
-                                    json.title = 'Сейчас в эфире (MAL)';
-                                    json.results = owner._mapMalToLampa(json.data);
-                                    call(json);
-                                } else {
-                                    call({ results: [] });
-                                }
-                            }, function () { call({ results: [] }); });
-                        });
+                        owner.get('https://api.jikan.moe/v4/seasons/now?limit=20', params,
+                            (json) => {
+                                json.title = 'Сейчас в эфире (MAL)';
+                                json.results = owner._mapMalToLampa(json.data);
+                                call(json);
+                            },
+                            (err) => {
+                                console.error('Jikan API error (now):', err);
+                                call({ results: [] });
+                            }
+                        );
                     }
                 ];
 
                 // Добавляем запросы по жанрам
                 myGenres.forEach(genre => {
                     parts_data.push(function (call) {
-                        owner._delayRequest(function () {
-                            owner.network.get(`https://api.jikan.moe/v4/anime?genres=${genre.id}&order_by=popularity&limit=20`, function (json) {
-                                if (json && json.data) {
-                                    json.title = `Аниме: ${genre.title.replace('filter_genre_', '')}`;
-                                    json.results = owner._mapMalToLampa(json.data);
-                                    call(json);
-                                } else {
-                                    call({ results: [] });
-                                }
-                            }, function () { call({ results: [] }); });
-                        });
+                        owner.get(`https://api.jikan.moe/v4/anime?genres=${genre.id}&order_by=popularity&limit=20`, params,
+                            (json) => {
+                                json.title = `Аниме: ${genre.title.replace('filter_genre_', '')}`;
+                                json.results = owner._mapMalToLampa(json.data);
+                                call(json);
+                            },
+                            (err) => {
+                                console.error(`Jikan API error (genre ${genre.id}):`, err);
+                                call({ results: [] });
+                            }
+                        );
                     });
                 });
 
-                function loadPart(partLoaded, partEmpty) {
-                    Lampa.Api.partNext(parts_data, parts_limit, partLoaded, partEmpty);
+                // Используем Lampa.Api.partNext, если он существует
+                if (typeof Lampa.Api.partNext === 'function') {
+                    Lampa.Api.partNext(parts_data, parts_limit, oncomplite, onerror);
+                } else {
+                    console.error('Lampa.Api.partNext is not defined!');
+                    onerror('Lampa.Api.partNext is not defined');
                 }
-
-                loadPart(oncomplite, onerror);
-                return loadPart;
             };
         };
 
         // Добавляем источник в Lampa
         function add() {
-            var myown_anime = Object.assign({}, Lampa.Api.sources.tmdb, new SourceMAL(Lampa.Api.sources.tmdb));
+            if (!Lampa.Api || !Lampa.Api.sources) {
+                console.error('Lampa.Api is not defined');
+                return;
+            }
+
+            var myown_anime = new SourceMAL();
             Lampa.Api.sources.myown_anime = myown_anime;
             
-            Object.defineProperty(Lampa.Api.sources, 'myown_anime', {
-                get: function () { return myown_anime; }
-            });
-
-            Lampa.Params.select('source', Object.assign({}, Lampa.Params.values['source'], {
-                'myown_anime': 'MyAnimeList'
-            }), 'tmdb');
-
             // Добавляем кнопку в меню
-            var e = $('<li class="menu__item selector" data-action="rus"><div class="menu__ico">' + anime_icon + '</div><div class="menu__text">Аниме (MAL)</div></li>');
-            e.on("hover:enter", function () {
+            var menuItem = $('<li class="menu__item selector" data-action="rus"><div class="menu__ico">' + anime_icon + '</div><div class="menu__text">Аниме (MAL)</div></li>');
+            menuItem.on("hover:enter", function () {
                 Lampa.Activity.push({
                     title: 'Аниме (MyAnimeList)',
                     component: 'main',
                     source: 'myown_anime'
                 });
             });
-            $(".menu .menu__list").eq(0).append(e);
+            
+            // Проверяем, существует ли меню
+            var menuList = $(".menu .menu__list").eq(0);
+            if (menuList.length) {
+                menuList.append(menuItem);
+            } else {
+                console.error('Menu element not found');
+            }
         }
 
-        if (window.appready) add();
-        else {
+        // Запускаем после готовности Lampa
+        if (window.appready) {
+            add();
+        } else {
             Lampa.Listener.follow('app', function (e) {
                 if (e.type == 'ready') add();
             });
         }
     }
 
-    if (!window.plugin_myown_anime_ready) startPlugin();
+    // Запускаем плагин
+    if (!window.plugin_myown_anime_ready) {
+        // Проверяем, загружена ли Lampa
+        if (typeof Lampa !== 'undefined') {
+            startPlugin();
+        } else {
+            // Если Lampa не загружена, ждём
+            var checkLampa = setInterval(function() {
+                if (typeof Lampa !== 'undefined') {
+                    clearInterval(checkLampa);
+                    startPlugin();
+                }
+            }, 100);
+        }
+    }
 })();
