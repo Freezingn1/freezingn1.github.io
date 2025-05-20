@@ -20,7 +20,7 @@
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/cinema.js'], function () { });
 
 	//HDRezka
-	Lampa.Utils.putScriptAsync(['https://reyohoho.space:4437/static/lampa.js'], function () { });
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/hdrezka.js'], function () { });
 
 	//Подборки
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/surs.js'], function () { });
