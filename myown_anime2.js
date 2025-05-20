@@ -73,19 +73,25 @@
             };
         };
 
-        // Источник данных Shikimori
+        // Источник данных Shikimori (с исправленной обработкой ошибок)
         var SourceShikimori = function() {
             this.network = new Lampa.Reguest();
             this.baseUrl = 'https://shikimori.one/api/';
 
             this.get = function(endpoint, params, onSuccess, onError) {
-                this.network.native(`${this.baseUrl}${endpoint}`, (json) => {
-                    if (json && !json.error) onSuccess(json);
-                    else onError(json?.error || 'Ошибка запроса');
+                this.network.native(`${this.baseUrl}${endpoint}`, (response) => {
+                    if (response && !response.error) {
+                        if (onSuccess) onSuccess(response);
+                    } else {
+                        if (onError) onError(response?.error || 'Ошибка запроса');
+                    }
                 }, {
                     type: 'json',
                     headers: {
                         'User-Agent': 'Lampa Player'
+                    },
+                    error: (error) => {
+                        if (onError) onError(error);
                     }
                 });
             };
@@ -96,48 +102,51 @@
                     // Популярные аниме
                     (call) => {
                         this.get('animes?limit=20&order=popularity', params, (json) => {
-                            json.title = 'Популярные аниме (Shikimori)';
-                            json.results = json.map(item => ({
-                                id: item.id,
-                                title: item.russian || item.name,
-                                poster_path: item.image?.original,
-                                vote_average: item.score,
-                                release_date: item.aired_on,
-                                episodes_aired: item.episodes_aired,
-                                type: 'anime'
-                            }));
-                            call(json);
-                        }, call);
+                            if (!json || json.error) {
+                                call({ results: [] }); // Возвращаем пустой массив при ошибке
+                                return;
+                            }
+                            var result = {
+                                title: 'Популярные аниме (Shikimori)',
+                                results: json.map(item => ({
+                                    id: item.id,
+                                    title: item.russian || item.name,
+                                    poster_path: item.image?.original,
+                                    vote_average: item.score,
+                                    release_date: item.aired_on,
+                                    episodes_aired: item.episodes_aired,
+                                    type: 'anime'
+                                }))
+                            };
+                            call(result);
+                        }, (error) => {
+                            console.error('Shikimori API error:', error);
+                            call({ results: [] }); // Пустой результат при ошибке
+                        });
                     },
                     // Сейчас в эфире
                     (call) => {
                         this.get('animes?limit=20&status=ongoing&order=ranked', params, (json) => {
-                            json.title = 'Сейчас в эфире';
-                            json.results = json.map(item => ({
-                                id: item.id,
-                                title: item.russian || item.name,
-                                poster_path: item.image?.original,
-                                vote_average: item.score,
-                                release_date: item.aired_on,
-                                type: 'anime'
-                            }));
-                            call(json);
-                        }, call);
-                    },
-                    // Лучшие за все время
-                    (call) => {
-                        this.get('animes?limit=20&order=ranked', params, (json) => {
-                            json.title = 'Лучшие аниме';
-                            json.results = json.map(item => ({
-                                id: item.id,
-                                title: item.russian || item.name,
-                                poster_path: item.image?.original,
-                                vote_average: item.score,
-                                release_date: item.aired_on,
-                                type: 'anime'
-                            }));
-                            call(json);
-                        }, call);
+                            if (!json || json.error) {
+                                call({ results: [] });
+                                return;
+                            }
+                            var result = {
+                                title: 'Сейчас в эфире',
+                                results: json.map(item => ({
+                                    id: item.id,
+                                    title: item.russian || item.name,
+                                    poster_path: item.image?.original,
+                                    vote_average: item.score,
+                                    release_date: item.aired_on,
+                                    type: 'anime'
+                                }))
+                            };
+                            call(result);
+                        }, (error) => {
+                            console.error('Shikimori API error:', error);
+                            call({ results: [] });
+                        });
                     }
                 ];
 
@@ -145,21 +154,30 @@
                 myGenres.forEach(genre => {
                     parts_data.push((call) => {
                         this.get(`animes?limit=20&genre=${genre.id}&order=popularity`, params, (json) => {
-                            json.title = `Аниме: ${Lampa.Lang.translate(genre.title)}`;
-                            json.results = json.map(item => ({
-                                id: item.id,
-                                title: item.russian || item.name,
-                                poster_path: item.image?.original,
-                                vote_average: item.score,
-                                release_date: item.aired_on,
-                                type: 'anime'
-                            }));
-                            call(json);
-                        }, call);
+                            if (!json || json.error) {
+                                call({ results: [] });
+                                return;
+                            }
+                            var result = {
+                                title: `Аниме: ${Lampa.Lang.translate(genre.title)}`,
+                                results: json.map(item => ({
+                                    id: item.id,
+                                    title: item.russian || item.name,
+                                    poster_path: item.image?.original,
+                                    vote_average: item.score,
+                                    release_date: item.aired_on,
+                                    type: 'anime'
+                                }))
+                            };
+                            call(result);
+                        }, (error) => {
+                            console.error('Shikimori API error:', error);
+                            call({ results: [] });
+                        });
                     });
                 });
 
-                Lampa.Api.partNext(parts_data, parts_limit, onSuccess, onError);
+                Lampa.Api.partNext(parts_data, parts_limit, onSuccess, onError || (() => {}));
             };
         };
 
