@@ -2152,8 +2152,7 @@ function changeSource(newSource, isProfileChanged) {
 function softRefresh(source, isFromSourceChange) {
     Lampa.Activity.push({
         title: Lampa.Lang.translate('title_main'),
-        component: 'main',
-        source: source
+        component: 'main'
         
     });
 
@@ -2379,7 +2378,6 @@ function addSettingMenu() {
         if (isSourceNameEnabled) {
             addMenuButton(sourceName, 'custom-source', icon, function () {
                 Lampa.Activity.push({
-                    source: sourceName,
                     title: Lampa.Lang.translate('title_main'),
                     component: 'main',
                     page: 1
@@ -3060,7 +3058,6 @@ function addMainButton() {
 
     button.on('hover:enter', function () {
         Lampa.Activity.push({
-            source: Lampa.Storage.get('source'),
             title: Lampa.Lang.translate('title_main'),
             component: 'main',
             page: 1
