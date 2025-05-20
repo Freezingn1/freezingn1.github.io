@@ -1,15 +1,6 @@
 (function (  ) {
     'use strict';
-   if (!window.surs_patch_applied) {
-    window.surs_patch_applied = true;
-    
-    const originalPush = Lampa.Activity.push;
-    Lampa.Activity.push = function(params) {
-        params.title = params.title.split(' - ')[0]; // Удаляем всё после "-"
-        params.url = ''; // Чистим URL
-        return originalPush.call(this, params);
-    };
-}
+   
 
 // Опции сортировки
 var allSortOptions = [
@@ -828,8 +819,8 @@ genres.forEach(function (genre) {
 
             var combinedData = partsData.concat(CustomData);
 
-           // Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 1, 'movie'));
-           // Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 2, 'tv'));
+            //Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 1, 'movie'));
+            //Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 2, 'tv'));
 
             function loadPart(partLoaded, partEmpty) {
                 Lampa.Api.partNext(combinedData, partsLimit, partLoaded, partEmpty);
@@ -2160,8 +2151,10 @@ function changeSource(newSource, isProfileChanged) {
 
 function softRefresh(source, isFromSourceChange) {
     Lampa.Activity.push({
-        title: Lampa.Lang.translate('title_main'),
-        component: 'main'
+        title: Lampa.Lang.translate('title_main') + ' - ' + source.toUpperCase(),
+        component: 'main',
+        source: source
+        
     });
 
     if (isFromSourceChange) {
@@ -2386,6 +2379,7 @@ function addSettingMenu() {
         if (isSourceNameEnabled) {
             addMenuButton(sourceName, 'custom-source', icon, function () {
                 Lampa.Activity.push({
+                    source: sourceName,
                     title: sourceName,
                     component: 'main',
                     page: 1
@@ -3066,7 +3060,8 @@ function addMainButton() {
 
     button.on('hover:enter', function () {
         Lampa.Activity.push({
-            title: Lampa.Lang.translate('title_main'),
+            source: Lampa.Storage.get('source'),
+            title: Lampa.Lang.translate('title_main') + ' - ' + Lampa.Storage.get('source'),
             component: 'main',
             page: 1
         });
