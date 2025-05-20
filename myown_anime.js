@@ -143,7 +143,7 @@
             },  
            // Новинки
             function (call) {
-              owner.get('discover/movie?with_original_language=ja&with_genres=16&without_genres=10762&with_keywords=210024|287501&sort_by=primary_release_date.desc&vote_count.gte=5', params, function (json) {
+              owner.get('discover/movie?with_original_language=ja&with_genres=16&without_genres=10762&with_keywords=210024|287501&sort_by=primary_release_date.desc&vote_average.gte=7&vote_average.lte=9.6&vote_count.gte=5', params, function (json) {
                 json.title = 'Полнометражное - новинки';
 
                 call(json);
