@@ -141,14 +141,6 @@
                 call(json);
               }, call);
             },  
-			// Онгоинги
-            function (call) {
-              owner.get('discover/tv?with_original_language=ja&with_genres=16&without_genres=10762&with_keywords=210024|287501&with_status=Returning%20Series&first_air_date.gte=2025-01-01&first_air_date.lte=2025-12-31&air_date.gte=2025-01-01&sort_by=vote_average.desc&vote_average.gte=6&vote_average.lte=9.6&vote_count.gte=5', params, function (json) {
-                json.title = 'Онгоинги';
-
-                call(json);
-              }, call);
-            },  
            // Новинки
             function (call) {
               owner.get('discover/movie?with_original_language=ja&with_genres=16&without_genres=10762&with_keywords=210024|287501&sort_by=primary_release_date.desc&vote_average.gte=7&vote_average.lte=9.6&vote_count.gte=5', params, function (json) {
