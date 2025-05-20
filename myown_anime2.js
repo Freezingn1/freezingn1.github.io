@@ -12,7 +12,7 @@
             
             // Обработчик клика: открываем ссылку
             menuItem.on("hover:enter", function() {
-                window.location.href = 'https://my.bylampa.online/?url=anime&title=Аниме - SURS&component=category&source=cub';
+                window.location.href = 'http://my.bylampa.online/?url=anime&title=Аниме - SURS&component=category&source=cub';
             });
 
             // Добавляем кнопку в меню
