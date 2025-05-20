@@ -819,8 +819,8 @@ genres.forEach(function (genre) {
 
             var combinedData = partsData.concat(CustomData);
 
-            Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 1, 'movie'));
-            Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 2, 'tv'));
+           // Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 1, 'movie'));
+           // Lampa.Arrays.insert(combinedData, 1, Lampa.Api.partPersons(combinedData, combinedData.length - 2, 'tv'));
 
             function loadPart(partLoaded, partEmpty) {
                 Lampa.Api.partNext(combinedData, partsLimit, partLoaded, partEmpty);
@@ -3055,7 +3055,7 @@ function addMainButton() {
 
     var button = $('<li class="menu__item selector" data-action="custom-main">' +
         '<div class="menu__ico">' + homeIcon + '</div>' +
-        '<div class="menu__text">' + Lampa.Lang.translate('title_main') + '</div>' +
+        '<div class="menu__text">' + Lampa.Lang.translate('title_main')'</div>' +
         '</li>');
 
     button.on('hover:enter', function () {
