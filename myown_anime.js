@@ -143,7 +143,7 @@
             },  
             // Новинки Сериалы
             function (call) {
-              owner.get('discover/tv?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=first_air_date.desc&vote_average.gte=5&vote_count.gte=5', params, function (json) {
+              owner.get('discover/tv?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=first_air_date.desc&vote_average.gte=7&vote_count.gte=20', params, function (json) {
                 json.title = 'Сериалы - новинки';
                 call(json);
               }, call);
