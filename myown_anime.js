@@ -135,7 +135,7 @@
             },  
 			// Популярные фильмы 2020–2026 с высоким рейтингом
             function (call) {
-              owner.get('discover/movie?with_original_language=ja&with_genres=16&without_genres=10762&first_air_date.gte=2020-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&vote_average.gte=7.0&vote_count.gte=25', params, function (json) {
+              owner.get('discover/movie?with_original_language=ja|zh|ko|en&with_genres=16&without_genres=10762&first_air_date.gte=2020-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&vote_average.gte=7.0&vote_count.gte=25&with_keywords=210024', params, function (json) {
                 json.title = 'Популярные фильмы с высоким рейтингом';
 
                 call(json);
