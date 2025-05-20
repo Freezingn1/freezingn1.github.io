@@ -2153,7 +2153,8 @@ function softRefresh(source, isFromSourceChange) {
     Lampa.Activity.push({
         title: Lampa.Lang.translate('title_main'),
         component: 'main'
-        
+        url: '', // Очищаем URL от параметров
+		source: '' // Убираем источник (но оставляем для внутренней работы)
     });
 
     if (isFromSourceChange) {
@@ -2378,7 +2379,7 @@ function addSettingMenu() {
         if (isSourceNameEnabled) {
             addMenuButton(sourceName, 'custom-source', icon, function () {
                 Lampa.Activity.push({
-                    title: Lampa.Lang.translate('title_main'),
+                    title: sourceName,
                     component: 'main',
                     page: 1
                 });
