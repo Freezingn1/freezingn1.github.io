@@ -3055,7 +3055,7 @@ function addMainButton() {
 
     var button = $('<li class="menu__item selector" data-action="custom-main">' +
         '<div class="menu__ico">' + homeIcon + '</div>' +
-        '<div class="menu__text">' + Lampa.Lang.translate('title_main')'</div>' +
+        '<div class="menu__text">' + Lampa.Lang.translate('title_main') + '</div>' +
         '</li>');
 
     button.on('hover:enter', function () {
