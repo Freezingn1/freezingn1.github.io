@@ -135,7 +135,7 @@
             },  
            // Новинки
             function (call) {
-              owner.get('discover/movie?with_genres=16&without_genres=10762&sort_by=primary_release_date.desc&vote_average.gte=5&vote_count.gte=5', params, function (json) {
+              owner.get('discover/movie?with_genres=16&without_genres=10762&with_keywords=210024|287501|234925|234255|234256|234258|234260|234261|234262|234263|234264|234265|234266|234267|234268|234269|234270|234271|234272|234273|234274|234275|234276|234277&sort_by=primary_release_date.desc&vote_average.gte=5&vote_count.gte=5', params, function (json) {
                 json.title = 'Полнометражное - новинки';
 
                 call(json);
