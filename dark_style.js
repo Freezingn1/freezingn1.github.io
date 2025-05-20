@@ -174,7 +174,7 @@
             }
             
 			.wrap__left {
-				box-shadow: 20px 0px 20px 0px #141414 !important;
+				box-shadow: 15px 0px 20px 0px #141414 !important;
 			}
 			
             .modal__content {
