@@ -7,12 +7,12 @@
     var myGenres = [
         { id: 1, title: 'filter_genre_action' },     // Action
         { id: 2, title: 'filter_genre_adventure' },  // Adventure
-        { id: 4, title: 'filter_genre_comedy' },      // Comedy
-        { id: 8, title: 'filter_genre_drama' },       // Drama
-        { id: 10, title: 'filter_genre_fantasy' },    // Fantasy
-        { id: 14, title: 'filter_genre_horror' },     // Horror
-        { id: 22, title: 'filter_genre_romance' },    // Romance
-        { id: 24, title: 'filter_genre_sci_fi' },     // Sci-Fi
+        { id: 4, title: 'filter_genre_comedy' },     // Comedy
+        { id: 8, title: 'filter_genre_drama' },      // Drama
+        { id: 10, title: 'filter_genre_fantasy' },   // Fantasy
+        { id: 14, title: 'filter_genre_horror' },    // Horror
+        { id: 22, title: 'filter_genre_romance' },   // Romance
+        { id: 24, title: 'filter_genre_sci_fi' },    // Sci-Fi
         { id: 37, title: 'filter_genre_slice_of_life' } // Slice of Life
     ];
 
@@ -24,20 +24,26 @@
             this.network = new Lampa.Reguest();
             this.discovery = false;
 
-            // Преобразуем данные MAL в формат, совместимый с Lampa
+            // Преобразуем данные MAL в формат Lampa
             this._mapMalToLampa = function (malData) {
+                if (!malData || !malData.length) return [];
                 return malData.map(item => ({
                     id: item.mal_id,
-                    title: item.title || item.name,
-                    original_title: item.title_japanese,
-                    poster_path: item.images?.jpg?.image_url,
-                    backdrop_path: item.images?.jpg?.large_image_url,
-                    vote_average: item.score,
-                    release_date: item.aired?.from,
+                    title: item.title || 'Без названия',
+                    original_title: item.title_japanese || item.title,
+                    poster_path: item.images?.jpg?.image_url || '',
+                    backdrop_path: item.images?.jpg?.large_image_url || '',
+                    vote_average: item.score || 0,
+                    release_date: item.aired?.from || '0000-00-00',
                     release_year: item.aired?.from ? item.aired.from.split('-')[0] : '0000',
-                    overview: item.synopsis,
-                    type: item.type.toLowerCase()
+                    overview: item.synopsis || 'Описание отсутствует',
+                    type: item.type ? item.type.toLowerCase() : 'tv'
                 }));
+            };
+
+            // Задержка для избежания лимита API
+            this._delayRequest = function (callback) {
+                setTimeout(callback, 350); // 350 мс между запросами
             };
 
             this.main = function (params, oncomplite, onerror) {
@@ -46,37 +52,68 @@
                 var parts_data = [
                     // Топ популярных аниме
                     function (call) {
-                        owner.get('https://api.jikan.moe/v4/top/anime?filter=bypopularity&limit=20 ', params, function (json) {
-                            json.title = 'Популярные аниме (MAL)';
-                            json.results = owner._mapMalToLampa(json.data);
-                            call(json);
-                        }, call);
+                        owner._delayRequest(function () {
+                            owner.network.timeout(10000).get('https://api.jikan.moe/v4/top/anime?filter=bypopularity&limit=20', function (json) {
+                                if (json && json.data) {
+                                    json.title = 'Популярные аниме (MAL)';
+                                    json.results = owner._mapMalToLampa(json.data);
+                                    call(json);
+                                } else {
+                                    console.error('Jikan API error:', json);
+                                    call({ results: [] });
+                                }
+                            }, function (error) {
+                                console.error('Jikan API request failed:', error);
+                                call({ results: [] });
+                            });
+                        });
                     },
                     // Топ рейтинговых аниме
                     function (call) {
-                        owner.get('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=20 ', params, function (json) {
-                            json.title = 'Лучшие аниме (MAL)';
-                            json.results = owner._mapMalToLampa(json.data);
-                            call(json);
-                        }, call);
+                        owner._delayRequest(function () {
+                            owner.network.get('https://api.jikan.moe/v4/top/anime?filter=favorite&limit=20', function (json) {
+                                if (json && json.data) {
+                                    json.title = 'Лучшие аниме (MAL)';
+                                    json.results = owner._mapMalToLampa(json.data);
+                                    call(json);
+                                } else {
+                                    call({ results: [] });
+                                }
+                            }, function () { call({ results: [] }); });
+                        });
                     },
                     // Сейчас в эфире
                     function (call) {
-                        owner.get('https://api.jikan.moe/v4/seasons/now?limit=20 ', params, function (json) {
-                            json.title = 'Сейчас в эфире (MAL)';
-                            json.results = owner._mapMalToLampa(json.data);
-                            call(json);
-                        }, call);
-                    },
-                    // Аниме по жанрам
-                    ...myGenres.map(genre => function (call) {
-                        owner.get(`https://api.jikan.moe/v4/anime?genres=${genre.id}&order_by=popularity&limit=20`, params, function (json) {
-                            json.title = `Аниме: ${Lampa.Lang.translate(genre.title)}`;
-                            json.results = owner._mapMalToLampa(json.data);
-                            call(json);
-                        }, call);
-                    })
+                        owner._delayRequest(function () {
+                            owner.network.get('https://api.jikan.moe/v4/seasons/now?limit=20', function (json) {
+                                if (json && json.data) {
+                                    json.title = 'Сейчас в эфире (MAL)';
+                                    json.results = owner._mapMalToLampa(json.data);
+                                    call(json);
+                                } else {
+                                    call({ results: [] });
+                                }
+                            }, function () { call({ results: [] }); });
+                        });
+                    }
                 ];
+
+                // Добавляем запросы по жанрам
+                myGenres.forEach(genre => {
+                    parts_data.push(function (call) {
+                        owner._delayRequest(function () {
+                            owner.network.get(`https://api.jikan.moe/v4/anime?genres=${genre.id}&order_by=popularity&limit=20`, function (json) {
+                                if (json && json.data) {
+                                    json.title = `Аниме: ${genre.title.replace('filter_genre_', '')}`;
+                                    json.results = owner._mapMalToLampa(json.data);
+                                    call(json);
+                                } else {
+                                    call({ results: [] });
+                                }
+                            }, function () { call({ results: [] }); });
+                        });
+                    });
+                });
 
                 function loadPart(partLoaded, partEmpty) {
                     Lampa.Api.partNext(parts_data, parts_limit, partLoaded, partEmpty);
@@ -97,7 +134,7 @@
             });
 
             Lampa.Params.select('source', Object.assign({}, Lampa.Params.values['source'], {
-                'myown_anime': 'myown_anime'
+                'myown_anime': 'MyAnimeList'
             }), 'tmdb');
 
             // Добавляем кнопку в меню
