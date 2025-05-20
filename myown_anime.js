@@ -135,7 +135,7 @@
             },  
            // Новинки
             function (call) {
-              owner.get('discover/movie?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=primary_release_date.desc&vote_average.gte=5&vote_count.gte=5', params, function (json) {
+              owner.get('discover/movie?with_genres=16&without_genres=10762&with_keywords=210024|287501&sort_by=primary_release_date.desc&vote_average.gte=5&vote_count.gte=5', params, function (json) {
                 json.title = 'Полнометражное - новинки';
 
                 call(json);
