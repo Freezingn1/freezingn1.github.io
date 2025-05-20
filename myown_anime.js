@@ -127,7 +127,7 @@
           var parts_data = [
 		  // Популярные сериалы 2020–2026 с высоким рейтингом
             function (call) {
-              owner.get('discover/tv?with_original_language=ja|zh|ko&with_genres=16&without_genres=10762&first_air_date.gte=2020-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&vote_average.gte=7.0&vote_count.gte=25', params, function (json) {
+              owner.get('discover/tv?with_original_language=ja|zh|ko|us&with_genres=16&without_genres=10762&first_air_date.gte=2020-01-01&first_air_date.lte=2026-12-31&sort_by=popularity.desc&vote_average.gte=7.0&vote_count.gte=25', params, function (json) {
                 json.title = 'Популярные сериалы с высоким рейтингом';
 
                 call(json);
