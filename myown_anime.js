@@ -156,7 +156,7 @@
                 call(json);
               }, call);
             },  
-            // Популярное
+         /*   // Популярное
             function (call) {
               owner.get('discover/movie?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=popularity.desc&vote_count.gte=20', params, function (json) {
                 json.title = 'Полнометражное - популярное';
@@ -168,7 +168,7 @@
                 //});
                 call(json);
               }, call);
-            },       
+            },       */
             // Популярное Сериалы
             function (call) {
               owner.get('discover/tv?with_genres=16&without_genres=10762&with_keywords=210024|287501&with_origin_country=JP&sort_by=popularity.desc&vote_count.gte=20', params, function (json) {
