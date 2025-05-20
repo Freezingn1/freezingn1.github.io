@@ -3061,7 +3061,7 @@ function addMainButton() {
     button.on('hover:enter', function () {
         Lampa.Activity.push({
             source: Lampa.Storage.get('source'),
-            title: Lampa.Lang.translate('title_main') + ' - ' + Lampa.Storage.get('source'),
+            title: Lampa.Lang.translate('title_main'),
             component: 'main',
             page: 1
         });
