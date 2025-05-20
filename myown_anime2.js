@@ -7,15 +7,18 @@
         window.plugin_myown_anime_ready = true;
 
         function add() {
-            // Создаем кнопку в меню
             var menuItem = $('<li class="menu__item selector" data-action="anime"><div class="menu__ico">' + anime_icon + '</div><div class="menu__text">Аниме</div></li>');
             
-            // Обработчик клика: открываем ссылку
+            // Открываем раздел через Lampa.Activity
             menuItem.on("hover:enter", function() {
-                window.location.href = 'http://my.bylampa.online/?url=anime&title=Аниме - SURS&component=category&source=cub';
+                Lampa.Activity.push({
+                    component: 'category',
+                    url: 'anime',
+                    title: 'Аниме - SURS',
+                    source: 'cub'
+                });
             });
 
-            // Добавляем кнопку в меню
             $(".menu .menu__list").eq(0).append(menuItem);
         }
 
