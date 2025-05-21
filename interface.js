@@ -7,16 +7,18 @@
         var timer;
         var network = new Lampa.Reguest();
         var loaded = {}; // Кэш загруженных данных
+        var isDestroyed = false; // Флаг уничтожения компонента
 
         // Создание HTML-структуры интерфейса
         this.create = function () {
+            if (isDestroyed) return;
             html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
         };
 
         // Обновление данных интерфейса
         this.update = function (data) {
-            if (!html) {
-                console.error('HTML element is not initialized');
+            if (isDestroyed || !html) {
+                console.warn('Cannot update - component is destroyed or HTML not initialized');
                 return;
             }
 
@@ -30,7 +32,7 @@
 
                 // Загрузка изображений (логотипов) с TMDB
                 network.silent(url, (images) => {
-                    if (!html) return;
+                    if (isDestroyed || !html) return;
 
                     let bestLogo = null;
                     
@@ -67,14 +69,14 @@
                     this.applyLogo(data, bestLogo);
                 }, () => {
                     // Fallback: если не удалось загрузить логотипы, показываем просто текст
-                    if (html) {
+                    if (!isDestroyed && html) {
                         const titleElement = html.find('.new-interface-info__title');
                         if (titleElement.length) {
                             titleElement.text(data.title);
                         }
                     }
                 });
-            } else if (html) {
+            } else if (!isDestroyed && html) {
                 // Если логотипы скрыты в настройках - показываем просто текст
                 const titleElement = html.find('.new-interface-info__title');
                 if (titleElement.length) {
@@ -82,7 +84,7 @@
                 }
             }
 
-            if (html) {
+            if (!isDestroyed && html) {
                 Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
                 this.load(data);
             }
@@ -90,82 +92,104 @@
         
         // Применение логотипа к интерфейсу
         this.applyLogo = function(data, logo) {
-			if (!html) return;
+            if (isDestroyed || !html) return;
     
-			const titleElement = html.find('.new-interface-info__title');
-			if (!titleElement.length) return;
+            const titleElement = html.find('.new-interface-info__title');
+            if (!titleElement.length) return;
     
-			if (logo && logo.file_path) {
-				const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+            if (logo && logo.file_path) {
+                const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
         
-        // Создаем скрытое изображение для предзагрузки
-				const preloadImg = new Image();
-				preloadImg.src = imageUrl;
+                // Создаем скрытое изображение для предзагрузки
+                const preloadImg = new Image();
+                preloadImg.src = imageUrl;
         
-				titleElement.html(
-					`<img class="new-interface-logo" 
-					src="${imageUrl}" 
-					alt="${data.title}"
-					loading="eager" 
-					style="opacity: 1; transition: none;"
-					onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
-				);
-    } else {
-        titleElement.text(data.title);
-    }
-};
+                titleElement.html(
+                    `<img class="new-interface-logo" 
+                    src="${imageUrl}" 
+                    alt="${data.title}"
+                    loading="eager" 
+                    style="opacity: 1; transition: none;"
+                    onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
+                );
+            } else {
+                titleElement.text(data.title);
+            }
+        };
 
         // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
         this.draw = function (data) {
-            var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
-            var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
-            var head = [];
-            var details = [];
-            var countries = Lampa.Api.sources.tmdb.parseCountries(data);
-            var pg = Lampa.Api.sources.tmdb.parsePG(data);
-            
-            if (create !== '0000') head.push('<span>' + create + '</span>');
-            if (countries.length > 0) head.push(countries.join(', '));
-            if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-            if (data.number_of_episodes && data.number_of_episodes > 0) {
+            if (isDestroyed || !html) {
+                console.warn('Cannot draw - component is destroyed or HTML not initialized');
+                return;
+            }
+
+            try {
+                var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+                var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+                var head = [];
+                var details = [];
+                var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+                var pg = Lampa.Api.sources.tmdb.parsePG(data);
+                
+                if (create !== '0000') head.push('<span>' + create + '</span>');
+                if (countries.length > 0) head.push(countries.join(', '));
+                if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+                if (data.number_of_episodes && data.number_of_episodes > 0) {
                     details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
                 }
-            
-            if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-            if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
-            
-            html.find('.new-interface-info__head').empty().append(head.join(', '));
-            html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+                
+                if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+                if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+                
+                html.find('.new-interface-info__head').empty().append(head.join(', '));
+                html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+            } catch (e) {
+                console.error('Error in draw method:', e);
+            }
         };
 
         // Загрузка дополнительных данных о контенте
         this.load = function (data) {
+            if (isDestroyed) return;
+
             var _this = this;
 
             clearTimeout(timer);
             var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
             if (loaded[url]) return this.draw(loaded[url]);
             timer = setTimeout(function () {
+                if (isDestroyed) return;
                 network.clear();
                 network.timeout(5000);
                 network.silent(url, function (movie) {
+                    if (isDestroyed) return;
                     loaded[url] = movie;
                     _this.draw(movie);
+                }, function() {
+                    console.warn('Failed to load additional data for:', data.id);
                 });
             }, 600);
         };
 
         this.render = function () {
-            return html;
+            return isDestroyed ? null : html;
         };
 
         this.empty = function () {};
 
         // Очистка и уничтожение интерфейса
         this.destroy = function () {
-            html.remove();
+            isDestroyed = true;
+            if (html) {
+                html.remove();
+                html = null;
+            }
             loaded = {};
-            html = null;
+            if (network) {
+                network.clear();
+            }
+            clearTimeout(timer);
         };
     }
 
@@ -187,11 +211,14 @@
         var background_img = html.find('.full-start__background');
         var background_last = '';
         var background_timer;
+        var isDestroyed = false;
 
         this.create = function () {};
 
         // Отображение пустого состояния
         this.empty = function () {
+            if (isDestroyed) return;
+
             var button;
 
             if (object.source == 'tmdb') {
@@ -213,15 +240,19 @@
 
         // Загрузка следующей порции данных
         this.loadNext = function () {
+            if (isDestroyed) return;
+
             var _this = this;
 
             if (this.next && !this.next_wait && items.length) {
                 this.next_wait = true;
                 this.next(function (new_data) {
+                    if (isDestroyed) return;
                     _this.next_wait = false;
                     new_data.forEach(_this.append.bind(_this));
                     Lampa.Layer.visible(items[active + 1].render(true));
                 }, function () {
+                    if (isDestroyed) return;
                     _this.next_wait = false;
                 });
             }
@@ -231,6 +262,8 @@
 
         // Построение интерфейса с полученными данными
         this.build = function (data) {
+            if (isDestroyed) return;
+
             var _this2 = this;
 
             lezydata = data;
@@ -247,6 +280,7 @@
                 scroll.onEnd = this.loadNext.bind(this);
 
                 scroll.onWheel = function (step) {
+                    if (isDestroyed) return;
                     if (!Lampa.Controller.own(_this2)) _this2.start();
                     if (step > 0) _this2.down();else if (active > 0) _this2.up();
                 };
@@ -258,6 +292,8 @@
 
         // Обновление фонового изображения
         this.background = function (elem) {
+            if (isDestroyed) return;
+
             var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
             clearTimeout(background_timer);
             if (new_background == background_last) return;
@@ -266,10 +302,12 @@
             background_img.removeClass('loaded');
             
             background_img[0].onload = function () {
+                if (isDestroyed) return;
                 background_img.addClass('loaded');
             };
             
             background_img[0].onerror = function () {
+                if (isDestroyed) return;
                 background_img.removeClass('loaded');
             };
             
@@ -278,6 +316,8 @@
 
         // Добавление элемента в список
         this.append = function (element) {
+            if (isDestroyed) return;
+
             var _this3 = this;
 
             if (element.ready) return;
@@ -297,33 +337,43 @@
             item.onBack = this.back.bind(this);
 
             item.onToggle = function () {
+                if (isDestroyed) return;
                 active = items.indexOf(item);
             };
 
             if (this.onMore) item.onMore = this.onMore.bind(this);
 
             item.onFocus = function (elem) {
+                if (isDestroyed) return;
                 info.update(elem);
                 _this3.background(elem);
             };
 
             item.onHover = function (elem) {
+                if (isDestroyed) return;
                 info.update(elem);
                 _this3.background(elem);
             };
 
-            item.onFocusMore = info.empty.bind(info);
+            item.onFocusMore = function() {
+                if (isDestroyed || !info) return;
+                info.empty();
+            };
+
             scroll.append(item.render());
             items.push(item);
         };
 
         // Навигация назад
         this.back = function () {
+            if (isDestroyed) return;
             Lampa.Activity.backward();
         };
 
         // Навигация вниз
         this.down = function () {
+            if (isDestroyed) return;
+
             active++;
             active = Math.min(active, items.length - 1);
             if (!viewall) lezydata.slice(0, active + 2).forEach(this.append.bind(this));
@@ -333,6 +383,8 @@
 
         // Навигация вверх
         this.up = function () {
+            if (isDestroyed) return;
+
             active--;
 
             if (active < 0) {
@@ -346,11 +398,14 @@
 
         // Инициализация управления
         this.start = function () {
+            if (isDestroyed) return;
+
             var _this4 = this;
 
             Lampa.Controller.add('content', {
                 link: this,
                 toggle: function toggle() {
+                    if (isDestroyed) return false;
                     if (_this4.activity.canRefresh()) return false;
 
                     if (items.length) {
@@ -359,15 +414,19 @@
                 },
                 update: function update() {},
                 left: function left() {
+                    if (isDestroyed) return;
                     if (Navigator.canmove('left')) Navigator.move('left');else Lampa.Controller.toggle('menu');
                 },
                 right: function right() {
+                    if (isDestroyed) return;
                     Navigator.move('right');
                 },
                 up: function up() {
+                    if (isDestroyed) return;
                     if (Navigator.canmove('up')) Navigator.move('up');else Lampa.Controller.toggle('head');
                 },
                 down: function down() {
+                    if (isDestroyed) return;
                     if (Navigator.canmove('down')) Navigator.move('down');
                 },
                 back: this.back
@@ -376,6 +435,7 @@
         };
 
         this.refresh = function () {
+            if (isDestroyed) return;
             this.activity.loader(true);
             this.activity.need_refresh = true;
         };
@@ -385,19 +445,21 @@
         this.stop = function () {};
 
         this.render = function () {
-            return html;
+            return isDestroyed ? null : html;
         };
 
         // Очистка и уничтожение компонента
         this.destroy = function () {
-            network.clear();
+            isDestroyed = true;
+            if (network) network.clear();
             Lampa.Arrays.destroy(items);
-            scroll.destroy();
+            if (scroll) scroll.destroy();
             if (info) info.destroy();
-            html.remove();
+            if (html) html.remove();
             items = null;
             network = null;
             lezydata = null;
+            clearTimeout(background_timer);
         };
     }
 
@@ -450,7 +512,6 @@
                 description: "Управление отображением логотипов вместо названий"
             }
         }); 
-
 
         // Добавление CSS стилей для нового интерфейса
         Lampa.Template.add('new_interface_style', `
@@ -510,10 +571,10 @@
                 object-fit: contain;
                 width: auto;
                 height: auto;
-				min-height: 1em;
-				filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
-				opacity: 1 !important;
-				transition: none !important;
+                min-height: 1em;
+                filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+                opacity: 1 !important;
+                transition: none !important;
             }
             
             .new-interface-info__details {
@@ -544,7 +605,7 @@
             
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
-				transition: none !important;
+                transition: none !important;
             }
             
             .new-interface .full-start__background {
