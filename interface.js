@@ -90,31 +90,53 @@
             }
         };
         
-        // Применение логотипа к интерфейсу
+        // Применение логотипа к интерфейсу (оптимизированная версия)
         this.applyLogo = function(data, logo) {
             if (isDestroyed || !html) return;
     
             const titleElement = html.find('.new-interface-info__title');
             if (!titleElement.length) return;
     
-            if (logo && logo.file_path) {
-                const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-        
-                // Создаем скрытое изображение для предзагрузки
-                const preloadImg = new Image();
-                preloadImg.src = imageUrl;
-        
-                titleElement.html(
-                    `<img class="new-interface-logo" 
-                    src="${imageUrl}" 
-                    alt="${data.title}"
-                    loading="eager" 
-                    style="opacity: 1; transition: none;"
-                    onerror="this.onerror=null;this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />`
-                );
-            } else {
+            // Если логотип не найден, показываем текст
+            if (!logo || !logo.file_path) {
                 titleElement.text(data.title);
+                return;
             }
+
+            const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+
+            // Проверка, не пытаемся ли загрузить то же самое лого повторно
+            if (titleElement.data('current-logo') === imageUrl) return;
+            titleElement.data('current-logo', imageUrl);
+
+            // Создаем временный элемент для предзагрузки
+            const tempImg = new Image();
+            tempImg.src = imageUrl;
+
+            // Обработка успешной загрузки
+            tempImg.onload = () => {
+                if (isDestroyed || !html) return;
+                
+                titleElement.html(`
+                    <img class="new-interface-logo logo-loading" 
+                         src="${imageUrl}" 
+                         alt="${data.title}"
+                         loading="eager"
+                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+                `);
+
+                // Плавное появление
+                setTimeout(() => {
+                    const logoImg = titleElement.find('.new-interface-logo');
+                    if (logoImg.length) logoImg.removeClass('logo-loading');
+                }, 10);
+            };
+
+            // Обработка ошибки загрузки
+            tempImg.onerror = () => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            };
         };
 
         // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
@@ -513,7 +535,7 @@
             }
         }); 
 
-        // Добавление CSS стилей для нового интерфейса
+        // Добавление CSS стилей для нового интерфейса (с анимацией логотипов)
         Lampa.Template.add('new_interface_style', `
             <style>
             .new-interface .card--small.card--wide {
@@ -573,8 +595,16 @@
                 height: auto;
                 min-height: 1em;
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+            }
+            
+            .new-interface-logo.logo-loading {
+                opacity: 0 !important;
+                transition: opacity 0.3s ease !important;
+            }
+            
+            .new-interface-logo {
                 opacity: 1 !important;
-                transition: none !important;
+                transition: opacity 0.3s ease !important;
             }
             
             .new-interface-info__details {
