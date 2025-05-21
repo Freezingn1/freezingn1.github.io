@@ -56,6 +56,7 @@
 
         const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
         const titleCache = new Map(); // Кэш для хранения русских названий
+        const logoCache = new Map();  // Кэш для хранения логотипов
 
         /**
          * Выбирает лучший логотип в зависимости от настроек
@@ -120,8 +121,67 @@
             return null;
         }
 
+        /**
+         * Загружает логотипы для карточки
+         * @param {Object} card - Объект карточки
+         * @returns {Promise<Array>} Массив логотипов
+         */
+        async function fetchLogos(card) {
+            try {
+                if (logoCache.has(card.id)) return logoCache.get(card.id);
+
+                const mediaType = card.name ? "tv" : "movie";
+                const url = Lampa.TMDB.api(mediaType) + `/${card.id}/images?api_key=${Lampa.TMDB.key()}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                const logos = data.logos || [];
+                
+                logoCache.set(card.id, logos);
+                return logos;
+            } catch (error) {
+                console.error("Ошибка при загрузке логотипов:", error);
+                return [];
+            }
+        }
+
+        /**
+         * Показывает логотип с плавной анимацией
+         * @param {HTMLElement} container - Контейнер для логотипа
+         * @param {string} imageUrl - URL изображения логотипа
+         * @param {string} altText - Альтернативный текст
+         */
+        function showLogoWithAnimation(container, imageUrl, altText) {
+            // Создаем временный элемент для предзагрузки
+            const tempImg = new Image();
+            tempImg.src = imageUrl;
+
+            tempImg.onload = () => {
+                container.html(`
+                    <img class="logo-loading" 
+                         src="${imageUrl}" 
+                         alt="${altText}"
+                         style="margin-top: 0.2em; margin-bottom: 0.1em; 
+                                max-width: 9em; max-height: 4em; 
+                                filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));" />
+                `);
+
+                // Плавное появление через 10мс
+                setTimeout(() => {
+                    container.find('img').removeClass('logo-loading');
+                }, 10);
+            };
+
+            tempImg.onerror = () => {
+                console.error("Не удалось загрузить логотип:", imageUrl);
+                container.text(altText); // Fallback на текст
+            };
+        }
+
         // Обработчик для полной страницы карточки
-        Lampa.Listener.follow("full", function(event) {
+        Lampa.Listener.follow("full", async function(event) {
             if (event.type !== "complite") return;
             if (!event.object || !event.object.activity || !event.object.activity.render) return;
             
@@ -159,51 +219,43 @@
                 // Очищаем заголовок перед загрузкой
                 titleElement.empty();
 
-                // Загружаем все логотипы с TMDB
-                const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
+                // Загружаем логотипы
+                const logos = await fetchLogos(movie);
+                const logo = getBestLogo(logos, logoSetting);
 
-                $.get(tmdbUrl, function(data) {
-                    const logos = data.logos || [];
-                    const logo = getBestLogo(logos, logoSetting);
-
-                    if (logo?.file_path) {
-                        // Показываем логотип
-                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-                        titleElement.html(`<img style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));" src="${imageUrl}" />`);
-                        
-                        // Показываем русское название в зависимости от настроек
-                        if (russianTitleSetting === "show_always" || 
-                            (russianTitleSetting === "show_when_no_ru_logo" && logo.iso_639_1 !== "ru")) {
-                            showRussianTitle();
-                        }
-                    } else {
-                        // Если логотипов нет вообще
-                        showTextTitle();
-                        if (russianTitleSetting === "show_always") {
-                            showRussianTitle();
-                        }
+                if (logo?.file_path) {
+                    // Показываем логотип с анимацией
+                    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+                    showLogoWithAnimation(titleElement, imageUrl, originalTitle);
+                    
+                    // Показываем русское название в зависимости от настроек
+                    if (russianTitleSetting === "show_always" || 
+                        (russianTitleSetting === "show_when_no_ru_logo" && logo.iso_639_1 !== "ru")) {
+                        showRussianTitle();
                     }
-                }).fail(() => {
-                    console.error("Ошибка загрузки логотипов из TMDB");
+                } else {
+                    // Если логотипов нет вообще
                     showTextTitle();
-                });
+                    if (russianTitleSetting === "show_always") {
+                        showRussianTitle();
+                    }
+                }
 
                 /**
                  * Показывает русское название под заголовком
                  */
-                function showRussianTitle() {
-                    fetchRussianTitle(movie).then(title => {
-                        if (title && render && render.find) {
-                            const rateLine = render.find(".full-start-new__rate-line").first();
-                            if (rateLine && rateLine.length) {
-                                rateLine.before(`
-                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 0.4em; opacity: 0.80; max-width: 15em;text-shadow: 1px 1px 0px #00000059;">
-                                        RU: ${title}
-                                    </div>
-                                `);
-                            }
+                async function showRussianTitle() {
+                    const title = await fetchRussianTitle(movie);
+                    if (title && render && render.find) {
+                        const rateLine = render.find(".full-start-new__rate-line").first();
+                        if (rateLine && rateLine.length) {
+                            rateLine.before(`
+                                <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 0.4em; opacity: 0.80; max-width: 15em;text-shadow: 1px 1px 0px #00000059;">
+                                    RU: ${title}
+                                </div>
+                            `);
                         }
-                    });
+                    }
                 }
 
                 /**
@@ -218,12 +270,17 @@
                 }
             } catch (error) {
                 console.error("Ошибка в обработчике full:", error);
+                showTextTitle();
             }
         });
 
-        // Добавляем CSS стили для плавного появления русских названий
+        // Добавляем CSS стили для плавного появления
         const style = document.createElement('style');
         style.textContent = `
+            .logo-loading {
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
             .ru-title-full {
                 transition: opacity 0.3s ease;
             }
