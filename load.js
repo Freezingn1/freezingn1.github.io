@@ -1,21 +1,26 @@
 (() => {
+  // Проверяем, не завершилась ли уже загрузка
+  if (document.readyState === 'complete') {
+    return;
+  }
+
   // Создаем элементы прелоадера
   const preloader = document.createElement('div');
-  preloader.id = 'preloader';
+  preloader.id = 'preloader-overlay';
   
   const loader = document.createElement('div');
-  loader.className = 'loader';
-  
-  // Стили
+  loader.className = 'preloader-spinner';
+
+  // Добавляем стили
   const style = document.createElement('style');
   style.textContent = `
-    #preloader {
+    #preloader-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: #ffffff;
+      background: rgba(255, 255, 255, 0.9);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -23,7 +28,7 @@
       transition: opacity 0.5s ease;
     }
     
-    .loader {
+    .preloader-spinner {
       width: 50px;
       height: 50px;
       border: 5px solid #f3f3f3;
@@ -36,38 +41,41 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    
+    body.loaded #preloader-overlay {
+      opacity: 0;
+      pointer-events: none;
+    }
   `;
-  
-  // Добавляем в DOM
+
+  // Добавляем элементы в DOM
   document.head.appendChild(style);
   preloader.appendChild(loader);
-  document.body.insertBefore(preloader, document.body.firstChild);
+  document.body.appendChild(preloader);
 
-  // Функция скрытия прелоадера
-  const hidePreloader = () => {
-    preloader.style.opacity = '0';
-    preloader.addEventListener('transitionend', () => {
+  // Функция для завершения загрузки
+  const completeLoading = () => {
+    document.body.classList.add('loaded');
+    setTimeout(() => {
       preloader.remove();
-      style.remove(); // Удаляем стили тоже
-    });
+      style.remove();
+    }, 500); // Совпадает с временем transition
   };
 
-  // Таймаут на случай, если load не сработает
-  const loadTimeout = setTimeout(() => {
-    window.removeEventListener('load', hidePreloader);
-    hidePreloader();
-    console.warn('Прелоадер отключен по таймауту');
-  }, 10000); // 10 секунд максимум
+  // Таймаут на случай проблем
+  const failSafeTimeout = setTimeout(completeLoading, 10000);
 
-  // Основной обработчик загрузки
-  window.addEventListener('load', () => {
-    clearTimeout(loadTimeout);
-    hidePreloader();
-  });
+  // Основные события загрузки
+  const handleLoad = () => {
+    clearTimeout(failSafeTimeout);
+    completeLoading();
+  };
 
-  // Дополнительная проверка для SPA/асинхронного контента
-  if (document.readyState === 'complete') {
-    clearTimeout(loadTimeout);
-    hidePreloader();
+  window.addEventListener('load', handleLoad);
+  document.addEventListener('DOMContentLoaded', handleLoad);
+
+  // Дополнительная проверка для SPA
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    handleLoad();
   }
 })();
