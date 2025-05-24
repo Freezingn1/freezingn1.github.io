@@ -599,12 +599,12 @@
             
             .new-interface-logo.logo-loading {
                 opacity: 0 !important;
-                transition: opacity 0.3s ease !important;
+              //  transition: opacity 0.3s ease !important;
             }
             
             .new-interface-logo {
                 opacity: 1 !important;
-                transition: opacity 0.3s ease !important;
+            //    transition: opacity 0.3s ease !important;
             }
             
             .new-interface-info__details {
