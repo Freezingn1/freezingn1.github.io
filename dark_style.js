@@ -204,6 +204,10 @@
             .extensions__item.focus:after {
                 border: 0.3em solid #c22222;
             }
+			
+			.console {
+				background: #141414;
+			}
 
             .extensions__block-add {
                 background-color: #181818;
