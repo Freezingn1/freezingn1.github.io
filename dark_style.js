@@ -121,10 +121,16 @@
             
 			.settings__content {
 				background: url(https://lampac666.ucoz.net/lampishe.png);
+				background-size: 100% 100%;
 			}
 			
 			.selectbox__content {
 				background: url(https://lampac666.ucoz.net/lampishe.png);
+				background-size: 100% 100%;
+			}
+			
+			.welcome {
+				background-size: 100% 100%;
 			}
             
             .menu__item.focus, .menu__item.traverse, .menu__item.hover {
