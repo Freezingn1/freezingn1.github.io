@@ -18,13 +18,13 @@
     function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
-            'background': '#141414'
+            'background': 'url(https://lampac666.ucoz.net/lampishe.png)'
         });
 
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
-                'background-color': '#141414'
+                'background-color': 'url(https://lampac666.ucoz.net/lampishe.png)'
             });
         });
 
