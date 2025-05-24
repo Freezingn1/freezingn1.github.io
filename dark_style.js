@@ -119,6 +119,13 @@
                 color: #fff;
             }
             
+			.settings__content {
+				background: url(https://lampac666.ucoz.net/lampishe.png);
+			}
+			
+			.selectbox__content {
+				background: url(https://lampac666.ucoz.net/lampishe.png);
+			}
             
             .menu__item.focus, .menu__item.traverse, .menu__item.hover {
                 background: #c22222;
@@ -174,7 +181,7 @@
             }
             
 			.wrap__left {
-				box-shadow: 15px 0px 20px 0px #141414 !important;
+				box-shadow: 15px 0px 20px 0px #0a0a0a !important;
 			}
 			
             .modal__content {
