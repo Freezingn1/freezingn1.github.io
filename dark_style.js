@@ -18,13 +18,13 @@
     function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
-            'background': 'url(https://lampac666.ucoz.net/lampishe.png)'
+            'background': '#141414'
         });
 
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
-                'background-color': 'url(https://lampac666.ucoz.net/lampishe.png)'
+                'background-color': '#141414'
             });
         });
 
@@ -119,19 +119,6 @@
                 color: #fff;
             }
             
-			.settings__content {
-				background: url(https://lampac666.ucoz.net/lampishe.png);
-				background-size: 100% 100%;
-			}
-			
-			.selectbox__content {
-				background: url(https://lampac666.ucoz.net/lampishe.png);
-				background-size: 100% 100%;
-			}
-			
-			.welcome {
-				background-size: 100% 100%;
-			}
             
             .menu__item.focus, .menu__item.traverse, .menu__item.hover {
                 background: #c22222;
@@ -187,7 +174,7 @@
             }
             
 			.wrap__left {
-				box-shadow: 15px 0px 20px 0px #0a0a0a !important;
+				box-shadow: 15px 0px 20px 0px #141414 !important;
 			}
 			
             .modal__content {
