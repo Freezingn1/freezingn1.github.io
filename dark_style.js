@@ -264,10 +264,6 @@
                 box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
             }
             
-			.welcome {
-				background: #000 url(https://sun9-73.userapi.com/impg/oQR8UfQpL9j-rlsMFR_bSXDjNNmFKUfkAahVFA/QgxtlTTZj4Y.jpg?size=1920x1080&quality=95&sign=beb0fbe2abc36bc05f704721306fda18&type=album) no-repeat 50% 50% !important;
-				background-size: 100% 100% !important;
-			}
             
             body {
                 background: #141414;
