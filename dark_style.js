@@ -8,8 +8,7 @@
      */
     function safeAddStyle(element, styles) {
         Object.keys(styles).forEach(property => {
-            // Убрали 'important' чтобы не перекрывать другие стили
-            element.style.setProperty(property, styles[property]);
+            element.style.setProperty(property, styles[property], 'important');
         });
     }
 
@@ -17,12 +16,15 @@
      * Основная функция применения стилей к элементам интерфейса
      */
     function applyStyles() {
-        // Убрали жёсткое задание фона для body
-        
+        // Устанавливаем тёмный фон для body
+        safeAddStyle(document.body, {
+            'background': '#141414'
+        });
+
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
-                'background-color': 'var(--background-main, #141414)'
+                'background-color': '#141414'
             });
         });
 
@@ -162,7 +164,7 @@
             }
             
             .online-prestige.focus::after {
-                border: solid .3em #c22222;
+                border: solid .3em #c22222 !important;
                 background-color: #871818;
             }
             
@@ -171,22 +173,22 @@
                 border: 0.3em solid #c22222;
             }
             
-            .wrap__left {
-                box-shadow: 15px 0px 20px 0px #141414;
-            }
-            
+			.wrap__left {
+				box-shadow: 15px 0px 20px 0px #141414 !important;
+			}
+			
             .modal__content {
-                background-color: var(--background-main, #141414);
+                background-color: #141414 !important;
             }			
             
             .card-more.focus .card-more__box::after {
                 border: 0.3em solid #c22222;
             }
-            
-            .card__type {
-                background: #c22222;
-            }
-            
+			
+			.card__type {
+				background: #c22222 !important;
+			}
+			
             .new-interface .card.card--wide+.card-more .card-more__box {
                 background: rgba(0, 0, 0, 0.3);
             }
@@ -202,29 +204,29 @@
             .extensions__item.focus:after {
                 border: 0.3em solid #c22222;
             }
-            
-            .console {
-                background: var(--background-main, #141414);
-            }
+			
+			.console {
+				background: #141414;
+			}
 
             .extensions__block-add {
                 background-color: #181818;
             }
             
             .settings-input--free {
-                background-color: var(--background-main, #141414);
+                background-color: #141414;
             }
 
             .settings-input__content {
-                background: var(--background-main, #141414);
+                background: #141414;
             }
             
             .extensions {
-                background-color: var(--background-main, #141414);
+                background-color: #141414;
             }
             
             .modal__content {
-                background-color: var(--background-main, #141414);
+                background-color: #141414;
                 box-shadow: 0px 0px 20px 0px rgb(0 0 0);
                 max-height: 90vh;
                 overflow: hidden;
@@ -238,15 +240,15 @@
             
             
             .modal__title {
-                background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text;
+                background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text !important;
             }
             
             .notification-item {
-                border: 2px solid #c22222;
+                border: 2px solid #c22222 !important;
             }
             
             .notification-date {
-                background: #c22222;
+                background: #c22222 !important;
             }
             
             .modal {
@@ -260,6 +262,11 @@
             
             .noty__body {
                 box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
+            }
+            
+            
+            body {
+                background: #141414;
             }
                         
             /* Градиентный текст для рейтинга */
@@ -357,6 +364,7 @@
         if (style) style.remove();
         
         // Восстанавливаем оригинальные стили
+        document.body.style.removeProperty('background');
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer, .bookmarks-folder__layer').forEach(el => {
             el.style.removeProperty('background-color');
             el.style.removeProperty('background');
