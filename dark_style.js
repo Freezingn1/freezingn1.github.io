@@ -362,7 +362,7 @@
         if (style) style.remove();
         
         // Восстанавливаем оригинальные стили
-        document.body.style.removeProperty('background');
+
         document.querySelectorAll('.selectbox__content, .layer--height, .selector__body, .modal-layer, .bookmarks-folder__layer').forEach(el => {
             el.style.removeProperty('background-color');
             el.style.removeProperty('background');
