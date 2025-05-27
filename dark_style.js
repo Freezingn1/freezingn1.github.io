@@ -124,6 +124,14 @@
                 background: #c22222;
                 color: #fff;
             }
+			
+			.card__marker > span {
+				max-width: 8em
+			}
+			
+			.bookmarks-folder__layer {
+				background-color: rgba(0, 0, 0, 0.3) !important;
+			}
             
             .menu__item.focus .menu__ico path[fill], .menu__item.focus .menu__ico rect[fill], .menu__item.focus .menu__ico circle[fill], .menu__item.traverse .menu__ico path[fill], .menu__item.traverse .menu__ico rect[fill], .menu__item.traverse .menu__ico circle[fill], .menu__item.hover .menu__ico path[fill], .menu__item.hover .menu__ico rect[fill], .menu__item.hover .menu__ico circle[fill] {
                 fill: #ffffff;
