@@ -126,7 +126,7 @@
             }
 			
 			.card__marker > span {
-				max-width: 8em
+				max-width: 11em
 			}
 			
 			.bookmarks-folder__layer {
