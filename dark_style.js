@@ -184,10 +184,7 @@
 			.wrap__left {
 				box-shadow: 15px 0px 20px 0px #141414 !important;
 			}
-			
-            .modal__content {
-                background-color: #141414 !important;
-            }			
+						
             
             .card-more.focus .card-more__box::after {
                 border: 0.3em solid #c22222;
@@ -239,8 +236,8 @@
             }
             
             .modal__content {
-                background-color: #141414;
-                box-shadow: 0px 0px 20px 0px rgb(0 0 0);
+                background-color: #141414 !important;
+                box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 50%);
                 max-height: 90vh;
                 overflow: hidden;
             }
