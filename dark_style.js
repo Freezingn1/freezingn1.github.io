@@ -276,6 +276,28 @@
 			.menu__list {
 				padding-left: 0;
 			}
+			
+			body.advanced--animation .head .head__action.focus,
+body.advanced--animation .head .head__action.hover,
+body.advanced--animation .menu .menu__item.focus,
+body.advanced--animation .menu .menu__item.hover,
+body.advanced--animation .full-start__button.focus,
+body.advanced--animation .full-start__button.hover,
+body.advanced--animation .simple-button.focus,
+body.advanced--animation .simple-button.hover,
+body.advanced--animation .full-descr__tag.focus,
+body.advanced--animation .full-descr__tag.hover,
+body.advanced--animation .tag-count.focus,
+body.advanced--animation .tag-count.hover,
+body.advanced--animation .full-review.focus,
+body.advanced--animation .full-review.hover,
+body.advanced--animation .full-review-add.focus,
+body.advanced--animation .full-review-add.hover {
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+}
 
             .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
                 border: 0.3em solid #c22222;
