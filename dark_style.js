@@ -22,7 +22,7 @@
         });
 
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
-        document.querySelectorAll('.selectbox__content, .selector__body, .modal-layer').forEach(el => {
+        document.querySelectorAll('.selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
                 'background-color': '#141414'
             });
@@ -249,6 +249,7 @@
 				width: 35%;
 				display: flex;
 				border-radius: 2em;
+				background: #161616;
 			}
 			.scroll--mask .scroll__content {
 				padding: 2.5em 0;
@@ -431,7 +432,7 @@ body.advanced--animation .full-review-add.hover {
         
         // Восстанавливаем оригинальные стили
         document.body.style.removeProperty('background');
-        document.querySelectorAll('.selectbox__content, .selector__body, .modal-layer, .bookmarks-folder__layer').forEach(el => {
+        document.querySelectorAll('.selector__body, .modal-layer, .bookmarks-folder__layer').forEach(el => {
             el.style.removeProperty('background-color');
             el.style.removeProperty('background');
         });
