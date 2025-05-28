@@ -243,27 +243,32 @@
             }
             
             .settings__content, .selectbox__content {
-    position: fixed;
-    top: 2em;
-    right: -100%;
-    width: 35%;
-    display: flex;
-    border-radius: 2em;
-}
-.scroll--mask .scroll__content {
-    padding: 2.5em 0;
-}
-.settings__title, .selectbox__title {
-    font-size: 2.5em;
-    font-weight: 300;
-    text-align: center;
-}
-.scroll--mask {
-    -webkit-mask-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0)), color-stop(8%, rgb(255, 255, 255)), color-stop(92%, rgb(255, 255, 255)), to(rgba(255, 255, 255, 0)));
-    -webkit-mask-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
-    mask-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0)), color-stop(8%, rgb(255, 255, 255)), color-stop(92%, rgb(255, 255, 255)), to(rgba(255, 255, 255, 0)));
-    mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
-}
+				position: fixed;
+				top: 2em;
+				right: -100%;
+				width: 35%;
+				display: flex;
+				border-radius: 2em;
+			}
+			.scroll--mask .scroll__content {
+				padding: 2.5em 0;
+			}
+			.settings__title, .selectbox__title {
+				font-size: 2.5em;
+				font-weight: 300;
+				text-align: center;
+			}
+			.scroll--mask {
+				-webkit-mask-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0)), color-stop(8%, rgb(255, 255, 255)), color-stop(92%, rgb(255, 255, 255)), to(rgba(255, 255, 255, 0)));
+				-webkit-mask-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
+				mask-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0)), color-stop(8%, rgb(255, 255, 255)), color-stop(92%, rgb(255, 255, 255)), to(rgba(255, 255, 255, 0)));
+				mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
+			}
+			
+			.settings__title, .selectbox__title {
+				margin-bottom: 0.2em;
+				margin-top: 0.2em;
+			}
 
             .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
                 border: 0.3em solid #c22222;
