@@ -251,9 +251,7 @@
 				border-radius: 2em;
 				background: #161616;
 			}
-			.scroll--mask .scroll__content {
-				padding: 2.5em 0;
-			}
+
 			.settings__title, .selectbox__title {
 				font-size: 2.5em;
 				font-weight: 300;
