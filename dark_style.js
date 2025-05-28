@@ -269,6 +269,13 @@
 				margin-bottom: 0.2em;
 				margin-top: 0.2em;
 			}
+			
+			.menu__item {
+				border-radius: 0em 15em 14em 0em;
+			}
+			.menu__list {
+				padding-left: 0;
+			}
 
             .extensions__block-empty.focus:after, .extensions__block-add.focus:after {
                 border: 0.3em solid #c22222;
