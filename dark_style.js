@@ -208,6 +208,11 @@
             .extensions__item {
                 background-color: #181818;
             }
+			
+			.modal {
+				-webkit-backdrop-filter: blur(0.5em);
+				backdrop-filter: blur(0.5em);
+			}
 
             .extensions__item.focus:after {
                 border: 0.3em solid #c22222;
