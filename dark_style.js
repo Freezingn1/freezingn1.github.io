@@ -15,7 +15,7 @@
     /**
      * Основная функция применения стилей к элементам интерфейса
      */
-  /*  function applyStyles() {
+    function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
             'background': '#141414'
@@ -35,7 +35,7 @@
                 'background': 'rgba(0, 0, 0, 0.3)'
             });
         }
-    } */
+    }
 
     /**
      * Добавляет CSS стили для карточек через тег <style>
@@ -303,29 +303,7 @@ body.advanced--animation .full-review-add.hover {
                 border: 0.3em solid #c22222;
             }
             
-            .body {
-            background: #141414 !important;
-        }
-
-        .selectbox__content {
-            background-color: #141414 !important;
-        }
-		
-		.layer--height {
-			background-color: #141414 !important;
-		}
-		
-		.selector__body {
-			background-color: #141414 !important;
-		}
-		
-		.modal-layer {
-			background-color: #141414 !important;
-		}
-		
-		.bookmarks-folder__layer {
-			background: rgba(0, 0, 0, 0.3) !important;
-		}
+            
             
             .modal__title {
                 background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text !important;
