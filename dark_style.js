@@ -112,18 +112,24 @@
             }		
             
             .tag-count.focus {
-                background-color: #c22222;
                 color: #fff;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
 
             .full-person.focus {
-                background-color: #c22222;
                 color: #fff;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
 
             .full-review.focus {
-                background-color: #c22222;
                 color: #fff;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             
