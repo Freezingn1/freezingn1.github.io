@@ -326,7 +326,9 @@
                 border: 0.3em solid #c22222;
             }
             
-            
+            .full-review-add.focus::after {
+				border: 0.3em solid #c22222;
+			}			
             
             .modal__title {
                 background: linear-gradient(rgb(221 204 204), rgb(194 34 34)) text !important;
