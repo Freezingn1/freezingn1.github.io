@@ -366,6 +366,61 @@
 					top: unset !important;
 				}
 			}
+			
+			@media screen and (max-width: 480px) {
+    ..ru-title-full:hover {
+        max-width: none !important;
+		top: unset !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .full-start-new__body {
+        text-align: center !important;
+    }
+}
+
+
+@media screen and (max-width: 580px) {
+    .full-start-new__buttons {
+        overflow: auto;
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        max-width: 100% !important;
+        margin: 0.5em auto !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .full-start-new__rate-line {
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        max-width: 100% !important;
+        margin: 0.5em auto !important;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .full-start-new__details {
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        max-width: 100% !important;
+        margin: 0.5em auto !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+	.full-start-new__reactions {
+		display: flex !important;
+		justify-content: center !important;
+		flex-wrap: wrap !important;
+		max-width: 100% !important;
+		margin: 0.5em auto !important;
+	}
+}
             
             .noty__body {
                 box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
