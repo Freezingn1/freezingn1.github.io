@@ -351,6 +351,14 @@
                 bottom: 0;
                 align-items: center;
             }
+			
+			.card-episode.focus .full-episode::after {
+				left: -0.2em;
+				top: -0.2em;
+				right: -0.2em;
+				bottom: -0.2em;
+				border: 0.3em solid #c22222;
+			}
             
             .noty__body {
                 box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
