@@ -254,11 +254,11 @@
 				overflow-y: auto;
 			}
 
-			.settings__title, .selectbox__title {
+			/* .settings__title, .selectbox__title {
 				font-size: 2.5em;
 				font-weight: 300;
 				text-align: center;
-			}
+			} */
 			.scroll--mask {
 				-webkit-mask-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0)), color-stop(8%, rgb(255, 255, 255)), color-stop(92%, rgb(255, 255, 255)), to(rgba(255, 255, 255, 0)));
 				-webkit-mask-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
