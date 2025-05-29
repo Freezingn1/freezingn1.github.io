@@ -443,6 +443,12 @@
     }
 }
 
+@media screen and (max-width: 480px) {
+    .full-start-new__rate-line {
+        padding-top: 0.5em !important;
+    }
+}
+
 .navigation-bar__body {
     background: #1c1c1c;
 }
