@@ -241,7 +241,6 @@
 				position: fixed;
 				top: 2em;
 				right: -100%;
-				width: 35%;
 				display: flex;
 				border-radius: 2em;
 				background: #161616;
