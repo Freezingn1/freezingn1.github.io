@@ -375,6 +375,12 @@
 }
 
 @media screen and (max-width: 480px) {
+	.ru-title-full:hover {
+		max-width: none !important;
+	}
+}
+
+@media screen and (max-width: 480px) {
     .full-start-new__body {
         text-align: center !important;
     }
