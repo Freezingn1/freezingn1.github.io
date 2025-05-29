@@ -202,7 +202,9 @@
             }
 			
 			.card__type {
-				background: #c22222 !important;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27) !important; 
 			}
 			
             .new-interface .card.card--wide+.card-more .card-more__box {
