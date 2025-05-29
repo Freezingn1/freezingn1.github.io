@@ -80,11 +80,15 @@
             }
             
             .torrent-serial.focus {
-                background-color: #c22222;
+                background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             .torrent-file.focus {
-                background-color: #c22222;
+                background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27);
             }
             
             .torrent-item.focus::after {
@@ -174,14 +178,16 @@
                 opacity: 0.80;
             }
             
-            .noty {
-                background: #c22222;
+            .noty {              
                 color: #ffffff;
+				#c22222
             }
             
             /* Цвет иконок правый угол */
             .head__action.focus {
-                background-color: #c22222;
+                background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27);
                 color: #fff;
             }
             .selector:hover {
@@ -218,7 +224,9 @@
             }
             
             .helper {
-                background: #c22222;
+                background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27);
             }
             
             .extensions__item {
@@ -330,7 +338,9 @@
             }
             
             .notification-date {
-                background: #c22222 !important;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27) !important;
             }
             
             .modal {
