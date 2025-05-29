@@ -377,6 +377,7 @@
 @media screen and (max-width: 480px) {
 	.ru-title-full:hover {
 		max-width: none !important;
+		text-align: center !important;
 	}
 }
 
