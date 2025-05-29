@@ -432,6 +432,7 @@
 @media screen and (max-width: 480px) {
     .selectbox__content {
         left: 0 !important;
+		top: unset !important;
     }
 }
             
