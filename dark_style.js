@@ -243,7 +243,7 @@
 				right: -100%;
 				display: flex;
 				border-radius: 2em;
-				background: #161616;
+				background: #1a1a1a;
 			}
 
 			.settings__title, .selectbox__title {
