@@ -354,6 +354,9 @@
             
             .noty__body {
                 box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             
