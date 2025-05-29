@@ -427,6 +427,12 @@
 		margin: 0.5em auto !important;
 	}
 }
+
+@media screen and (max-width: 480px) {
+    .selectbox__content {
+        left: 0 !important;
+    }
+}
             
             .noty__body {
                 box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
