@@ -237,6 +237,10 @@
                 border: 0.3em solid #c22222;
             }
 			
+			.torrent-item {
+				background-color: rgb(0 0 0 / 0%);
+			}
+			
 			.console {
 				background: #141414;
 			}
