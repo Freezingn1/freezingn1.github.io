@@ -67,6 +67,7 @@
             .settings-param.focus {
                 background-color: #c22222;
                 color: #fff;
+				border-radius: 1.2em;
             }
             
             .simple-button.focus {
@@ -239,11 +240,18 @@
             
             .settings__content, .selectbox__content {
 				position: fixed;
-				top: 2em;
 				right: -100%;
 				display: flex;
-				border-radius: 2em;
 				background: #1a1a1a;
+				top: 1em;
+				left: 98%;
+				max-height: calc(100vh - 2em);
+				border-radius: 1.2em;
+				box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+				padding: 0.5em;
+				transform: translateX(100%);
+				transition: transform 0.3s ease;
+				overflow-y: auto;
 			}
 
 			.settings__title, .selectbox__title {
@@ -389,12 +397,14 @@
             .selectbox-item.focus {
                 background-color: #c22222;
                 color: #fff;
+				border-radius: 1.2em;
             }
             
             /* Стиль для папки настроек в фокусе */
             .settings-folder.focus {
                 background-color: #c22222;
                 color: #fff;
+				border-radius: 1.2em;
             }
         `;
         document.head.appendChild(style);
