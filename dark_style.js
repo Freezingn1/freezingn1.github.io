@@ -363,6 +363,7 @@
 			@media screen and (max-width: 480px) {
 				.settings__content {
 					left: 0 !important;
+					top: unset !important;
 				}
 			}
             
