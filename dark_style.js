@@ -65,14 +65,18 @@
             }
             
             .settings-param.focus {
-                background-color: #c22222;
                 color: #fff;
 				border-radius: 1.2em;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             .simple-button.focus {
-                background-color: #c22222;
                 color: #fff;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             .torrent-serial.focus {
@@ -91,10 +95,12 @@
                 right: -0.5em;
                 bottom: -0.5em;
                 border: 0.3em solid #c22222;
-                background-color: #c22222;
                 -webkit-border-radius: 0.7em;
                 border-radius: 0.7em;
                 z-index: -1;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
                     
             .explorer__left {
@@ -122,8 +128,10 @@
             
             
             .menu__item.focus, .menu__item.traverse, .menu__item.hover {
-                background: #c22222;
                 color: #fff;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
 			
 			.card__marker > span {
@@ -384,10 +392,12 @@
             }
             
             .full-start__button.focus {
-                background: #c22222;
                 color: white;
                 background-size: 200% 200%;
                 animation: gradientAnimation 5s ease infinite;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             /* Стиль для элемента selectbox в фокусе */
@@ -399,9 +409,11 @@
             
             /* Стиль для папки настроек в фокусе */
             .settings-folder.focus {
-                background-color: #c22222;
                 color: #fff;
 				border-radius: 1.2em;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
         `;
         document.head.appendChild(style);
