@@ -151,7 +151,9 @@
                 -webkit-box-shadow: 0 0 0 0.2em #c22222;
                 -moz-box-shadow: 0 0 0 0.2em #c22222;
                 box-shadow: 0 0 0 0.2em #c22222;
-                background: #871818;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             .menu__item.focus .menu__ico [stroke], .menu__item.traverse .menu__ico [stroke], .menu__item.hover .menu__ico [stroke] {
@@ -402,9 +404,11 @@
             
             /* Стиль для элемента selectbox в фокусе */
             .selectbox-item.focus {
-                background-color: #c22222;
                 color: #fff;
 				border-radius: 1.2em;
+				background: #e52d27;  
+				background: -webkit-linear-gradient(to right, #b31217, #e52d27); 
+				background: linear-gradient(to right, #b31217, #e52d27); 
             }
             
             /* Стиль для папки настроек в фокусе */
