@@ -258,8 +258,6 @@
 				font-size: 2.5em;
 				font-weight: 300;
 				text-align: center;
-				/* margin-bottom: 0.2em;
-				margin-top: 0.2em; */
 			} 
 			
 			.scroll--mask {
