@@ -180,7 +180,6 @@
             
             .noty {              
                 color: #ffffff;
-				#c22222
             }
             
             /* Цвет иконок правый угол */
@@ -353,10 +352,6 @@
             }
 			
 			.card-episode.focus .full-episode::after {
-				left: -0.2em;
-				top: -0.2em;
-				right: -0.2em;
-				bottom: -0.2em;
 				border: 0.3em solid #c22222;
 			}
 			
