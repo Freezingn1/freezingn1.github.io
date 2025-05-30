@@ -18,13 +18,13 @@
     function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
-            'background': '#141414'
+            'background': '#0a0a0a'
         });
 
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
-                'background-color': '#141414'
+                'background-color': '#0a0a0a'
             });
         });
 
