@@ -18,13 +18,13 @@
     function applyStyles() {
         // Устанавливаем тёмный фон для body
         safeAddStyle(document.body, {
-            'background': '#0a0a0a'
+            'background': '#141414'
         });
 
         // 1. Тёмный фон для элементов интерфейса (без перезаписи других стилей)
         document.querySelectorAll('.selector__body, .modal-layer').forEach(el => {
             safeAddStyle(el, {
-                'background-color': '#0a0a0a'
+                'background-color': '#141414'
             });
         });
 
@@ -204,7 +204,7 @@
             }
             
 			.wrap__left {
-				box-shadow: 15px 0px 20px 0px #0a0a0a !important;
+				box-shadow: 15px 0px 20px 0px #141414 !important;
 			}
 						
             
@@ -237,7 +237,7 @@
             }			
 			
 			.console {
-				background: #0a0a0a;
+				background: #141414;
 			}
 
             .extensions__block-add {
@@ -245,19 +245,19 @@
             }
             
             .settings-input--free {
-                background-color: #0a0a0a;
+                background-color: #141414;
             }
 
             .settings-input__content {
-                background: #0a0a0a;
+                background: #141414;
             }
             
             .extensions {
-                background-color: #0a0a0a;
+                background-color: #141414;
             }
             
             .modal__content {
-                background-color: #0a0a0a !important;
+                background-color: #141414 !important;
                 box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 50%);
                 max-height: 90vh;
                 overflow: hidden;
@@ -466,7 +466,7 @@
             
             
             body {
-                background: #0a0a0a;
+                background: #141414;
             }
                         
             /* Градиентный текст для рейтинга */
