@@ -204,7 +204,7 @@
             }
             
 			.wrap__left {
-				box-shadow: 15px 0px 20px 0px #141414 !important;
+				box-shadow: 15px 0px 20px 0px #0a0a0a !important;
 			}
 						
             
@@ -237,7 +237,7 @@
             }			
 			
 			.console {
-				background: #141414;
+				background: #0a0a0a;
 			}
 
             .extensions__block-add {
@@ -245,19 +245,19 @@
             }
             
             .settings-input--free {
-                background-color: #141414;
+                background-color: #0a0a0a;
             }
 
             .settings-input__content {
-                background: #141414;
+                background: #0a0a0a;
             }
             
             .extensions {
-                background-color: #141414;
+                background-color: #0a0a0a;
             }
             
             .modal__content {
-                background-color: #141414 !important;
+                background-color: #0a0a0a !important;
                 box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 50%);
                 max-height: 90vh;
                 overflow: hidden;
@@ -466,7 +466,7 @@
             
             
             body {
-                background: #141414;
+                background: #0a0a0a;
             }
                         
             /* Градиентный текст для рейтинга */
