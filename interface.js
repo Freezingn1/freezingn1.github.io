@@ -153,26 +153,46 @@ function stringHash(str) {
         };
         
         this.applyLogo = function(data, logo) {
-    if (isDestroyed || !html) return;
-
-    const titleElement = html.find('.new-interface-info__title');
-    if (!titleElement.length || !logo?.file_path) {
-        titleElement.text(data.title || '');
-        return;
-    }
-
-    const imageUrl = Lampa.TMDB.image("/t/p/w185" + logo.file_path);
-    if (titleElement.data('current-logo') === imageUrl) return;
+            if (isDestroyed || !html) return;
     
-    titleElement.data('current-logo', imageUrl)
-        .html(`<img class="new-interface-logo" 
-                  src="${imageUrl}" 
-                  alt="${data.title}"
-                  loading="eager"
-                  style="opacity:0;transition:opacity 0.3s ease"
-                  onload="this.style.opacity=1"
-                  onerror="this.replaceWith(document.createTextNode('${data.title.replace(/"/g, '&quot;')}'))" />`);
-};
+            const titleElement = html.find('.new-interface-info__title');
+            if (!titleElement.length) return;
+    
+            if (!logo || !logo.file_path) {
+                titleElement.text(data.title);
+                return;
+            }
+
+            const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+
+            if (titleElement.data('current-logo') === imageUrl) return;
+            titleElement.data('current-logo', imageUrl);
+
+            const tempImg = new Image();
+            tempImg.src = imageUrl;
+
+            tempImg.onload = () => {
+                if (isDestroyed || !html) return;
+                
+                titleElement.html(`
+                    <img class="new-interface-logo logo-loading" 
+                         src="${imageUrl}" 
+                         alt="${data.title}"
+                         loading="lazy"
+                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+                `);
+
+                setTimeout(() => {
+                    const logoImg = titleElement.find('.new-interface-logo');
+                    if (logoImg.length) logoImg.removeClass('logo-loading');
+                }, 10);
+            };
+
+            tempImg.onerror = () => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            };
+        };
 
         this.draw = function (data) {
             if (isDestroyed || !html) {
