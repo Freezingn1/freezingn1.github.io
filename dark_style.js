@@ -392,6 +392,9 @@
                 
                 .full-start-new__rate-line {
                     padding-top: 0.5em !important;
+					display: flex;
+					justify-content: center;
+					margin-bottom: 0em;
                 }
                 
                 .full-start-new__tagline {
