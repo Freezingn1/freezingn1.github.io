@@ -437,17 +437,19 @@ function stringHash(str) {
             item.onFocus = function (elem) {
                 if (isDestroyed) return;
                 info.update(elem);
-                // Вызываем Lampa.Background.change здесь
+                // Вызываем _this3.background(elem) для обновления фона внутри компонента
+                _this3.background(elem);
+                // Также вызываем Lampa.Background.change для обновления общего фона Lampa
                 Lampa.Background.change(Lampa.Api.img(elem.backdrop_path, 'w1280'));
-                // Удалено _this3.background(elem); так как это избыточно, если Lampa.Background.change обрабатывает основной фон
             };
 
             item.onHover = function (elem) {
                 if (isDestroyed) return;
                 info.update(elem);
-                // Вызываем Lampa.Background.change здесь
+                // Вызываем _this3.background(elem) для обновления фона внутри компонента
+                _this3.background(elem);
+                // Также вызываем Lampa.Background.change для обновления общего фона Lampa
                 Lampa.Background.change(Lampa.Api.img(elem.backdrop_path, 'w1280'));
-                // Удалено _this3.background(elem); так как это избыточно, если Lampa.Background.change обрабатывает основной фон
             };
 
             item.onFocusMore = function() {
