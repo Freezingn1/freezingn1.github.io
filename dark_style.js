@@ -376,8 +376,15 @@
             @media screen and (max-width: 480px) {
                 .settings__content,
                 .selectbox__content {
-                    left: 0 !important;
-                    top: unset !important;
+                left: 0 !important;
+                top: unset !important;
+				-webkit-border-top-left-radius: 2em;
+				-moz-border-radius-topleft: 2em;
+				border-top-left-radius: 2em !important;
+				-webkit-border-top-right-radius: 2em;
+				-moz-border-radius-topright: 2em;
+				border-top-right-radius: 2em !important;
+				border-radius: inherit !important;
                 }
                 
                 .ru-title-full,
