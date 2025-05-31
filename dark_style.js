@@ -257,8 +257,7 @@
             }
             
             .modal__content {
-                background-color: #141414 !important;
-                box-shadow: 0px 0px 20px 0px rgb(0 0 0 / 50%);
+                background-color: #1a1a1a !important;
                 max-height: 90vh;
                 overflow: hidden;
             }
@@ -272,7 +271,6 @@
 				left: 98%;
 				max-height: calc(100vh - 2em);
 				border-radius: 1.2em;
-				box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
 				padding: 0.5em;
 				transform: translateX(100%);
 				transition: transform 0.3s ease;
