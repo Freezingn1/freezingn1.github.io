@@ -3,7 +3,62 @@
 
     // Кэширующая функция для запросов
     function fetchWithCache(network, url, callback, fallback) {
-        const cacheKey = 'tmdb_cache_' + Lampa.Utils.md5(url);
+    // Заменяем Lampa.Utils.md5 на простой хеш из строки
+    const cacheKey = 'tmdb_cache_' + stringHash(url);
+    const cached = Lampa.Storage.get(cacheKey);
+    const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
+    
+    if (cached && cached.timestamp > Date.now() - cacheTime) {
+        callback(cached.data);
+        return;
+    }
+    
+    network.silent(url, (data) => {
+        Lampa.Storage.set(cacheKey, {
+            timestamp: Date.now(),
+            data: data
+        });
+        callback(data);
+    }, () => {
+        if (cached) callback(cached.data);
+        else if (fallback) fallback();
+    });
+}
+
+// Добавляем простую функцию для создания хеша из строки
+function stringHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+}
+
+    // Основная функция для создания интерфейса информации о контенте
+    function create() {
+    var html;
+    var timer;
+    var network = new Lampa.Reguest();
+    var loaded = {};
+    var isDestroyed = false;
+    var intersectionObserver;
+
+    // Простая функция для создания хеша из строки
+    function stringHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash.toString();
+    }
+
+    // Кэширующая функция для запросов
+    function fetchWithCache(network, url, callback, fallback) {
+        const cacheKey = 'tmdb_cache_' + stringHash(url);
         const cached = Lampa.Storage.get(cacheKey);
         const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
         
@@ -23,15 +78,6 @@
             else if (fallback) fallback();
         });
     }
-
-    // Основная функция для создания интерфейса информации о контенте
-    function create() {
-        var html;
-        var timer;
-        var network = new Lampa.Reguest();
-        var loaded = {};
-        var isDestroyed = false;
-        var intersectionObserver;
 
         this.create = function () {
             if (isDestroyed) return;
