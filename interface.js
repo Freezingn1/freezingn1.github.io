@@ -3,61 +3,6 @@
 
     // Кэширующая функция для запросов
     function fetchWithCache(network, url, callback, fallback) {
-    // Заменяем Lampa.Utils.md5 на простой хеш из строки
-    const cacheKey = 'tmdb_cache_' + stringHash(url);
-    const cached = Lampa.Storage.get(cacheKey);
-    const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
-    
-    if (cached && cached.timestamp > Date.now() - cacheTime) {
-        callback(cached.data);
-        return;
-    }
-    
-    network.silent(url, (data) => {
-        Lampa.Storage.set(cacheKey, {
-            timestamp: Date.now(),
-            data: data
-        });
-        callback(data);
-    }, () => {
-        if (cached) callback(cached.data);
-        else if (fallback) fallback();
-    });
-}
-
-// Добавляем простую функцию для создания хеша из строки
-function stringHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString();
-}
-
-    // Основная функция для создания интерфейса информации о контенте
-    function create() {
-    var html;
-    var timer;
-    var network = new Lampa.Reguest();
-    var loaded = {};
-    var isDestroyed = false;
-    var intersectionObserver;
-
-    // Простая функция для создания хеша из строки
-    function stringHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash.toString();
-    }
-
-    // Кэширующая функция для запросов
-    function fetchWithCache(network, url, callback, fallback) {
         const cacheKey = 'tmdb_cache_' + stringHash(url);
         const cached = Lampa.Storage.get(cacheKey);
         const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
@@ -78,6 +23,26 @@ function stringHash(str) {
             else if (fallback) fallback();
         });
     }
+
+    // Добавляем простую функцию для создания хеша из строки
+    function stringHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash.toString();
+    }
+
+    // Основная функция для создания интерфейса информации о контенте
+    function create() {
+        var html;
+        var timer;
+        var network = new Lampa.Reguest();
+        var loaded = {};
+        var isDestroyed = false;
+        var intersectionObserver;
 
         this.create = function () {
             if (isDestroyed) return;
@@ -292,6 +257,7 @@ function stringHash(str) {
         var background_timer;
         var isDestroyed = false;
         var intersectionObserver;
+        var visibilityHandler;
 
         this.create = function () {};
 
@@ -351,6 +317,14 @@ function stringHash(str) {
             html.append(info.render());
             html.append(scroll.render());
 
+            // Добавляем обработчик изменения видимости
+            visibilityHandler = function() {
+                if (!document.hidden && !isDestroyed && items.length) {
+                    items[active].toggle();
+                }
+            };
+            document.addEventListener('visibilitychange', visibilityHandler);
+
             if (newlampa) {
                 Lampa.Layer.update(html);
                 Lampa.Layer.visible(scroll.render(true));
@@ -368,39 +342,34 @@ function stringHash(str) {
         };
 
         this.background = function (elem) {
-        if (isDestroyed) return;
-        if (!elem || !elem.backdrop_path) return;
-
-        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-        clearTimeout(background_timer);
-        
-        // Если это тот же самый фон - пропускаем
-        if (new_background === background_last) return;
-        
-        background_last = new_background;
-        
-        // Создаем новое изображение для предзагрузки
-        var tempImg = new Image();
-        tempImg.src = new_background;
-        
-        tempImg.onload = function() {
             if (isDestroyed) return;
+            if (!elem || !elem.backdrop_path) return;
+
+            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+            clearTimeout(background_timer);
             
-            // Добавляем анимацию перехода
-            background_img.css({
-                'opacity': 0,
-                'transition': 'opacity 0.5s ease'
-            });
+            if (new_background === background_last) return;
             
-            // Меняем источник изображения
-            background_img.attr('src', new_background);
+            background_last = new_background;
             
-            // Плавное появление нового фона
-            background_timer = setTimeout(function() {
+            var tempImg = new Image();
+            tempImg.src = new_background;
+            
+            tempImg.onload = function() {
                 if (isDestroyed) return;
-                background_img.css('opacity', 0.6);
-            }, 50);
-        };
+                
+                background_img.css({
+                    'opacity': 0,
+                    'transition': 'opacity 0.5s ease'
+                });
+                
+                background_img.attr('src', new_background);
+                
+                background_timer = setTimeout(function() {
+                    if (isDestroyed) return;
+                    background_img.css('opacity', 0.6);
+                }, 50);
+            };
         };
 
         this.append = function (element) {
@@ -454,7 +423,22 @@ function stringHash(str) {
 
         this.back = function () {
             if (isDestroyed) return;
+            
+            // Явное восстановление фокуса перед возвратом
+            if (items.length && items[active]) {
+                items[active].toggle();
+                scroll.update(items[active].render());
+            }
+            
             Lampa.Activity.backward();
+            
+            // Дополнительное восстановление фокуса после возврата
+            setTimeout(() => {
+                if (!isDestroyed && items.length && items[active]) {
+                    items[active].toggle();
+                    scroll.update(items[active].render());
+                }
+            }, 100);
         };
 
         this.down = function () {
@@ -493,7 +477,12 @@ function stringHash(str) {
                     if (_this4.activity.canRefresh()) return false;
 
                     if (items.length) {
-                        items[active].toggle();
+                        // Улучшенная обработка фокуса
+                        if (document.activeElement && !$(document.activeElement).closest('.new-interface').length) {
+                            items[active].toggle(true); // Принудительный фокус
+                        } else {
+                            items[active].toggle();
+                        }
                     }
                 },
                 update: function update() {},
@@ -515,6 +504,14 @@ function stringHash(str) {
                 },
                 back: this.back
             });
+            
+            // Явно установить фокус при старте
+            setTimeout(() => {
+                if (!isDestroyed && items.length) {
+                    items[active].toggle();
+                }
+            }, 50);
+            
             Lampa.Controller.toggle('content');
         };
 
@@ -542,6 +539,9 @@ function stringHash(str) {
                 html.off();
                 html.find('*').off();
                 html.remove();
+            }
+            if (visibilityHandler) {
+                document.removeEventListener('visibilitychange', visibilityHandler);
             }
             items = null;
             network = null;
