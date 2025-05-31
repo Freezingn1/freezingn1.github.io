@@ -368,42 +368,39 @@ function stringHash(str) {
         };
 
         this.background = function (elem) {
-            if (isDestroyed) return;
+        if (isDestroyed) return;
+        if (!elem || !elem.backdrop_path) return;
 
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            clearTimeout(background_timer);
-            if (new_background == background_last) return;
+        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+        clearTimeout(background_timer);
+        
+        // Если это тот же самый фон - пропускаем
+        if (new_background === background_last) return;
+        
+        background_last = new_background;
+        
+        // Создаем новое изображение для предзагрузки
+        var tempImg = new Image();
+        tempImg.src = new_background;
+        
+        tempImg.onload = function() {
+            if (isDestroyed) return;
             
-            background_last = new_background;
-            background_img.removeClass('loaded');
+            // Добавляем анимацию перехода
+            background_img.css({
+                'opacity': 0,
+                'transition': 'opacity 0.5s ease'
+            });
             
-            if ('IntersectionObserver' in window) {
-                if (!intersectionObserver) {
-                    intersectionObserver = new IntersectionObserver((entries) => {
-                        if (entries[0].isIntersecting) {
-                            loadBackground();
-                            intersectionObserver.unobserve(background_img[0]);
-                        }
-                    }, { threshold: 0.1 });
-                }
-                intersectionObserver.observe(background_img[0]);
-            } else {
-                loadBackground();
-            }
+            // Меняем источник изображения
+            background_img.attr('src', new_background);
             
-            function loadBackground() {
-                const img = new Image();
-                img.src = new_background;
-                img.onload = function() {
-                    if (isDestroyed) return;
-                    background_img[0].src = new_background;
-                    background_img.addClass('loaded');
-                };
-                img.onerror = function() {
-                    if (isDestroyed) return;
-                    background_img.removeClass('loaded');
-                };
-            }
+            // Плавное появление нового фона
+            background_timer = setTimeout(function() {
+                if (isDestroyed) return;
+                background_img.css('opacity', 0.6);
+            }, 50);
+        };
         };
 
         this.append = function (element) {
@@ -437,19 +434,13 @@ function stringHash(str) {
             item.onFocus = function (elem) {
                 if (isDestroyed) return;
                 info.update(elem);
-                // Вызываем _this3.background(elem) для обновления фона внутри компонента
                 _this3.background(elem);
-                // Также вызываем Lampa.Background.change для обновления общего фона Lampa
-                Lampa.Background.change(Lampa.Api.img(elem.backdrop_path, 'w1280'));
             };
 
             item.onHover = function (elem) {
                 if (isDestroyed) return;
                 info.update(elem);
-                // Вызываем _this3.background(elem) для обновления фона внутри компонента
                 _this3.background(elem);
-                // Также вызываем Lampa.Background.change для обновления общего фона Lampa
-                Lampa.Background.change(Lampa.Api.img(elem.backdrop_path, 'w1280'));
             };
 
             item.onFocusMore = function() {
