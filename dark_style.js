@@ -384,7 +384,7 @@
 				-webkit-border-top-right-radius: 2em;
 				-moz-border-radius-topright: 2em;
 				border-top-right-radius: 2em !important;
-				border-radius: inherit !important;
+				border-radius: inherit;
                 }
                 
                 .ru-title-full,
