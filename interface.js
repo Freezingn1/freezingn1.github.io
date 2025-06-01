@@ -592,12 +592,16 @@
                 height: auto;
                 min-height: 1em;
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
-                opacity: 0;
-                transition: opacity 0.3s ease;
             }
             
-            .new-interface-logo.logo-loaded {
-                opacity: 1;
+            .new-interface-logo.logo-loading {
+                opacity: 0 !important;
+              //  transition: opacity 0.3s ease !important;
+            }
+            
+            .new-interface-logo {
+                opacity: 1 !important;
+            //    transition: opacity 0.3s ease !important;
             }
             
             .new-interface-info__details {
@@ -627,15 +631,14 @@
             }
             
             .new-interface .full-start__background {
-                opacity: 0;
-                transition: opacity 0.5s ease;
+                opacity: 0.6 !important;
+                transition: none !important;
+            }
+            
+            .new-interface .full-start__background {
                 height:109% !important;
                 left:0em !important;
                 top:-9.2% !important;
-            }
-            
-            .new-interface .full-start__background.loaded {
-                opacity: 0.6;
             }
             
             .new-interface .full-start__rate {
@@ -681,11 +684,6 @@
             }
             body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
                 animation: animation-trigger-enter 0.2s forwards
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
             }
             </style>
         `);				
