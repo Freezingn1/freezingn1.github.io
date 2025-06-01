@@ -175,17 +175,12 @@ function stringHash(str) {
                 if (isDestroyed || !html) return;
                 
                 titleElement.html(`
-                    <img class="new-interface-logo logo-loading" 
+                    <img class="new-interface-logo logo-fade-in" 
                          src="${imageUrl}" 
                          alt="${data.title}"
                          loading="lazy"
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `);
-
-                setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) logoImg.removeClass('logo-loading');
-                }, 10);
             };
 
             tempImg.onerror = () => {
@@ -368,39 +363,39 @@ function stringHash(str) {
         };
 
         this.background = function (elem) {
-        if (isDestroyed) return;
-        if (!elem || !elem.backdrop_path) return;
-
-        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-        clearTimeout(background_timer);
-        
-        // Если это тот же самый фон - пропускаем
-        if (new_background === background_last) return;
-        
-        background_last = new_background;
-        
-        // Создаем новое изображение для предзагрузки
-        var tempImg = new Image();
-        tempImg.src = new_background;
-        
-        tempImg.onload = function() {
             if (isDestroyed) return;
+            if (!elem || !elem.backdrop_path) return;
+
+            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+            clearTimeout(background_timer);
             
-            // Добавляем анимацию перехода
-            background_img.css({
-                'opacity': 0,
-                'transition': 'opacity 0.5s ease'
-            });
+            // Если это тот же самый фон - пропускаем
+            if (new_background === background_last) return;
             
-            // Меняем источник изображения
-            background_img.attr('src', new_background);
+            background_last = new_background;
             
-            // Плавное появление нового фона
-            background_timer = setTimeout(function() {
+            // Создаем новое изображение для предзагрузки
+            var tempImg = new Image();
+            tempImg.src = new_background;
+            
+            tempImg.onload = function() {
                 if (isDestroyed) return;
-                background_img.css('opacity', 0.6);
-            }, 50);
-        };
+                
+                // Добавляем анимацию перехода
+                background_img.css({
+                    'opacity': 0,
+                    'transition': 'opacity 0.8s ease'
+                });
+                
+                // Меняем источник изображения
+                background_img.attr('src', new_background);
+                
+                // Плавное появление нового фона
+                background_timer = setTimeout(function() {
+                    if (isDestroyed) return;
+                    background_img.css('opacity', 0.6);
+                }, 50);
+            };
         };
 
         this.append = function (element) {
@@ -599,6 +594,11 @@ function stringHash(str) {
 
         Lampa.Template.add('new_interface_style', `
             <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
             .new-interface .card--small.card--wide {
                 width: 18.3em;
             }
@@ -659,12 +659,8 @@ function stringHash(str) {
                 will-change: opacity;
             }
             
-            .new-interface-logo.logo-loading {
-                opacity: 0 !important;
-            }
-            
-            .new-interface-logo {
-                opacity: 1 !important;
+            .new-interface-logo.logo-fade-in {
+                animation: fadeIn 0.5s ease forwards;
             }
             
             .new-interface-info__details {
@@ -695,7 +691,7 @@ function stringHash(str) {
             
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
-                transition: none !important;
+                transition: opacity 0.8s ease !important;
             }
             
             .new-interface .full-start__background {
