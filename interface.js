@@ -24,7 +24,7 @@
         });
     }
 
-    // Функция для создания хеша из строки
+    // Добавляем простую функцию для создания хеша из строки
     function stringHash(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -55,10 +55,6 @@
                 return;
             }
 
-            // Сначала загружаем фон
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            
-            // Затем остальные элементы
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
             if (logoSetting !== 'hide') {
@@ -116,6 +112,7 @@
             }
 
             if (!isDestroyed && html) {
+                Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
                 this.load(data);
             }
         };
@@ -350,11 +347,6 @@
             
             background_last = new_background;
             
-            // Сначала установим низкокачественный фон
-            var lowResUrl = Lampa.Api.img(elem.backdrop_path, 'w200');
-            background_img.css('opacity', 0).attr('src', lowResUrl);
-            
-            // Затем загружаем полноценный фон
             var tempImg = new Image();
             tempImg.src = new_background;
             
@@ -372,11 +364,6 @@
                     if (isDestroyed) return;
                     background_img.css('opacity', 0.6);
                 }, 50);
-            };
-            
-            tempImg.onerror = function() {
-                if (isDestroyed) return;
-                background_img.css('opacity', 0.6);
             };
         };
 
@@ -432,6 +419,7 @@
         this.back = function () {
             if (isDestroyed) return;
             
+            // Явное восстановление фокуса перед возвратом
             if (items.length && items[active]) {
                 items[active].toggle();
                 scroll.update(items[active].render());
@@ -439,6 +427,7 @@
             
             Lampa.Activity.backward();
             
+            // Дополнительное восстановление фокуса после возврата
             setTimeout(() => {
                 if (!isDestroyed && items.length && items[active]) {
                     items[active].toggle();
@@ -483,8 +472,9 @@
                     if (_this4.activity.canRefresh()) return false;
 
                     if (items.length) {
+                        // Улучшенная обработка фокуса
                         if (document.activeElement && !$(document.activeElement).closest('.new-interface').length) {
-                            items[active].toggle(true);
+                            items[active].toggle(true); // Принудительный фокус
                         } else {
                             items[active].toggle();
                         }
@@ -510,6 +500,7 @@
                 back: this.back
             });
             
+            // Явно установить фокус при старте
             setTimeout(() => {
                 if (!isDestroyed && items.length) {
                     items[active].toggle();
@@ -702,9 +693,6 @@
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
                 transition: opacity 0.8s ease !important;
-                will-change: opacity, contents;
-                backface-visibility: hidden;
-                transform: translateZ(0);
             }
             
             .new-interface .full-start__background {
