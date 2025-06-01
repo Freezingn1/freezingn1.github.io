@@ -5,7 +5,7 @@
     function fetchWithCache(network, url, callback, fallback) {
         const cacheKey = 'tmdb_cache_' + stringHash(url);
         const cached = Lampa.Storage.get(cacheKey);
-        const cacheTime = 0; // 24 часа кэширования
+        const cacheTime = 0; // 0 часа кэширования.  24 * 60 * 60 * 1000; //24 часа кэширования. 60 * 60 * 1000; // 1 час
         
         if (cached && cached.timestamp > Date.now() - cacheTime) {
             callback(cached.data);
