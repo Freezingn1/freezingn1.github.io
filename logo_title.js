@@ -282,10 +282,6 @@
             }
             .full-start-new__title img {
                 object-fit: contain;
-				transition: opacity 0.3s ease;
-            }
-			.full-start-new__title img:hover {
-				opacity: 1 !important;
             }
         `;
         document.head.appendChild(style);
