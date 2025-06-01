@@ -1,48 +1,113 @@
 (function () {
     'use strict';
 
+    // Кэширующая функция для запросов
+    function fetchWithCache(network, url, callback, fallback) {
+    // Заменяем Lampa.Utils.md5 на простой хеш из строки
+    const cacheKey = 'tmdb_cache_' + stringHash(url);
+    const cached = Lampa.Storage.get(cacheKey);
+    const cacheTime = 0; // 0 часа кэширования
+    
+    if (cached && cached.timestamp > Date.now() - cacheTime) {
+        callback(cached.data);
+        return;
+    }
+    
+    network.silent(url, (data) => {
+        Lampa.Storage.set(cacheKey, {
+            timestamp: Date.now(),
+            data: data
+        });
+        callback(data);
+    }, () => {
+        if (cached) callback(cached.data);
+        else if (fallback) fallback();
+    });
+}
+
+// Добавляем простую функцию для создания хеша из строки
+function stringHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
+}
+
     // Основная функция для создания интерфейса информации о контенте
     function create() {
-        var html;
-        var timer;
-        var network = new Lampa.Reguest();
-        var loaded = {}; // Кэш загруженных данных
-        var isDestroyed = false; // Флаг уничтожения компонента
+    var html;
+    var timer;
+    var network = new Lampa.Reguest();
+    var loaded = {};
+    var isDestroyed = false;
+    var intersectionObserver;
 
-        // Создание HTML-структуры интерфейса
+    // Простая функция для создания хеша из строки
+    function stringHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash.toString();
+    }
+
+    // Кэширующая функция для запросов
+    function fetchWithCache(network, url, callback, fallback) {
+        const cacheKey = 'tmdb_cache_' + stringHash(url);
+        const cached = Lampa.Storage.get(cacheKey);
+        const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
+        
+        if (cached && cached.timestamp > Date.now() - cacheTime) {
+            callback(cached.data);
+            return;
+        }
+        
+        network.silent(url, (data) => {
+            Lampa.Storage.set(cacheKey, {
+                timestamp: Date.now(),
+                data: data
+            });
+            callback(data);
+        }, () => {
+            if (cached) callback(cached.data);
+            else if (fallback) fallback();
+        });
+    }
+
         this.create = function () {
             if (isDestroyed) return;
             html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
         };
 
-        // Обновление данных интерфейса
         this.update = function (data) {
             if (isDestroyed || !html) {
                 console.warn('Cannot update - component is destroyed or HTML not initialized');
                 return;
             }
 
-            // Получение настроек отображения логотипов
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
-            // Если логотипы не скрыты в настройках
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-                // Загрузка изображений (логотипов) с TMDB
-                network.silent(url, (images) => {
+                fetchWithCache(network, url, (images) => {
                     if (isDestroyed || !html) return;
 
                     let bestLogo = null;
                     
-                    // Поиск лучшего логотипа с учетом языковых предпочтений
                     if (images.logos && images.logos.length > 0) {
                         let bestRussianLogo = null;
                         let bestEnglishLogo = null;
                         let bestOtherLogo = null;
 
-                        images.logos.forEach(logo => {
+                        for (let i = 0; i < images.logos.length; i++) {
+                            const logo = images.logos[i];
                             if (logo.iso_639_1 === 'ru') {
                                 if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
                                     bestRussianLogo = logo;
@@ -56,11 +121,10 @@
                             else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
                                 bestOtherLogo = logo;
                             }
-                        });
+                        }
 
                         bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
 
-                        // Если в настройках выбраны только русские логотипы и русского нет - не показываем ничего
                         if (logoSetting === 'ru_only' && !bestRussianLogo) {
                             bestLogo = null;
                         }
@@ -68,7 +132,6 @@
                     
                     this.applyLogo(data, bestLogo);
                 }, () => {
-                    // Fallback: если не удалось загрузить логотипы, показываем просто текст
                     if (!isDestroyed && html) {
                         const titleElement = html.find('.new-interface-info__title');
                         if (titleElement.length) {
@@ -77,7 +140,6 @@
                     }
                 });
             } else if (!isDestroyed && html) {
-                // Если логотипы скрыты в настройках - показываем просто текст
                 const titleElement = html.find('.new-interface-info__title');
                 if (titleElement.length) {
                     titleElement.text(data.title);
@@ -90,14 +152,12 @@
             }
         };
         
-        // Применение логотипа к интерфейсу (оптимизированная версия)
         this.applyLogo = function(data, logo) {
             if (isDestroyed || !html) return;
     
             const titleElement = html.find('.new-interface-info__title');
             if (!titleElement.length) return;
     
-            // Если логотип не найден, показываем текст
             if (!logo || !logo.file_path) {
                 titleElement.text(data.title);
                 return;
@@ -105,15 +165,12 @@
 
             const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
-            // Проверка, не пытаемся ли загрузить то же самое лого повторно
             if (titleElement.data('current-logo') === imageUrl) return;
             titleElement.data('current-logo', imageUrl);
 
-            // Создаем временный элемент для предзагрузки
             const tempImg = new Image();
             tempImg.src = imageUrl;
 
-            // Обработка успешной загрузки
             tempImg.onload = () => {
                 if (isDestroyed || !html) return;
                 
@@ -121,25 +178,22 @@
                     <img class="new-interface-logo logo-loading" 
                          src="${imageUrl}" 
                          alt="${data.title}"
-                         loading="eager"
+                         loading="lazy"
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `);
 
-                // Плавное появление
                 setTimeout(() => {
                     const logoImg = titleElement.find('.new-interface-logo');
                     if (logoImg.length) logoImg.removeClass('logo-loading');
                 }, 10);
             };
 
-            // Обработка ошибки загрузки
             tempImg.onerror = () => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
         };
 
-        // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
         this.draw = function (data) {
             if (isDestroyed || !html) {
                 console.warn('Cannot draw - component is destroyed or HTML not initialized');
@@ -171,7 +225,6 @@
             }
         };
 
-        // Загрузка дополнительных данных о контенте
         this.load = function (data) {
             if (isDestroyed) return;
 
@@ -184,7 +237,7 @@
                 if (isDestroyed) return;
                 network.clear();
                 network.timeout(5000);
-                network.silent(url, function (movie) {
+                fetchWithCache(network, url, function (movie) {
                     if (isDestroyed) return;
                     loaded[url] = movie;
                     _this.draw(movie);
@@ -200,10 +253,11 @@
 
         this.empty = function () {};
 
-        // Очистка и уничтожение интерфейса
         this.destroy = function () {
             isDestroyed = true;
             if (html) {
+                html.off();
+                html.find('*').off();
                 html.remove();
                 html = null;
             }
@@ -212,10 +266,13 @@
                 network.clear();
             }
             clearTimeout(timer);
+            if (intersectionObserver) {
+                intersectionObserver.disconnect();
+                intersectionObserver = null;
+            }
         };
     }
 
-    // Основной компонент интерфейса
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -224,7 +281,7 @@
             scroll_by_item: true
         });
         var items = [];
-        var html = $('<div class="new-interface"><img class="full-start__background"></div>');
+        var html = $('<div class="new-interface"><img class="full-start__background" loading="lazy"></div>');
         var active = 0;
         var newlampa = Lampa.Manifest.app_digital >= 166;
         var info;
@@ -234,10 +291,10 @@
         var background_last = '';
         var background_timer;
         var isDestroyed = false;
+        var intersectionObserver;
 
         this.create = function () {};
 
-        // Отображение пустого состояния
         this.empty = function () {
             if (isDestroyed) return;
 
@@ -260,7 +317,6 @@
             this.activity.toggle();
         };
 
-        // Загрузка следующей порции данных
         this.loadNext = function () {
             if (isDestroyed) return;
 
@@ -282,7 +338,6 @@
 
         this.push = function () {};
 
-        // Построение интерфейса с полученными данными
         this.build = function (data) {
             if (isDestroyed) return;
 
@@ -312,31 +367,42 @@
             this.activity.toggle();
         };
 
-        // Обновление фонового изображения
         this.background = function (elem) {
-            if (isDestroyed) return;
+        if (isDestroyed) return;
+        if (!elem || !elem.backdrop_path) return;
 
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            clearTimeout(background_timer);
-            if (new_background == background_last) return;
+        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+        clearTimeout(background_timer);
+        
+        // Если это тот же самый фон - пропускаем
+        if (new_background === background_last) return;
+        
+        background_last = new_background;
+        
+        // Создаем новое изображение для предзагрузки
+        var tempImg = new Image();
+        tempImg.src = new_background;
+        
+        tempImg.onload = function() {
+            if (isDestroyed) return;
             
-            background_last = new_background;
-            background_img.removeClass('loaded');
+            // Добавляем анимацию перехода
+            background_img.css({
+                'opacity': 0,
+                'transition': 'opacity 0.5s ease'
+            });
             
-            background_img[0].onload = function () {
+            // Меняем источник изображения
+            background_img.attr('src', new_background);
+            
+            // Плавное появление нового фона
+            background_timer = setTimeout(function() {
                 if (isDestroyed) return;
-                background_img.addClass('loaded');
-            };
-            
-            background_img[0].onerror = function () {
-                if (isDestroyed) return;
-                background_img.removeClass('loaded');
-            };
-            
-            background_img[0].src = background_last;
+                background_img.css('opacity', 0.6);
+            }, 50);
+        };
         };
 
-        // Добавление элемента в список
         this.append = function (element) {
             if (isDestroyed) return;
 
@@ -386,13 +452,11 @@
             items.push(item);
         };
 
-        // Навигация назад
         this.back = function () {
             if (isDestroyed) return;
             Lampa.Activity.backward();
         };
 
-        // Навигация вниз
         this.down = function () {
             if (isDestroyed) return;
 
@@ -403,7 +467,6 @@
             scroll.update(items[active].render());
         };
 
-        // Навигация вверх
         this.up = function () {
             if (isDestroyed) return;
 
@@ -418,7 +481,6 @@
             }
         };
 
-        // Инициализация управления
         this.start = function () {
             if (isDestroyed) return;
 
@@ -470,28 +532,33 @@
             return isDestroyed ? null : html;
         };
 
-        // Очистка и уничтожение компонента
         this.destroy = function () {
             isDestroyed = true;
             if (network) network.clear();
             Lampa.Arrays.destroy(items);
             if (scroll) scroll.destroy();
             if (info) info.destroy();
-            if (html) html.remove();
+            if (html) {
+                html.off();
+                html.find('*').off();
+                html.remove();
+            }
             items = null;
             network = null;
             lezydata = null;
             clearTimeout(background_timer);
+            if (intersectionObserver) {
+                intersectionObserver.disconnect();
+                intersectionObserver = null;
+            }
         };
     }
 
-    // Инициализация плагина
     function startPlugin() {
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
 
-        // Переопределение основного интерфейса
         Lampa.InteractionMain = function (object) {
             var use = new_interface;
 
@@ -504,7 +571,6 @@
             return new use(object);
         };
         
-        // Добавление компонента в настройки
         Lampa.SettingsApi.addComponent({
             component: 'styleint',
             name: Lampa.Lang.translate('Стильный интерфейс'),
@@ -513,7 +579,6 @@
             `
         });
 
-        // Добавление параметра настройки логотипов
         Lampa.SettingsApi.addParam({
             component: "styleint",
             param: {
@@ -532,7 +597,6 @@
             }
         }); 
 
-        // Добавление CSS стилей для нового интерфейса (с анимацией логотипов)
         Lampa.Template.add('new_interface_style', `
             <style>
             .new-interface .card--small.card--wide {
@@ -592,16 +656,15 @@
                 height: auto;
                 min-height: 1em;
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+                will-change: opacity;
             }
             
             .new-interface-logo.logo-loading {
                 opacity: 0 !important;
-              //  transition: opacity 0.3s ease !important;
             }
             
             .new-interface-logo {
                 opacity: 1 !important;
-            //    transition: opacity 0.3s ease !important;
             }
             
             .new-interface-info__details {
@@ -646,7 +709,6 @@
                 margin-right: 0;
             }
             
-            /* Полное удаление card__promo */
             .new-interface .card__promo,
             .new-interface .card .card__promo {
                 display: none !important;
@@ -680,7 +742,8 @@
             }
 
             body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
-                animation: animation-card-focus 0.2s
+                animation: animation-card-focus 0.2s;
+                animation-fill-mode: both;
             }
             body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
                 animation: animation-trigger-enter 0.2s forwards
@@ -688,10 +751,8 @@
             </style>
         `);				
         
-        // Добавление стилей в DOM
         $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
-    // Инициализация плагина, если он еще не был инициализирован
     if (!window.plugin_interface_ready) startPlugin();
 })();
