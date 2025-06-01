@@ -3,64 +3,10 @@
 
     // Кэширующая функция для запросов
     function fetchWithCache(network, url, callback, fallback) {
-    // Заменяем Lampa.Utils.md5 на простой хеш из строки
-    const cacheKey = 'tmdb_cache_' + stringHash(url);
-    const cached = Lampa.Storage.get(cacheKey);
-    const cacheTime = 0; // 0 часа кэширования
-    
-    if (cached && cached.timestamp > Date.now() - cacheTime) {
-        callback(cached.data);
-        return;
-    }
-    
-    network.silent(url, (data) => {
-        Lampa.Storage.set(cacheKey, {
-            timestamp: Date.now(),
-            data: data
-        });
-        callback(data);
-    }, () => {
-        if (cached) callback(cached.data);
-        else if (fallback) fallback();
-    });
-}
-
-// Добавляем простую функцию для создания хеша из строки
-function stringHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString();
-}
-
-    // Основная функция для создания интерфейса информации о контенте
-    function create() {
-    var html;
-    var timer;
-    var network = new Lampa.Reguest();
-    var loaded = {};
-    var isDestroyed = false;
-    var intersectionObserver;
-
-    // Простая функция для создания хеша из строки
-    function stringHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash.toString();
-    }
-
-    // Кэширующая функция для запросов
-    function fetchWithCache(network, url, callback, fallback) {
+        // Заменяем Lampa.Utils.md5 на простой хеш из строки
         const cacheKey = 'tmdb_cache_' + stringHash(url);
         const cached = Lampa.Storage.get(cacheKey);
-        const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
+        const cacheTime = 0; // 0 часа кэширования
         
         if (cached && cached.timestamp > Date.now() - cacheTime) {
             callback(cached.data);
@@ -78,6 +24,60 @@ function stringHash(str) {
             else if (fallback) fallback();
         });
     }
+
+    // Добавляем простую функцию для создания хеша из строки
+    function stringHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash.toString();
+    }
+
+    // Основная функция для создания интерфейса информации о контенте
+    function create() {
+        var html;
+        var timer;
+        var network = new Lampa.Reguest();
+        var loaded = {};
+        var isDestroyed = false;
+        var intersectionObserver;
+
+        // Простая функция для создания хеша из строки
+        function stringHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return hash.toString();
+        }
+
+        // Кэширующая функция для запросов
+        function fetchWithCache(network, url, callback, fallback) {
+            const cacheKey = 'tmdb_cache_' + stringHash(url);
+            const cached = Lampa.Storage.get(cacheKey);
+            const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
+            
+            if (cached && cached.timestamp > Date.now() - cacheTime) {
+                callback(cached.data);
+                return;
+            }
+            
+            network.silent(url, (data) => {
+                Lampa.Storage.set(cacheKey, {
+                    timestamp: Date.now(),
+                    data: data
+                });
+                callback(data);
+            }, () => {
+                if (cached) callback(cached.data);
+                else if (fallback) fallback();
+            });
+        }
 
         this.create = function () {
             if (isDestroyed) return;
@@ -182,9 +182,19 @@ function stringHash(str) {
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `);
 
+                // Плавное появление логотипа
                 setTimeout(() => {
                     const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) logoImg.removeClass('logo-loading');
+                    if (logoImg.length) {
+                        logoImg.css({
+                            'transition': 'opacity 0.5s ease',
+                            'opacity': 0
+                        });
+                        
+                        setTimeout(() => {
+                            logoImg.css('opacity', 1);
+                        }, 10);
+                    }
                 }, 10);
             };
 
@@ -368,39 +378,44 @@ function stringHash(str) {
         };
 
         this.background = function (elem) {
-        if (isDestroyed) return;
-        if (!elem || !elem.backdrop_path) return;
-
-        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-        clearTimeout(background_timer);
-        
-        // Если это тот же самый фон - пропускаем
-        if (new_background === background_last) return;
-        
-        background_last = new_background;
-        
-        // Создаем новое изображение для предзагрузки
-        var tempImg = new Image();
-        tempImg.src = new_background;
-        
-        tempImg.onload = function() {
             if (isDestroyed) return;
+            if (!elem || !elem.backdrop_path) return;
+
+            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+            clearTimeout(background_timer);
             
-            // Добавляем анимацию перехода
-            background_img.css({
-                'opacity': 0,
-                'transition': 'opacity 0.5s ease'
-            });
+            // Если это тот же самый фон - пропускаем
+            if (new_background === background_last) return;
             
-            // Меняем источник изображения
-            background_img.attr('src', new_background);
+            background_last = new_background;
             
-            // Плавное появление нового фона
-            background_timer = setTimeout(function() {
+            // Создаем новое изображение для предзагрузки
+            var tempImg = new Image();
+            tempImg.src = new_background;
+            
+            tempImg.onload = function() {
                 if (isDestroyed) return;
-                background_img.css('opacity', 0.6);
-            }, 50);
-        };
+                
+                // Добавляем анимацию перехода
+                background_img.css({
+                    'opacity': 0,
+                    'transition': 'opacity 0.5s ease'
+                });
+                
+                // Меняем источник изображения
+                background_img.attr('src', new_background);
+                
+                // Плавное появление нового фона
+                background_timer = setTimeout(function() {
+                    if (isDestroyed) return;
+                    background_img.css('opacity', 0.6);
+                }, 50);
+            };
+            
+            tempImg.onerror = function() {
+                if (isDestroyed) return;
+                background_img.css('opacity', 0);
+            };
         };
 
         this.append = function (element) {
@@ -657,6 +672,7 @@ function stringHash(str) {
                 min-height: 1em;
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
                 will-change: opacity;
+                transition: opacity 0.5s ease !important;
             }
             
             .new-interface-logo.logo-loading {
@@ -694,8 +710,8 @@ function stringHash(str) {
             }
             
             .new-interface .full-start__background {
-                opacity: 0.6 !important;
-                transition: none !important;
+                opacity: 0 !important;
+                transition: opacity 0.5s ease !important;
             }
             
             .new-interface .full-start__background {
