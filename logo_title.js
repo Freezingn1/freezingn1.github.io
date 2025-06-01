@@ -249,7 +249,7 @@
                 if (logo?.file_path) {
                     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
                     updateTitleElement(titleElement, 
-                        `<img loading="lazy" style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));" src="${imageUrl}" />`, 
+                        `<img loading="lazy" style="transition: opacity 0.8s ease; margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));" src="${imageUrl}" />`, 
                         false);
                     
                     if (russianTitleSetting === "show_always" || 
