@@ -1,17 +1,28 @@
-(function () {
+(function() {
     'use strict';
+
+    // Хеширование строки для кэша
+    function stringHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash.toString();
+    }
 
     // Кэширующая функция для запросов
     function fetchWithCache(network, url, callback, fallback) {
         const cacheKey = 'tmdb_cache_' + stringHash(url);
         const cached = Lampa.Storage.get(cacheKey);
-        const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
-        
+        const cacheTime = 24 * 60 * 60 * 1000; // 24 часа
+
         if (cached && cached.timestamp > Date.now() - cacheTime) {
             callback(cached.data);
             return;
         }
-        
+
         network.silent(url, (data) => {
             Lampa.Storage.set(cacheKey, {
                 timestamp: Date.now(),
@@ -24,36 +35,36 @@
         });
     }
 
-    // Добавляем простую функцию для создания хеша из строки
-    function stringHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash.toString();
-    }
-
-    // Основная функция для создания интерфейса информации о контенте
+    // Компонент информации о контенте
     function create() {
         var html;
         var timer;
         var network = new Lampa.Reguest();
         var loaded = {};
         var isDestroyed = false;
-        var intersectionObserver;
 
-        this.create = function () {
+        this.create = function() {
             if (isDestroyed) return;
-            html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+            html = $(`
+                <div class="new-interface-info">
+                    <div class="new-interface-info__preloader">
+                        <div class="preloader-spinner"></div>
+                    </div>
+                    <div class="new-interface-info__body">
+                        <div class="new-interface-info__head"></div>
+                        <div class="new-interface-info__title"></div>
+                        <div class="new-interface-info__details"></div>
+                        <div class="new-interface-info__description"></div>
+                    </div>
+                </div>
+            `);
         };
 
-        this.update = function (data) {
-            if (isDestroyed || !html) {
-                console.warn('Cannot update - component is destroyed or HTML not initialized');
-                return;
-            }
+        this.update = function(data) {
+            if (isDestroyed || !html) return;
+
+            // Показываем preloader
+            html.find('.new-interface-info__preloader').show();
 
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
@@ -96,24 +107,17 @@
                     }
                     
                     this.applyLogo(data, bestLogo);
+                    this.load(data);
+                    html.find('.new-interface-info__preloader').hide();
                 }, () => {
                     if (!isDestroyed && html) {
-                        const titleElement = html.find('.new-interface-info__title');
-                        if (titleElement.length) {
-                            titleElement.text(data.title);
-                        }
+                        html.find('.new-interface-info__title').text(data.title);
+                        html.find('.new-interface-info__preloader').hide();
                     }
                 });
-            } else if (!isDestroyed && html) {
-                const titleElement = html.find('.new-interface-info__title');
-                if (titleElement.length) {
-                    titleElement.text(data.title);
-                }
-            }
-
-            if (!isDestroyed && html) {
-                Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-                this.load(data);
+            } else {
+                html.find('.new-interface-info__title').text(data.title);
+                html.find('.new-interface-info__preloader').hide();
             }
         };
         
@@ -154,11 +158,8 @@
             };
         };
 
-        this.draw = function (data) {
-            if (isDestroyed || !html) {
-                console.warn('Cannot draw - component is destroyed or HTML not initialized');
-                return;
-            }
+        this.draw = function(data) {
+            if (isDestroyed || !html) return;
 
             try {
                 var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
@@ -185,7 +186,7 @@
             }
         };
 
-        this.load = function (data) {
+        this.load = function(data) {
             if (isDestroyed) return;
 
             var _this = this;
@@ -193,11 +194,11 @@
             clearTimeout(timer);
             var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
             if (loaded[url]) return this.draw(loaded[url]);
-            timer = setTimeout(function () {
+            timer = setTimeout(function() {
                 if (isDestroyed) return;
                 network.clear();
                 network.timeout(5000);
-                fetchWithCache(network, url, function (movie) {
+                fetchWithCache(network, url, function(movie) {
                     if (isDestroyed) return;
                     loaded[url] = movie;
                     _this.draw(movie);
@@ -207,13 +208,13 @@
             }, 600);
         };
 
-        this.render = function () {
+        this.render = function() {
             return isDestroyed ? null : html;
         };
 
-        this.empty = function () {};
+        this.empty = function() {};
 
-        this.destroy = function () {
+        this.destroy = function() {
             isDestroyed = true;
             if (html) {
                 html.off();
@@ -226,13 +227,10 @@
                 network.clear();
             }
             clearTimeout(timer);
-            if (intersectionObserver) {
-                intersectionObserver.disconnect();
-                intersectionObserver = null;
-            }
         };
     }
 
+    // Основной компонент интерфейса
     function component(object) {
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({
@@ -241,7 +239,14 @@
             scroll_by_item: true
         });
         var items = [];
-        var html = $('<div class="new-interface"><img class="full-start__background" loading="lazy"></div>');
+        var html = $(`
+            <div class="new-interface">
+                <div class="global-preloader">
+                    <div class="preloader-spinner"></div>
+                </div>
+                <img class="full-start__background" loading="lazy">
+            </div>
+        `);
         var active = 0;
         var newlampa = Lampa.Manifest.app_digital >= 166;
         var info;
@@ -251,55 +256,9 @@
         var background_last = '';
         var background_timer;
         var isDestroyed = false;
-        var intersectionObserver;
         var visibilityHandler;
 
-        this.create = function () {};
-
-        this.empty = function () {
-            if (isDestroyed) return;
-
-            var button;
-
-            if (object.source == 'tmdb') {
-                button = $('<div class="empty__footer"><div class="simple-button selector">' + Lampa.Lang.translate('change_source_on_cub') + '</div></div>');
-                button.find('.selector').on('hover:enter', function () {
-                    Lampa.Storage.set('source', 'cub');
-                    Lampa.Activity.replace({
-                        source: 'cub'
-                    });
-                });
-            }
-
-            var empty = new Lampa.Empty();
-            html.append(empty.render(button));
-            this.start = empty.start;
-            this.activity.loader(false);
-            this.activity.toggle();
-        };
-
-        this.loadNext = function () {
-            if (isDestroyed) return;
-
-            var _this = this;
-
-            if (this.next && !this.next_wait && items.length) {
-                this.next_wait = true;
-                this.next(function (new_data) {
-                    if (isDestroyed) return;
-                    _this.next_wait = false;
-                    new_data.forEach(_this.append.bind(_this));
-                    Lampa.Layer.visible(items[active + 1].render(true));
-                }, function () {
-                    if (isDestroyed) return;
-                    _this.next_wait = false;
-                });
-            }
-        };
-
-        this.push = function () {};
-
-        this.build = function (data) {
+        this.build = function(data) {
             if (isDestroyed) return;
 
             var _this2 = this;
@@ -309,34 +268,39 @@
             info.create();
             scroll.minus(info.render());
             data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
-            html.append(info.render());
-            html.append(scroll.render());
 
-            // Добавляем обработчик изменения видимости
-            visibilityHandler = function() {
-                if (!document.hidden && !isDestroyed && items.length) {
-                    items[active].toggle();
+            // Ждем завершения всех асинхронных операций
+            setTimeout(() => {
+                if (isDestroyed) return;
+                
+                html.find('.global-preloader').hide();
+                html.append(info.render());
+                html.append(scroll.render());
+                
+                if (newlampa) {
+                    Lampa.Layer.update(html);
+                    Lampa.Layer.visible(scroll.render(true));
+                    scroll.onEnd = this.loadNext.bind(this);
+
+                    scroll.onWheel = function(step) {
+                        if (isDestroyed) return;
+                        if (!Lampa.Controller.own(_this2)) _this2.start();
+                        if (step > 0) _this2.down();
+                        else if (active > 0) _this2.up();
+                    };
                 }
-            };
-            document.addEventListener('visibilitychange', visibilityHandler);
 
-            if (newlampa) {
-                Lampa.Layer.update(html);
-                Lampa.Layer.visible(scroll.render(true));
-                scroll.onEnd = this.loadNext.bind(this);
-
-                scroll.onWheel = function (step) {
-                    if (isDestroyed) return;
-                    if (!Lampa.Controller.own(_this2)) _this2.start();
-                    if (step > 0) _this2.down();else if (active > 0) _this2.up();
+                // Добавляем обработчик видимости
+                visibilityHandler = function() {
+                    if (!document.hidden && !isDestroyed && items.length) {
+                        items[active].toggle();
+                    }
                 };
-            }
-
-            this.activity.loader(false);
-            this.activity.toggle();
+                document.addEventListener('visibilitychange', visibilityHandler);
+            }, 300);
         };
 
-        this.background = function (elem) {
+        this.background = function(elem) {
             if (isDestroyed) return;
             if (!elem || !elem.backdrop_path) return;
 
@@ -367,7 +331,7 @@
             };
         };
 
-        this.append = function (element) {
+        this.append = function(element) {
             if (isDestroyed) return;
 
             var _this3 = this;
@@ -388,20 +352,20 @@
             item.onUp = this.up.bind(this);
             item.onBack = this.back.bind(this);
 
-            item.onToggle = function () {
+            item.onToggle = function() {
                 if (isDestroyed) return;
                 active = items.indexOf(item);
             };
 
             if (this.onMore) item.onMore = this.onMore.bind(this);
 
-            item.onFocus = function (elem) {
+            item.onFocus = function(elem) {
                 if (isDestroyed) return;
                 info.update(elem);
                 _this3.background(elem);
             };
 
-            item.onHover = function (elem) {
+            item.onHover = function(elem) {
                 if (isDestroyed) return;
                 info.update(elem);
                 _this3.background(elem);
@@ -416,10 +380,9 @@
             items.push(item);
         };
 
-        this.back = function () {
+        this.back = function() {
             if (isDestroyed) return;
             
-            // Явное восстановление фокуса перед возвратом
             if (items.length && items[active]) {
                 items[active].toggle();
                 scroll.update(items[active].render());
@@ -427,7 +390,6 @@
             
             Lampa.Activity.backward();
             
-            // Дополнительное восстановление фокуса после возврата
             setTimeout(() => {
                 if (!isDestroyed && items.length && items[active]) {
                     items[active].toggle();
@@ -436,7 +398,7 @@
             }, 100);
         };
 
-        this.down = function () {
+        this.down = function() {
             if (isDestroyed) return;
 
             active++;
@@ -446,7 +408,7 @@
             scroll.update(items[active].render());
         };
 
-        this.up = function () {
+        this.up = function() {
             if (isDestroyed) return;
 
             active--;
@@ -460,7 +422,7 @@
             }
         };
 
-        this.start = function () {
+        this.start = function() {
             if (isDestroyed) return;
 
             var _this4 = this;
@@ -472,9 +434,8 @@
                     if (_this4.activity.canRefresh()) return false;
 
                     if (items.length) {
-                        // Улучшенная обработка фокуса
                         if (document.activeElement && !$(document.activeElement).closest('.new-interface').length) {
-                            items[active].toggle(true); // Принудительный фокус
+                            items[active].toggle(true);
                         } else {
                             items[active].toggle();
                         }
@@ -483,7 +444,8 @@
                 update: function update() {},
                 left: function left() {
                     if (isDestroyed) return;
-                    if (Navigator.canmove('left')) Navigator.move('left');else Lampa.Controller.toggle('menu');
+                    if (Navigator.canmove('left')) Navigator.move('left');
+                    else Lampa.Controller.toggle('menu');
                 },
                 right: function right() {
                     if (isDestroyed) return;
@@ -491,7 +453,8 @@
                 },
                 up: function up() {
                     if (isDestroyed) return;
-                    if (Navigator.canmove('up')) Navigator.move('up');else Lampa.Controller.toggle('head');
+                    if (Navigator.canmove('up')) Navigator.move('up');
+                    else Lampa.Controller.toggle('head');
                 },
                 down: function down() {
                     if (isDestroyed) return;
@@ -500,7 +463,6 @@
                 back: this.back
             });
             
-            // Явно установить фокус при старте
             setTimeout(() => {
                 if (!isDestroyed && items.length) {
                     items[active].toggle();
@@ -510,21 +472,11 @@
             Lampa.Controller.toggle('content');
         };
 
-        this.refresh = function () {
-            if (isDestroyed) return;
-            this.activity.loader(true);
-            this.activity.need_refresh = true;
-        };
-
-        this.pause = function () {};
-
-        this.stop = function () {};
-
-        this.render = function () {
+        this.render = function() {
             return isDestroyed ? null : html;
         };
 
-        this.destroy = function () {
+        this.destroy = function() {
             isDestroyed = true;
             if (network) network.clear();
             Lampa.Arrays.destroy(items);
@@ -542,10 +494,6 @@
             network = null;
             lezydata = null;
             clearTimeout(background_timer);
-            if (intersectionObserver) {
-                intersectionObserver.disconnect();
-                intersectionObserver = null;
-            }
         };
     }
 
@@ -554,18 +502,14 @@
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
 
-        Lampa.InteractionMain = function (object) {
+        Lampa.InteractionMain = function(object) {
             var use = new_interface;
-
             if (window.innerWidth < 767) use = old_interface;
             if (Lampa.Manifest.app_digital < 153) use = old_interface;
-            if (object.title === 'Избранное') {
-                use = old_interface;
-            }
-
+            if (object.title === 'Избранное') use = old_interface;
             return new use(object);
         };
-        
+
         Lampa.SettingsApi.addComponent({
             component: 'styleint',
             name: Lampa.Lang.translate('Стильный интерфейс'),
@@ -590,166 +534,196 @@
                 name: "Настройки логотипов на главной",
                 description: "Управление отображением логотипов вместо названий"
             }
-        }); 
+        });
 
         Lampa.Template.add('new_interface_style', `
             <style>
-            .new-interface .card--small.card--wide {
-                width: 18.3em;
-            }
-            
-            .new-interface-info {
-                position: relative;
-                padding: 1.5em;
-                height: 26em;
-            }
-            
-            .new-interface-info__body {
-                width: 80%;
-                padding-top: 1.1em;
-            }
-            
-            .new-interface-info__head {
-                color: rgba(255, 255, 255, 0.6);
-                margin-bottom: 0em;
-                font-size: 1.3em;
-                min-height: 1em;
-            }
-            
-            .new-interface-info__head span {
-                color: #fff;
-            }
-            
-            .new-interface-info__title {
-                font-size: 4em;
-                margin-top: 0.1em;
-                font-weight: 800;
-                margin-bottom: 0em;
-                overflow: hidden;
-                -o-text-overflow: ".";
-                text-overflow: ".";
-                display: -webkit-box;
-                -webkit-line-clamp: 3;
-                line-clamp: 3;
-                -webkit-box-orient: vertical;
-                margin-left: -0.03em;
-                line-height: 1;
-                text-shadow: 2px 3px 1px #00000040;
-                max-width: 9em;
-                text-transform: uppercase;
-                letter-spacing: -2px;
-                word-spacing: 5px;
-            }
-            
-            .new-interface-logo {
-                margin-top: 0.3em;
-                margin-bottom: 0.3em;
-                max-width: 7em;
-                max-height: 3em;
-                object-fit: contain;
-                width: auto;
-                height: auto;
-                min-height: 1em;
-                filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
-                will-change: opacity;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            
-            .logo-fade-in {
-                animation: fadeIn 0.6s ease forwards;
-                opacity: 0;
-            }
-            
-            .new-interface-info__details {
-                margin-bottom: 1.6em;
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-                min-height: 1.9em;
-                font-size: 1.3em;
-            }
-            
-            .new-interface-info__split {
-                margin: 0 1em;
-                font-size: 0.7em;
-            }
-            
-            .new-interface-info__description {
-                font-size: 1.2em;
-                font-weight: 300;
-                line-height: 1.5;
-                overflow: hidden;
-                display: -webkit-box;
-                -webkit-line-clamp: 4;
-                line-clamp: 4;
-                -webkit-box-orient: vertical;
-                width: 70%;
-            }
-            
-            .new-interface .full-start__background {
-                opacity: 0.6 !important;
-                transition: opacity 0.8s ease !important;
-            }
-            
-            .new-interface .full-start__background {
-                height:109% !important;
-                left:0em !important;
-                top:-9.2% !important;
-            }
-            
-            .new-interface .full-start__rate {
-                font-size: 1.3em;
-                margin-right: 0;
-            }
-            
-            .new-interface .card__promo,
-            .new-interface .card .card__promo {
-                display: none !important;
-                visibility: hidden !important;
-                height: 0 !important;
-                width: 0 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                opacity: 0 !important;
-            }
-            
-            .new-interface .card-more__box {
-                padding-bottom: 95%;
-            }
-            
-            .new-interface .card.card--wide+.card-more .card-more__box {
-                padding-bottom: 95%;
-            }
-            
-            .new-interface .card.card--wide .card-watched {
-                display: none !important;
-            }					
-            
-            body.light--version .new-interface-info__body {
-                width: 69%;
-                padding-top: 1.5em;
-            }
-            
-            body.light--version .new-interface-info {
-                height: 25.3em;
-            }
+                .new-interface {
+                    opacity: 0;
+                    transition: opacity 0.5s ease;
+                }
+                .new-interface.ready {
+                    opacity: 1;
+                }
+                
+                .new-interface-info__preloader,
+                .global-preloader {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    z-index: 1000;
+                }
+                .preloader-spinner {
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    border-top-color: #fff;
+                    animation: spin 1s ease-in-out infinite;
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                
+                .new-interface .card--small.card--wide {
+                    width: 18.3em;
+                }
+                
+                .new-interface-info {
+                    position: relative;
+                    padding: 1.5em;
+                    height: 26em;
+                }
+                
+                .new-interface-info__body {
+                    width: 80%;
+                    padding-top: 1.1em;
+                }
+                
+                .new-interface-info__head {
+                    color: rgba(255, 255, 255, 0.6);
+                    margin-bottom: 0em;
+                    font-size: 1.3em;
+                    min-height: 1em;
+                }
+                
+                .new-interface-info__head span {
+                    color: #fff;
+                }
+                
+                .new-interface-info__title {
+                    font-size: 4em;
+                    margin-top: 0.1em;
+                    font-weight: 800;
+                    margin-bottom: 0em;
+                    overflow: hidden;
+                    -o-text-overflow: ".";
+                    text-overflow: ".";
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    margin-left: -0.03em;
+                    line-height: 1;
+                    text-shadow: 2px 3px 1px #00000040;
+                    max-width: 9em;
+                    text-transform: uppercase;
+                    letter-spacing: -2px;
+                    word-spacing: 5px;
+                }
+                
+                .new-interface-logo {
+                    margin-top: 0.3em;
+                    margin-bottom: 0.3em;
+                    max-width: 7em;
+                    max-height: 3em;
+                    object-fit: contain;
+                    width: auto;
+                    height: auto;
+                    min-height: 1em;
+                    filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+                    will-change: opacity;
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                .logo-fade-in {
+                    animation: fadeIn 0.6s ease forwards;
+                    opacity: 0;
+                }
+                
+                .new-interface-info__details {
+                    margin-bottom: 1.6em;
+                    display: flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    min-height: 1.9em;
+                    font-size: 1.3em;
+                }
+                
+                .new-interface-info__split {
+                    margin: 0 1em;
+                    font-size: 0.7em;
+                }
+                
+                .new-interface-info__description {
+                    font-size: 1.2em;
+                    font-weight: 300;
+                    line-height: 1.5;
+                    overflow: hidden;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 4;
+                    line-clamp: 4;
+                    -webkit-box-orient: vertical;
+                    width: 70%;
+                }
+                
+                .new-interface .full-start__background {
+                    opacity: 0.6 !important;
+                    transition: opacity 0.8s ease !important;
+                }
+                
+                .new-interface .full-start__background {
+                    height:109% !important;
+                    left:0em !important;
+                    top:-9.2% !important;
+                }
+                
+                .new-interface .full-start__rate {
+                    font-size: 1.3em;
+                    margin-right: 0;
+                }
+                
+                .new-interface .card__promo,
+                .new-interface .card .card__promo {
+                    display: none !important;
+                    visibility: hidden !important;
+                    height: 0 !important;
+                    width: 0 !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    opacity: 0 !important;
+                }
+                
+                .new-interface .card-more__box {
+                    padding-bottom: 95%;
+                }
+                
+                .new-interface .card.card--wide+.card-more .card-more__box {
+                    padding-bottom: 95%;
+                }
+                
+                .new-interface .card.card--wide .card-watched {
+                    display: none !important;
+                }
+                
+                body.light--version .new-interface-info__body {
+                    width: 69%;
+                    padding-top: 1.5em;
+                }
+                
+                body.light--version .new-interface-info {
+                    height: 25.3em;
+                }
 
-            body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
-                animation: animation-card-focus 0.2s;
-                animation-fill-mode: both;
-            }
-            body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
-                animation: animation-trigger-enter 0.2s forwards
-            }
+                body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
+                    animation: animation-card-focus 0.2s;
+                    animation-fill-mode: both;
+                }
+                body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
+                    animation: animation-trigger-enter 0.2s forwards
+                }
             </style>
-        `);				
+        `);
         
         $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
-    if (!window.plugin_interface_ready) startPlugin();
+    if (!window.plugin_interface_ready) {
+        document.addEventListener('DOMContentLoaded', startPlugin);
+    }
 })();
