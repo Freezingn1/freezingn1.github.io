@@ -1,6 +1,16 @@
 (function () {
     'use strict';
 
+    // Функция для очистки кэша TMDB при запуске
+    function clearTmdbCache() {
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('tmdb_cache_')) {
+                localStorage.removeItem(key);
+            }
+        });
+        console.log('TMDB cache cleared');
+    }
+
     // Кэширующая функция для запросов
     function fetchWithCache(network, url, callback, fallback) {
         const cacheKey = 'tmdb_cache_' + stringHash(url);
@@ -24,7 +34,7 @@
         });
     }
 
-    // Добавляем простую функцию для создания хеша из строки
+    // Функция для создания хеша из строки
     function stringHash(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -419,7 +429,6 @@
         this.back = function () {
             if (isDestroyed) return;
             
-            // Явное восстановление фокуса перед возвратом
             if (items.length && items[active]) {
                 items[active].toggle();
                 scroll.update(items[active].render());
@@ -427,7 +436,6 @@
             
             Lampa.Activity.backward();
             
-            // Дополнительное восстановление фокуса после возврата
             setTimeout(() => {
                 if (!isDestroyed && items.length && items[active]) {
                     items[active].toggle();
@@ -472,9 +480,8 @@
                     if (_this4.activity.canRefresh()) return false;
 
                     if (items.length) {
-                        // Улучшенная обработка фокуса
                         if (document.activeElement && !$(document.activeElement).closest('.new-interface').length) {
-                            items[active].toggle(true); // Принудительный фокус
+                            items[active].toggle(true);
                         } else {
                             items[active].toggle();
                         }
@@ -500,7 +507,6 @@
                 back: this.back
             });
             
-            // Явно установить фокус при старте
             setTimeout(() => {
                 if (!isDestroyed && items.length) {
                     items[active].toggle();
@@ -550,6 +556,9 @@
     }
 
     function startPlugin() {
+        // Очищаем кэш при запуске плагина
+        clearTmdbCache();
+
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
@@ -590,7 +599,7 @@
                 name: "Настройки логотипов на главной",
                 description: "Управление отображением логотипов вместо названий"
             }
-        }); 
+        });
 
         Lampa.Template.add('new_interface_style', `
             <style>
