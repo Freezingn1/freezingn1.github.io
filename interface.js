@@ -626,9 +626,13 @@
             }
             
             .new-interface .full-start__background {
-                opacity: 0.6 !important;
+                opacity: 0 !important;
                 transition: opacity 0.8s ease !important;
-            }            
+            }
+            
+            .new-interface .full-start__background.loaded {
+                opacity: 0.6 !important;
+            }
             
             .new-interface .full-start__background {
                 height:109% !important;
