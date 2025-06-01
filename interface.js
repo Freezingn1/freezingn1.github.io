@@ -140,17 +140,12 @@
                 if (isDestroyed || !html) return;
                 
                 titleElement.html(`
-                    <img class="new-interface-logo logo-loading" 
+                    <img class="new-interface-logo logo-fade-in" 
                          src="${imageUrl}" 
                          alt="${data.title}"
                          loading="lazy"
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `);
-
-                setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) logoImg.removeClass('logo-loading');
-                }, 10);
             };
 
             tempImg.onerror = () => {
@@ -360,7 +355,7 @@
                 
                 background_img.css({
                     'opacity': 0,
-                    'transition': 'opacity 0.5s ease'
+                    'transition': 'opacity 0.8s ease'
                 });
                 
                 background_img.attr('src', new_background);
@@ -659,12 +654,14 @@
                 will-change: opacity;
             }
             
-            .new-interface-logo.logo-loading {
-                opacity: 0 !important;
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
             }
             
-            .new-interface-logo {
-                opacity: 1 !important;
+            .logo-fade-in {
+                animation: fadeIn 0.6s ease forwards;
+                opacity: 0;
             }
             
             .new-interface-info__details {
@@ -695,7 +692,7 @@
             
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
-                transition: none !important;
+                transition: opacity 0.8s ease !important;
             }
             
             .new-interface .full-start__background {
