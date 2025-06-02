@@ -432,7 +432,9 @@
             }
             
 			@media screen and (min-width: 481px) {
-				.settings__content {
+				.settings__content,
+				.selectbox__content
+				{
 					box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
 				}
 			}
