@@ -431,6 +431,12 @@
                 }
             }
             
+			@media screen and (min-width: 481px) {
+				.settings__content {
+					box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+				}
+			}
+			
             @media screen and (max-width: 480px) {
                 .full-start-new__reactions {
                     display: flex !important;
