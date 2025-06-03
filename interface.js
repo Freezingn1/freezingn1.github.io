@@ -654,10 +654,14 @@
                 will-change: opacity;
             }
             
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
             
             .logo-fade-in {
-                opacity: 0.6 !important;
-				transition: opacity 0.8s ease !important;
+                animation: fadeIn 0.3s ease forwards;
+                opacity: 0;
             }
             
             .new-interface-info__details {
