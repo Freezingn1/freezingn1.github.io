@@ -128,7 +128,7 @@
                 return;
             }
 
-            const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+            const imageUrl = Lampa.TMDB.image("/t/p/w300" + logo.file_path);
 
             if (titleElement.data('current-logo') === imageUrl) return;
             titleElement.data('current-logo', imageUrl);
@@ -660,7 +660,7 @@
             }
             
             .logo-fade-in {
-                animation: fadeIn 0.8s ease forwards;
+                animation: fadeIn 0.3s ease forwards;
                 opacity: 0;
             }
             
