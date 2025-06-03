@@ -409,6 +409,15 @@
                     margin-top: 0.5em !important;
                 }
             }
+			
+			@media screen and (max-width: 480px) {
+				.full-start-new__title img {
+					object-fit: contain;
+					max-width: 12em;
+					max-height: 6em;
+				}
+				}
+			
             
             @media screen and (max-width: 580px) {
                 .full-start-new__buttons {

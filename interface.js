@@ -654,15 +654,6 @@
                 will-change: opacity;
             }
             
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            
-            .logo-fade-in {
-                animation: fadeIn 0.3s ease forwards;
-                opacity: 0;
-            }
             
             .new-interface-info__details {
                 margin-bottom: 1.6em;
