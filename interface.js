@@ -14,7 +14,7 @@
             }
         }
         
-        const request = network.silent(url, (data) => {
+        network.silent(url, (data) => {
             Lampa.Storage.set(cacheKey, {
                 timestamp: Date.now(),
                 data: data
@@ -25,8 +25,6 @@
             if (cached) callback(cached.data);
             else if (fallback) fallback();
         });
-
-        return request;
     }
 
     // Добавляем простую функцию для создания хеша из строки
@@ -48,9 +46,7 @@
         var loaded = {};
         var isDestroyed = false;
         var intersectionObserver;
-        var preloadedLogos = {};
-        var currentRequest = null;
-        var currentId = null;
+        var preloadedLogos = {}; // Хранилище предзагруженных логотипов
 
         this.create = function () {
             if (isDestroyed) return;
@@ -67,10 +63,12 @@
             const type = data.name ? 'tv' : 'movie';
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
             
+            // Если уже предзагружено, не загружаем снова
             if (preloadedLogos[url]) return;
             
             preloadedLogos[url] = true;
             
+            // Загружаем с флагом forceRefresh раз в 24 часа для обновления кэша
             const lastUpdate = Lampa.Storage.get('logo_last_update_' + data.id) || 0;
             const forceRefresh = Date.now() - lastUpdate > 24 * 60 * 60 * 1000;
             
@@ -87,26 +85,13 @@
                 return;
             }
 
-            currentId = data.id;
-            const titleElement = html.find('.new-interface-info__title');
-            if (titleElement.length) {
-                titleElement.data('current-id', currentId);
-                titleElement.text(data.title || data.name);
-            }
-
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-                // Отменяем предыдущий запрос
-                if (currentRequest) {
-                    currentRequest.abort();
-                    currentRequest = null;
-                }
-
-                // Проверяем кэш
+                // Проверяем, есть ли уже предзагруженные данные
                 const cacheKey = 'tmdb_cache_' + stringHash(url);
                 const cached = Lampa.Storage.get(cacheKey);
                 
@@ -114,18 +99,23 @@
                     this.processLogoData(data, cached.data);
                 }
                 
-                // Загружаем свежие данные
-                currentRequest = fetchWithCache(network, url, (images) => {
-                    if (isDestroyed || !html || currentId !== data.id) return;
+                // Загружаем свежие данные с возможностью обновления кэша
+                fetchWithCache(network, url, (images) => {
+                    if (isDestroyed || !html) return;
                     this.processLogoData(data, images);
                 }, () => {
-                    if (!isDestroyed && html && currentId === data.id) {
+                    if (!isDestroyed && html) {
                         const titleElement = html.find('.new-interface-info__title');
                         if (titleElement.length) {
-                            titleElement.text(data.title || data.name);
+                            titleElement.text(data.title);
                         }
                     }
                 });
+            } else if (!isDestroyed && html) {
+                const titleElement = html.find('.new-interface-info__title');
+                if (titleElement.length) {
+                    titleElement.text(data.title);
+                }
             }
 
             if (!isDestroyed && html) {
@@ -135,7 +125,7 @@
         };
         
         this.processLogoData = function(data, images) {
-            if (isDestroyed || !html || !images || currentId !== data.id) return;
+            if (isDestroyed || !html || !images) return;
             
             let bestLogo = null;
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
@@ -173,13 +163,13 @@
         };
         
         this.applyLogo = function(data, logo) {
-            if (isDestroyed || !html || currentId !== data.id) return;
+            if (isDestroyed || !html) return;
     
             const titleElement = html.find('.new-interface-info__title');
-            if (!titleElement.length || titleElement.data('current-id') !== data.id) return;
+            if (!titleElement.length) return;
     
             if (!logo || !logo.file_path) {
-                titleElement.text(data.title || data.name);
+                titleElement.text(data.title);
                 return;
             }
 
@@ -188,24 +178,25 @@
             if (titleElement.data('current-logo') === imageUrl) return;
             titleElement.data('current-logo', imageUrl);
 
+            // Проверяем, есть ли изображение уже в кэше браузера
             const tempImg = new Image();
             tempImg.src = imageUrl;
 
             tempImg.onload = () => {
-                if (isDestroyed || !html || titleElement.data('current-id') !== data.id) return;
+                if (isDestroyed || !html) return;
                 
                 titleElement.html(`
                     <img class="new-interface-logo logo-fade-in" 
                          src="${imageUrl}" 
-                         alt="${(data.title || data.name).replace(/"/g, '&quot;')}"
+                         alt="${data.title}"
                          loading="lazy"
-                         onerror="this.remove(); this.parentElement.textContent='${(data.title || data.name).replace(/"/g, '&quot;')}'" />
+                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `);
             };
 
             tempImg.onerror = () => {
-                if (isDestroyed || !html || titleElement.data('current-id') !== data.id) return;
-                titleElement.text(data.title || data.name);
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
             };
         };
 
@@ -270,10 +261,6 @@
 
         this.destroy = function () {
             isDestroyed = true;
-            if (currentRequest) {
-                currentRequest.abort();
-                currentRequest = null;
-            }
             if (html) {
                 html.off();
                 html.find('*').off();
@@ -351,6 +338,8 @@
                     _this.next_wait = false;
                     new_data.forEach(_this.append.bind(_this));
                     Lampa.Layer.visible(items[active + 1].render(true));
+                    
+                    // Предзагрузка логотипов для следующих элементов
                     _this.preloadNextLogos();
                 }, function () {
                     if (isDestroyed) return;
@@ -359,11 +348,13 @@
             }
         };
         
+        // Предзагрузка логотипов для следующих элементов
         this.preloadNextLogos = function() {
             if (isDestroyed || !info || !info.preloadLogo) return;
             
             clearTimeout(preloadTimer);
             preloadTimer = setTimeout(() => {
+                // Предзагружаем логотипы для текущего, следующего и предыдущего элементов
                 if (items[active] && items[active].element) {
                     info.preloadLogo(items[active].element);
                 }
@@ -391,6 +382,7 @@
             html.append(info.render());
             html.append(scroll.render());
 
+            // Добавляем обработчик изменения видимости
             visibilityHandler = function() {
                 if (!document.hidden && !isDestroyed && items.length) {
                     items[active].toggle();
@@ -412,6 +404,8 @@
 
             this.activity.loader(false);
             this.activity.toggle();
+            
+            // Предзагрузка логотипов для первых элементов
             this.preloadNextLogos();
         };
 
@@ -470,7 +464,7 @@
             item.onToggle = function () {
                 if (isDestroyed) return;
                 active = items.indexOf(item);
-                _this3.preloadNextLogos();
+                _this3.preloadNextLogos(); // Предзагрузка при переключении элементов
             };
 
             if (this.onMore) item.onMore = this.onMore.bind(this);
@@ -499,6 +493,7 @@
         this.back = function () {
             if (isDestroyed) return;
             
+            // Явное восстановление фокуса перед возвратом
             if (items.length && items[active]) {
                 items[active].toggle();
                 scroll.update(items[active].render());
@@ -506,6 +501,7 @@
             
             Lampa.Activity.backward();
             
+            // Дополнительное восстановление фокуса после возврата
             setTimeout(() => {
                 if (!isDestroyed && items.length && items[active]) {
                     items[active].toggle();
@@ -522,6 +518,8 @@
             if (!viewall) lezydata.slice(0, active + 2).forEach(this.append.bind(this));
             items[active].toggle();
             scroll.update(items[active].render());
+            
+            // Предзагрузка логотипов при прокрутке вниз
             this.preloadNextLogos();
         };
 
@@ -536,6 +534,8 @@
             } else {
                 items[active].toggle();
                 scroll.update(items[active].render());
+                
+                // Предзагрузка логотипов при прокрутке вверх
                 this.preloadNextLogos();
             }
         };
@@ -552,8 +552,9 @@
                     if (_this4.activity.canRefresh()) return false;
 
                     if (items.length) {
+                        // Улучшенная обработка фокуса
                         if (document.activeElement && !$(document.activeElement).closest('.new-interface').length) {
-                            items[active].toggle(true);
+                            items[active].toggle(true); // Принудительный фокус
                         } else {
                             items[active].toggle();
                         }
@@ -579,6 +580,7 @@
                 back: this.back
             });
             
+            // Явно установить фокус при старте
             setTimeout(() => {
                 if (!isDestroyed && items.length) {
                     items[active].toggle();
