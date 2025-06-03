@@ -1,15 +1,17 @@
 (function () {
     'use strict';
 
-    // Кэширующая функция для запросов
-    function fetchWithCache(network, url, callback, fallback) {
+    // Кэширующая функция для запросов с возможностью принудительного обновления
+    function fetchWithCache(network, url, callback, fallback, forceRefresh = false) {
         const cacheKey = 'tmdb_cache_' + stringHash(url);
-        const cached = Lampa.Storage.get(cacheKey);
         const cacheTime = 24 * 60 * 60 * 1000; // 24 часа кэширования
         
-        if (cached && cached.timestamp > Date.now() - cacheTime) {
-            callback(cached.data);
-            return;
+        if (!forceRefresh) {
+            const cached = Lampa.Storage.get(cacheKey);
+            if (cached && cached.timestamp > Date.now() - cacheTime) {
+                callback(cached.data);
+                return;
+            }
         }
         
         network.silent(url, (data) => {
@@ -19,6 +21,7 @@
             });
             callback(data);
         }, () => {
+            const cached = Lampa.Storage.get(cacheKey);
             if (cached) callback(cached.data);
             else if (fallback) fallback();
         });
@@ -43,10 +46,37 @@
         var loaded = {};
         var isDestroyed = false;
         var intersectionObserver;
+        var preloadedLogos = {}; // Хранилище предзагруженных логотипов
 
         this.create = function () {
             if (isDestroyed) return;
             html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+        };
+
+        // Предзагрузка логотипов для элемента
+        this.preloadLogo = function(data) {
+            if (isDestroyed || !data || !data.id) return;
+            
+            const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+            if (logoSetting === 'hide') return;
+            
+            const type = data.name ? 'tv' : 'movie';
+            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+            
+            // Если уже предзагружено, не загружаем снова
+            if (preloadedLogos[url]) return;
+            
+            preloadedLogos[url] = true;
+            
+            // Загружаем с флагом forceRefresh раз в 24 часа для обновления кэша
+            const lastUpdate = Lampa.Storage.get('logo_last_update_' + data.id) || 0;
+            const forceRefresh = Date.now() - lastUpdate > 24 * 60 * 60 * 1000;
+            
+            fetchWithCache(network, url, (images) => {
+                if (forceRefresh) {
+                    Lampa.Storage.set('logo_last_update_' + data.id, Date.now());
+                }
+            }, null, forceRefresh);
         };
 
         this.update = function (data) {
@@ -61,41 +91,18 @@
                 const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
+                // Проверяем, есть ли уже предзагруженные данные
+                const cacheKey = 'tmdb_cache_' + stringHash(url);
+                const cached = Lampa.Storage.get(cacheKey);
+                
+                if (cached) {
+                    this.processLogoData(data, cached.data);
+                }
+                
+                // Загружаем свежие данные с возможностью обновления кэша
                 fetchWithCache(network, url, (images) => {
                     if (isDestroyed || !html) return;
-
-                    let bestLogo = null;
-                    
-                    if (images.logos && images.logos.length > 0) {
-                        let bestRussianLogo = null;
-                        let bestEnglishLogo = null;
-                        let bestOtherLogo = null;
-
-                        for (let i = 0; i < images.logos.length; i++) {
-                            const logo = images.logos[i];
-                            if (logo.iso_639_1 === 'ru') {
-                                if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
-                                    bestRussianLogo = logo;
-                                }
-                            }
-                            else if (logo.iso_639_1 === 'en') {
-                                if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
-                                    bestEnglishLogo = logo;
-                                }
-                            }
-                            else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
-                                bestOtherLogo = logo;
-                            }
-                        }
-
-                        bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-
-                        if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                            bestLogo = null;
-                        }
-                    }
-                    
-                    this.applyLogo(data, bestLogo);
+                    this.processLogoData(data, images);
                 }, () => {
                     if (!isDestroyed && html) {
                         const titleElement = html.find('.new-interface-info__title');
@@ -117,6 +124,44 @@
             }
         };
         
+        this.processLogoData = function(data, images) {
+            if (isDestroyed || !html || !images) return;
+            
+            let bestLogo = null;
+            const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+            
+            if (images.logos && images.logos.length > 0) {
+                let bestRussianLogo = null;
+                let bestEnglishLogo = null;
+                let bestOtherLogo = null;
+
+                for (let i = 0; i < images.logos.length; i++) {
+                    const logo = images.logos[i];
+                    if (logo.iso_639_1 === 'ru') {
+                        if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
+                            bestRussianLogo = logo;
+                        }
+                    }
+                    else if (logo.iso_639_1 === 'en') {
+                        if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
+                            bestEnglishLogo = logo;
+                        }
+                    }
+                    else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
+                        bestOtherLogo = logo;
+                    }
+                }
+
+                bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
+
+                if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                    bestLogo = null;
+                }
+            }
+            
+            this.applyLogo(data, bestLogo);
+        };
+        
         this.applyLogo = function(data, logo) {
             if (isDestroyed || !html) return;
     
@@ -133,6 +178,7 @@
             if (titleElement.data('current-logo') === imageUrl) return;
             titleElement.data('current-logo', imageUrl);
 
+            // Проверяем, есть ли изображение уже в кэше браузера
             const tempImg = new Image();
             tempImg.src = imageUrl;
 
@@ -222,6 +268,7 @@
                 html = null;
             }
             loaded = {};
+            preloadedLogos = {};
             if (network) {
                 network.clear();
             }
@@ -253,6 +300,7 @@
         var isDestroyed = false;
         var intersectionObserver;
         var visibilityHandler;
+        var preloadTimer;
 
         this.create = function () {};
 
@@ -290,11 +338,33 @@
                     _this.next_wait = false;
                     new_data.forEach(_this.append.bind(_this));
                     Lampa.Layer.visible(items[active + 1].render(true));
+                    
+                    // Предзагрузка логотипов для следующих элементов
+                    _this.preloadNextLogos();
                 }, function () {
                     if (isDestroyed) return;
                     _this.next_wait = false;
                 });
             }
+        };
+        
+        // Предзагрузка логотипов для следующих элементов
+        this.preloadNextLogos = function() {
+            if (isDestroyed || !info || !info.preloadLogo) return;
+            
+            clearTimeout(preloadTimer);
+            preloadTimer = setTimeout(() => {
+                // Предзагружаем логотипы для текущего, следующего и предыдущего элементов
+                if (items[active] && items[active].element) {
+                    info.preloadLogo(items[active].element);
+                }
+                if (items[active + 1] && items[active + 1].element) {
+                    info.preloadLogo(items[active + 1].element);
+                }
+                if (items[active - 1] && items[active - 1].element) {
+                    info.preloadLogo(items[active - 1].element);
+                }
+            }, 200);
         };
 
         this.push = function () {};
@@ -334,6 +404,9 @@
 
             this.activity.loader(false);
             this.activity.toggle();
+            
+            // Предзагрузка логотипов для первых элементов
+            this.preloadNextLogos();
         };
 
         this.background = function (elem) {
@@ -391,6 +464,7 @@
             item.onToggle = function () {
                 if (isDestroyed) return;
                 active = items.indexOf(item);
+                _this3.preloadNextLogos(); // Предзагрузка при переключении элементов
             };
 
             if (this.onMore) item.onMore = this.onMore.bind(this);
@@ -444,6 +518,9 @@
             if (!viewall) lezydata.slice(0, active + 2).forEach(this.append.bind(this));
             items[active].toggle();
             scroll.update(items[active].render());
+            
+            // Предзагрузка логотипов при прокрутке вниз
+            this.preloadNextLogos();
         };
 
         this.up = function () {
@@ -457,6 +534,9 @@
             } else {
                 items[active].toggle();
                 scroll.update(items[active].render());
+                
+                // Предзагрузка логотипов при прокрутке вверх
+                this.preloadNextLogos();
             }
         };
 
@@ -538,10 +618,11 @@
             if (visibilityHandler) {
                 document.removeEventListener('visibilitychange', visibilityHandler);
             }
+            clearTimeout(preloadTimer);
+            clearTimeout(background_timer);
             items = null;
             network = null;
             lezydata = null;
-            clearTimeout(background_timer);
             if (intersectionObserver) {
                 intersectionObserver.disconnect();
                 intersectionObserver = null;
@@ -660,7 +741,7 @@
             }
             
             .logo-fade-in {
-                animation: fadeIn 0.6s ease forwards;
+                animation: fadeIn 0.3s ease forwards;
                 opacity: 0;
             }
             
