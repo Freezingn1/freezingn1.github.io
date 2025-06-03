@@ -128,7 +128,7 @@
                 return;
             }
 
-            const imageUrl = Lampa.TMDB.image("/t/p/w300" + logo.file_path);
+            const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
             if (titleElement.data('current-logo') === imageUrl) return;
             titleElement.data('current-logo', imageUrl);
@@ -654,6 +654,15 @@
                 will-change: opacity;
             }
             
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
+            .logo-fade-in {
+                animation: fadeIn 0.6s ease forwards;
+                opacity: 0;
+            }
             
             .new-interface-info__details {
                 margin-bottom: 1.6em;
