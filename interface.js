@@ -660,7 +660,7 @@
             }
             
             .logo-fade-in {
-                animation: fadeIn 0.3s ease forwards;
+                animation: fadeIn 0.8s ease forwards;
                 opacity: 0;
             }
             
