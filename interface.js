@@ -661,7 +661,7 @@
             
             .logo-fade-in {
                 animation: fadeIn 0.6s ease forwards;
-                opacity: 0;
+                opacity: 0.5;
             }
             
             .new-interface-info__details {
