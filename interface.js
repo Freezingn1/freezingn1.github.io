@@ -594,16 +594,13 @@
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
             }
             
-			@keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-			
-            .logo-loading {
-                animation: fadeIn 0.3s ease forwards;
-                opacity: 0;
+            .new-interface-logo.logo-loading {
+                opacity: 0 !important;
             }
             
+            .new-interface-logo {
+                opacity: 1 !important;
+            }
             
             .new-interface-info__details {
                 margin-bottom: 1.6em;
