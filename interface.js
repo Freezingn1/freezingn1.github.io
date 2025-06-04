@@ -599,7 +599,7 @@
                 to { opacity: 1; }
             }
 			
-            .new-interface-logo.logo-loading {
+            .logo-loading {
                 animation: fadeIn 0.3s ease forwards;
                 opacity: 0;
             }
