@@ -3,25 +3,16 @@
 
     // Основная функция для создания интерфейса информации о контенте
     function create() {
-        const LOGO_CACHE_KEY = 'tmdb_logos_cache';
-        let logoCache = JSON.parse(localStorage.getItem(LOGO_CACHE_KEY)) || {};
-        
         var html;
         var timer;
         var network = new Lampa.Reguest();
-        var isDestroyed = false;
+        var loaded = {}; // Кэш загруженных данных
+        var isDestroyed = false; // Флаг уничтожения компонента
 
         // Создание HTML-структуры интерфейса
         this.create = function () {
             if (isDestroyed) return;
-            html = $(`<div class="new-interface-info">
-                <div class="new-interface-info__body">
-                    <div class="new-interface-info__head"></div>
-                    <div class="new-interface-info__title"></div>
-                    <div class="new-interface-info__details"></div>
-                    <div class="new-interface-info__description"></div>
-                </div>
-            </div>`);
+            html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
         };
 
         // Обновление данных интерфейса
@@ -31,17 +22,21 @@
                 return;
             }
 
+            // Получение настроек отображения логотипов
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
+            // Если логотипы не скрыты в настройках
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
+                // Загрузка изображений (логотипов) с TMDB
                 network.silent(url, (images) => {
                     if (isDestroyed || !html) return;
 
                     let bestLogo = null;
                     
+                    // Поиск лучшего логотипа с учетом языковых предпочтений
                     if (images.logos && images.logos.length > 0) {
                         let bestRussianLogo = null;
                         let bestEnglishLogo = null;
@@ -64,19 +59,29 @@
                         });
 
                         bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-                        if (logoSetting === 'ru_only' && !bestRussianLogo) bestLogo = null;
+
+                        // Если в настройках выбраны только русские логотипы и русского нет - не показываем ничего
+                        if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                            bestLogo = null;
+                        }
                     }
                     
                     this.applyLogo(data, bestLogo);
                 }, () => {
+                    // Fallback: если не удалось загрузить логотипы, показываем просто текст
                     if (!isDestroyed && html) {
                         const titleElement = html.find('.new-interface-info__title');
-                        if (titleElement.length) titleElement.text(data.title);
+                        if (titleElement.length) {
+                            titleElement.text(data.title);
+                        }
                     }
                 });
             } else if (!isDestroyed && html) {
+                // Если логотипы скрыты в настройках - показываем просто текст
                 const titleElement = html.find('.new-interface-info__title');
-                if (titleElement.length) titleElement.text(data.title);
+                if (titleElement.length) {
+                    titleElement.text(data.title);
+                }
             }
 
             if (!isDestroyed && html) {
@@ -85,42 +90,32 @@
             }
         };
         
-        // Применение логотипа с кэшированием
+        // Применение логотипа к интерфейсу (оптимизированная версия)
         this.applyLogo = function(data, logo) {
             if (isDestroyed || !html) return;
     
             const titleElement = html.find('.new-interface-info__title');
             if (!titleElement.length) return;
     
+            // Если логотип не найден, показываем текст
             if (!logo || !logo.file_path) {
                 titleElement.text(data.title);
                 return;
             }
 
             const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-            const cacheKey = `${data.id}_${logo.file_path}`;
 
-            // Используем кэшированное изображение если есть
-            if (logoCache[cacheKey]) {
-                titleElement.html(`
-                    <img class="new-interface-logo" 
-                         src="${logoCache[cacheKey]}" 
-                         alt="${data.title}"
-                         loading="eager" />
-                `);
-                return;
-            }
+            // Проверка, не пытаемся ли загрузить то же самое лого повторно
+            if (titleElement.data('current-logo') === imageUrl) return;
+            titleElement.data('current-logo', imageUrl);
 
-            // Загружаем и кэшируем новое изображение
+            // Создаем временный элемент для предзагрузки
             const tempImg = new Image();
             tempImg.src = imageUrl;
 
+            // Обработка успешной загрузки
             tempImg.onload = () => {
                 if (isDestroyed || !html) return;
-                
-                // Сохраняем в кэш
-                logoCache[cacheKey] = imageUrl;
-                localStorage.setItem(LOGO_CACHE_KEY, JSON.stringify(logoCache));
                 
                 titleElement.html(`
                     <img class="new-interface-logo logo-loading" 
@@ -130,19 +125,21 @@
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `);
 
+                // Плавное появление
                 setTimeout(() => {
                     const logoImg = titleElement.find('.new-interface-logo');
                     if (logoImg.length) logoImg.removeClass('logo-loading');
                 }, 10);
             };
 
+            // Обработка ошибки загрузки
             tempImg.onerror = () => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
         };
 
-        // Отрисовка деталей контента
+        // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
         this.draw = function (data) {
             if (isDestroyed || !html) {
                 console.warn('Cannot draw - component is destroyed or HTML not initialized');
@@ -174,21 +171,22 @@
             }
         };
 
-        // Загрузка данных
+        // Загрузка дополнительных данных о контенте
         this.load = function (data) {
             if (isDestroyed) return;
 
             var _this = this;
+
             clearTimeout(timer);
-            
             var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-            
+            if (loaded[url]) return this.draw(loaded[url]);
             timer = setTimeout(function () {
                 if (isDestroyed) return;
                 network.clear();
                 network.timeout(5000);
                 network.silent(url, function (movie) {
                     if (isDestroyed) return;
+                    loaded[url] = movie;
                     _this.draw(movie);
                 }, function() {
                     console.warn('Failed to load additional data for:', data.id);
@@ -196,15 +194,23 @@
             }, 600);
         };
 
-        this.render = function () { return isDestroyed ? null : html; };
+        this.render = function () {
+            return isDestroyed ? null : html;
+        };
+
         this.empty = function () {};
 
-        // Очистка
+        // Очистка и уничтожение интерфейса
         this.destroy = function () {
             isDestroyed = true;
-            logoCache = {};
-            if (html) html.remove();
-            if (network) network.clear();
+            if (html) {
+                html.remove();
+                html = null;
+            }
+            loaded = {};
+            if (network) {
+                network.clear();
+            }
             clearTimeout(timer);
         };
     }
@@ -685,5 +691,5 @@
     }
 
     // Инициализация плагина, если он еще не был инициализирован
- if (!window.plugin_interface_ready) startPlugin();
+    if (!window.plugin_interface_ready) startPlugin();
 })();
