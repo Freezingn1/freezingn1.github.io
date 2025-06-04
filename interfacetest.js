@@ -8,7 +8,7 @@
       var loaded = {};
 
       this.create = function () {
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"><img class=\"title-logo\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
       };
 
       this.update = function (data) {
@@ -21,26 +21,23 @@
 
       this.displayTitleLogo = function(data) {
         var titleElement = html.find('.new-interface-info__title');
-        var logoElement = titleElement.find('.title-logo');
+        titleElement.empty();
         
-        // Очищаем перед обновлением
-        titleElement.text('');
-        logoElement.attr('src', '').attr('alt', '');
-        
-        // Проверяем наличие логотипов
-        if (data.images && data.images.logos && data.images.logos.length > 0) {
+        // Проверяем наличие логотипов в данных
+        if (data.logos && data.logos.length > 0) {
           // Сортируем логотипы: сначала русские, затем английские, затем другие
-          var logos = data.images.logos;
+          var logos = data.logos;
           var ruLogo = logos.find(logo => logo.iso_639_1 === 'ru');
           var enLogo = logos.find(logo => logo.iso_639_1 === 'en');
-          var otherLogo = logos.find(logo => logo.iso_639_1 !== 'ru' && logo.iso_639_1 !== 'en');
+          var otherLogo = logos.find(logo => logo.iso_639_1 && logo.iso_639_1 !== 'ru' && logo.iso_639_1 !== 'en');
           
           var selectedLogo = ruLogo || enLogo || otherLogo || logos[0];
           
-          if (selectedLogo) {
-            logoElement.attr('src', Lampa.Api.img(selectedLogo.file_path, 'w500'));
-            logoElement.attr('alt', data.title || data.name);
-            titleElement.append(logoElement);
+          if (selectedLogo && selectedLogo.file_path) {
+            var logoImg = $('<img class="title-logo">');
+            logoImg.attr('src', Lampa.Api.img(selectedLogo.file_path, 'w500'));
+            logoImg.attr('alt', data.title || data.name);
+            titleElement.append(logoImg);
             return;
           }
         }
@@ -79,7 +76,10 @@
           network.timeout(5000);
           network.silent(url, function (movie) {
             loaded[url] = movie;
-
+            // Добавляем логотипы в данные, если они есть
+            if (movie.images && movie.images.logos) {
+              movie.logos = movie.images.logos;
+            }
             _this.draw(movie);
           });
         }, 300);
