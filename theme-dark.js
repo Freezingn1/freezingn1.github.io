@@ -14,7 +14,7 @@
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/interface.js'], function () { });
 
 	//Каталог парсеров
-	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/Fpubtorr.js'], function () { });
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/pubtorr.js'], function () { });
 
 	//Онлайн
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/cinema.js'], function () { });
