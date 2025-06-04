@@ -6,7 +6,6 @@
         var html;
         var timer;
         var network = new Lampa.Reguest();
-        var loaded = {}; // Кэш загруженных данных
         var isDestroyed = false; // Флаг уничтожения компонента
 
         // Создание HTML-структуры интерфейса
@@ -103,7 +102,7 @@
                 return;
             }
 
-            const imageUrl = Lampa.TMDB.image("/t/p/w300" + logo.file_path);
+            const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
             // Проверка, не пытаемся ли загрузить то же самое лого повторно
             if (titleElement.data('current-logo') === imageUrl) return;
@@ -171,7 +170,7 @@
             }
         };
 
-        // Загрузка дополнительных данных о контенте
+        // Загрузка дополнительных данных о контенте (без кэширования)
         this.load = function (data) {
             if (isDestroyed) return;
 
@@ -179,14 +178,13 @@
 
             clearTimeout(timer);
             var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-            if (loaded[url]) return this.draw(loaded[url]);
+            
             timer = setTimeout(function () {
                 if (isDestroyed) return;
                 network.clear();
                 network.timeout(5000);
                 network.silent(url, function (movie) {
                     if (isDestroyed) return;
-                    loaded[url] = movie;
                     _this.draw(movie);
                 }, function() {
                     console.warn('Failed to load additional data for:', data.id);
@@ -207,7 +205,6 @@
                 html.remove();
                 html = null;
             }
-            loaded = {};
             if (network) {
                 network.clear();
             }
