@@ -318,8 +318,8 @@
           background_last = new_background;
           setTimeout(function () {
             background_img[0].src = background_last;
-          });
-        });
+          }, 300);
+        }, 0.1);
       };
 
         // Добавление элемента в список
