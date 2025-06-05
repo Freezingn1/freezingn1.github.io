@@ -333,9 +333,7 @@
                 background_img.removeClass('loaded');
             };
             
-            setTimeout(function () {
             background_img[0].src = background_last;
-          }, 100);
         };
 
         // Добавление элемента в список
@@ -630,6 +628,10 @@
                 width: 70%;
             }
             
+            .new-interface .full-start__background {
+                opacity: 0.6 !important;
+                transition: none !important;
+            }
             
             .new-interface .full-start__background {
                 height:109% !important;
