@@ -186,7 +186,7 @@
 
             _this.draw(movie);
           });
-        }, 600);
+        }, 300);
       };
 
       this.render = function () {
