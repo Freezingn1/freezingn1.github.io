@@ -348,7 +348,7 @@
                     if (isDestroyed) return;
                     background_img.removeClass('fade-out fade-in');
                 };
-            }, 300); // Задержка перед сменой изображения
+            }, 100); // Задержка перед сменой изображения
         };
 
         // Добавление элемента в список
@@ -646,7 +646,7 @@
             /* Стили для плавного перехода фона */
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
-                transition: opacity 0.3s ease-in-out !important;
+                transition: opacity 0.15s ease-in-out !important;
                 height:109% !important;
                 left:0em !important;
                 top:-9.2% !important;
@@ -654,6 +654,7 @@
             
             .new-interface .full-start__background.fade-out {
                 opacity: 0 !important;
+				transition-duration: 0.1s !important; /* Ещё быстрее для исчезновения */
             }
             
             .new-interface .full-start__background.fade-in {
