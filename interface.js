@@ -319,7 +319,7 @@
           setTimeout(function () {
             background_img[0].src = background_last;
           }, 300);
-        }, 1000);
+        }, 1);
       };
 
         // Добавление элемента в список
