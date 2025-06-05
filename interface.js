@@ -327,10 +327,13 @@
           background_img[0].onerror = function () {
             background_img.removeClass('loaded');
           };
-            
+
+          background_last = new_background;
+          setTimeout(function () {
             background_img[0].src = background_last;
-        };
-		};
+          });
+        });
+      };
 
         // Добавление элемента в список
         this.append = function (element) {
