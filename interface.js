@@ -6,31 +6,37 @@
         var html;
         var timer;
         var network = new Lampa.Reguest();
-        var loaded = {};
-        var isDestroyed = false;
+        var loaded = {}; // Кэш загруженных данных
+        var isDestroyed = false; // Флаг уничтожения компонента
 
+        // Создание HTML-структуры интерфейса
         this.create = function () {
             if (isDestroyed) return;
             html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
         };
 
+        // Обновление данных интерфейса
         this.update = function (data) {
             if (isDestroyed || !html) {
                 console.warn('Cannot update - component is destroyed or HTML not initialized');
                 return;
             }
 
+            // Получение настроек отображения логотипов
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
+            // Если логотипы не скрыты в настройках
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
+                // Загрузка изображений (логотипов) с TMDB
                 network.silent(url, (images) => {
                     if (isDestroyed || !html) return;
 
                     let bestLogo = null;
                     
+                    // Поиск лучшего логотипа с учетом языковых предпочтений
                     if (images.logos && images.logos.length > 0) {
                         let bestRussianLogo = null;
                         let bestEnglishLogo = null;
@@ -54,6 +60,7 @@
 
                         bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
 
+                        // Если в настройках выбраны только русские логотипы и русского нет - не показываем ничего
                         if (logoSetting === 'ru_only' && !bestRussianLogo) {
                             bestLogo = null;
                         }
@@ -61,6 +68,7 @@
                     
                     this.applyLogo(data, bestLogo);
                 }, () => {
+                    // Fallback: если не удалось загрузить логотипы, показываем просто текст
                     if (!isDestroyed && html) {
                         const titleElement = html.find('.new-interface-info__title');
                         if (titleElement.length) {
@@ -69,6 +77,7 @@
                     }
                 });
             } else if (!isDestroyed && html) {
+                // Если логотипы скрыты в настройках - показываем просто текст
                 const titleElement = html.find('.new-interface-info__title');
                 if (titleElement.length) {
                     titleElement.text(data.title);
@@ -81,12 +90,14 @@
             }
         };
         
+        // Применение логотипа к интерфейсу (оптимизированная версия)
         this.applyLogo = function(data, logo) {
             if (isDestroyed || !html) return;
     
             const titleElement = html.find('.new-interface-info__title');
             if (!titleElement.length) return;
     
+            // Если логотип не найден, показываем текст
             if (!logo || !logo.file_path) {
                 titleElement.text(data.title);
                 return;
@@ -94,12 +105,15 @@
 
             const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
+            // Проверка, не пытаемся ли загрузить то же самое лого повторно
             if (titleElement.data('current-logo') === imageUrl) return;
             titleElement.data('current-logo', imageUrl);
 
+            // Создаем временный элемент для предзагрузки
             const tempImg = new Image();
             tempImg.src = imageUrl;
 
+            // Обработка успешной загрузки
             tempImg.onload = () => {
                 if (isDestroyed || !html) return;
                 
@@ -111,18 +125,21 @@
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `);
 
+                // Плавное появление
                 setTimeout(() => {
                     const logoImg = titleElement.find('.new-interface-logo');
                     if (logoImg.length) logoImg.removeClass('logo-loading');
                 }, 10);
             };
 
+            // Обработка ошибки загрузки
             tempImg.onerror = () => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
         };
 
+        // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
         this.draw = function (data) {
             if (isDestroyed || !html) {
                 console.warn('Cannot draw - component is destroyed or HTML not initialized');
@@ -154,6 +171,7 @@
             }
         };
 
+        // Загрузка дополнительных данных о контенте
         this.load = function (data) {
             if (isDestroyed) return;
 
@@ -182,6 +200,7 @@
 
         this.empty = function () {};
 
+        // Очистка и уничтожение интерфейса
         this.destroy = function () {
             isDestroyed = true;
             if (html) {
@@ -205,31 +224,20 @@
             scroll_by_item: true
         });
         var items = [];
-        var html = $('<div class="new-interface">' +
-                    '<div class="full-start__background-container">' +
-                      '<img class="full-start__background back-layer">' +
-                      '<img class="full-start__background front-layer">' +
-                    '</div>' +
-                  '</div>');
+        var html = $('<div class="new-interface"><img class="full-start__background"></div>');
         var active = 0;
         var newlampa = Lampa.Manifest.app_digital >= 166;
         var info;
         var lezydata;
         var viewall = Lampa.Storage.field('card_views_type') == 'view' || Lampa.Storage.field('navigation_type') == 'mouse';
+        var background_img = html.find('.full-start__background');
         var background_last = '';
         var background_timer;
         var isDestroyed = false;
 
-        // Предзагрузка первых 3 фонов
-        if (object.data && object.data.slice) {
-            object.data.slice(0, 3).forEach(item => {
-                const img = new Image();
-                img.src = Lampa.Api.img(item.backdrop_path, 'w1280');
-            });
-        }
-
         this.create = function () {};
 
+        // Отображение пустого состояния
         this.empty = function () {
             if (isDestroyed) return;
 
@@ -252,6 +260,7 @@
             this.activity.toggle();
         };
 
+        // Загрузка следующей порции данных
         this.loadNext = function () {
             if (isDestroyed) return;
 
@@ -273,6 +282,7 @@
 
         this.push = function () {};
 
+        // Построение интерфейса с полученными данными
         this.build = function (data) {
             if (isDestroyed) return;
 
@@ -302,6 +312,7 @@
             this.activity.toggle();
         };
 
+        // Обновление фонового изображения
         this.background = function (elem) {
             if (isDestroyed) return;
 
@@ -309,27 +320,23 @@
             clearTimeout(background_timer);
             if (new_background == background_last) return;
             
-            var back_layer = html.find('.back-layer');
-            var front_layer = html.find('.front-layer');
+            background_last = new_background;
+            background_img.removeClass('loaded');
             
-            if (!background_last) {
-                back_layer[0].src = new_background;
-                background_last = new_background;
-                return;
-            }
-            
-            front_layer[0].src = new_background;
-            front_layer.css('opacity', '0');
-            
-            front_layer.stop(true).animate({opacity: 0.6}, 200, function() {
+            background_img[0].onload = function () {
                 if (isDestroyed) return;
-                
-                back_layer[0].src = new_background;
-                front_layer.css('opacity', '0');
-                background_last = new_background;
-            });
+                background_img.addClass('loaded');
+            };
+            
+            background_img[0].onerror = function () {
+                if (isDestroyed) return;
+                background_img.removeClass('loaded');
+            };
+            
+            background_img[0].src = background_last;
         };
 
+        // Добавление элемента в список
         this.append = function (element) {
             if (isDestroyed) return;
 
@@ -379,11 +386,13 @@
             items.push(item);
         };
 
+        // Навигация назад
         this.back = function () {
             if (isDestroyed) return;
             Lampa.Activity.backward();
         };
 
+        // Навигация вниз
         this.down = function () {
             if (isDestroyed) return;
 
@@ -394,6 +403,7 @@
             scroll.update(items[active].render());
         };
 
+        // Навигация вверх
         this.up = function () {
             if (isDestroyed) return;
 
@@ -408,6 +418,7 @@
             }
         };
 
+        // Инициализация управления
         this.start = function () {
             if (isDestroyed) return;
 
@@ -459,6 +470,7 @@
             return isDestroyed ? null : html;
         };
 
+        // Очистка и уничтожение компонента
         this.destroy = function () {
             isDestroyed = true;
             if (network) network.clear();
@@ -473,11 +485,13 @@
         };
     }
 
+    // Инициализация плагина
     function startPlugin() {
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
 
+        // Переопределение основного интерфейса
         Lampa.InteractionMain = function (object) {
             var use = new_interface;
 
@@ -490,6 +504,7 @@
             return new use(object);
         };
         
+        // Добавление компонента в настройки
         Lampa.SettingsApi.addComponent({
             component: 'styleint',
             name: Lampa.Lang.translate('Стильный интерфейс'),
@@ -498,6 +513,7 @@
             `
         });
 
+        // Добавление параметра настройки логотипов
         Lampa.SettingsApi.addParam({
             component: "styleint",
             param: {
@@ -516,6 +532,7 @@
             }
         }); 
 
+        // Добавление CSS стилей для нового интерфейса (с анимацией логотипов)
         Lampa.Template.add('new_interface_style', `
             <style>
             .new-interface .card--small.card--wide {
@@ -611,33 +628,15 @@
                 width: 70%;
             }
             
-            /* Стили для плавного перехода фона */
-            .full-start__background-container {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-                z-index: 0;
+            .new-interface .full-start__background {
+                opacity: 0.6 !important;
+                transition: none !important;
             }
             
-            .full-start__background {
-                position: absolute;
-                width: 100%;
-                height: 109%;
-                left: 0;
-                top: -9.2%;
-                object-fit: cover;
-                opacity: 0.6;
-                transition: opacity 0.2s ease-out;
-            }
-            
-            .full-start__background.back-layer {
-                z-index: 1;
-            }
-            
-            .full-start__background.front-layer {
-                z-index: 2;
-                opacity: 0;
+            .new-interface .full-start__background {
+                height:109% !important;
+                left:0em !important;
+                top:-9.2% !important;
             }
             
             .new-interface .full-start__rate {
@@ -687,8 +686,10 @@
             </style>
         `);				
         
+        // Добавление стилей в DOM
         $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
+    // Инициализация плагина, если он еще не был инициализирован
     if (!window.plugin_interface_ready) startPlugin();
 })();
