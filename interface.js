@@ -335,7 +335,7 @@
             
             setTimeout(function () {
             background_img[0].src = background_last;
-          }, 300);
+          }, 100);
         };
 
         // Добавление элемента в список
