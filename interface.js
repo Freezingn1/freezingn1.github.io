@@ -173,33 +173,46 @@
 
         // Загрузка дополнительных данных о контенте
         this.load = function (data) {
-        var _this = this;
+            if (isDestroyed) return;
 
-        clearTimeout(timer);
-        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-        if (loaded[url]) return this.draw(loaded[url]);
-        timer = setTimeout(function () {
-          network.clear();
-          network.timeout(5000);
-          network.silent(url, function (movie) {
-            loaded[url] = movie;
+            var _this = this;
 
-            _this.draw(movie);
-          });
-        }, 300);
-      };
+            clearTimeout(timer);
+            var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
+            if (loaded[url]) return this.draw(loaded[url]);
+            timer = setTimeout(function () {
+                if (isDestroyed) return;
+                network.clear();
+                network.timeout(5000);
+                network.silent(url, function (movie) {
+                    if (isDestroyed) return;
+                    loaded[url] = movie;
+                    _this.draw(movie);
+                }, function() {
+                    console.warn('Failed to load additional data for:', data.id);
+                });
+            }, 600);
+        };
 
         this.render = function () {
-        return html;
-      };
+            return isDestroyed ? null : html;
+        };
 
-      this.empty = function () {};
+        this.empty = function () {};
 
-      this.destroy = function () {
-        html.remove();
-        loaded = {};
-        html = null;
-      };
+        // Очистка и уничтожение интерфейса
+        this.destroy = function () {
+            isDestroyed = true;
+            if (html) {
+                html.remove();
+                html = null;
+            }
+            loaded = {};
+            if (network) {
+                network.clear();
+            }
+            clearTimeout(timer);
+        };
     }
 
     // Основной компонент интерфейса
@@ -301,26 +314,27 @@
 
         // Обновление фонового изображения
         this.background = function (elem) {
-        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-        clearTimeout(background_timer);
-        if (new_background == background_last) return;
-        background_timer = setTimeout(function () {
-          background_img.removeClass('loaded');
+            if (isDestroyed) return;
 
-          background_img[0].onload = function () {
-            background_img.addClass('loaded');
-          };
-
-          background_img[0].onerror = function () {
+            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+            clearTimeout(background_timer);
+            if (new_background == background_last) return;
+            
+            background_last = new_background;
             background_img.removeClass('loaded');
-          };
-
-          background_last = new_background;
-          setTimeout(function () {
+            
+            background_img[0].onload = function () {
+                if (isDestroyed) return;
+                background_img.addClass('loaded');
+            };
+            
+            background_img[0].onerror = function () {
+                if (isDestroyed) return;
+                background_img.removeClass('loaded');
+            };
+            
             background_img[0].src = background_last;
-          }, 300);
-        }, 1);
-      };
+        };
 
         // Добавление элемента в список
         this.append = function (element) {
@@ -614,7 +628,6 @@
                 width: 70%;
             }
             
-
             
             .new-interface .full-start__background {
                 height:109% !important;
