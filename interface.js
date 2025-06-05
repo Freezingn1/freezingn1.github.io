@@ -312,7 +312,7 @@
             this.activity.toggle();
         };
 
-        // Обновление фонового изображения
+        // Обновление фонового изображения с плавной анимацией
         this.background = function (elem) {
             if (isDestroyed) return;
 
@@ -321,19 +321,34 @@
             if (new_background == background_last) return;
             
             background_last = new_background;
-            background_img.removeClass('loaded');
             
-            background_img[0].onload = function () {
+            // Добавляем класс для плавного исчезновения
+            background_img.addClass('fade-out');
+            
+            background_timer = setTimeout(() => {
                 if (isDestroyed) return;
-                background_img.addClass('loaded');
-            };
-            
-            background_img[0].onerror = function () {
-                if (isDestroyed) return;
-                background_img.removeClass('loaded');
-            };
-            
-            background_img[0].src = background_last;
+                
+                // Устанавливаем новый источник изображения
+                background_img[0].src = background_last;
+                
+                // Обработчики для плавного появления
+                background_img[0].onload = function () {
+                    if (isDestroyed) return;
+                    background_img.removeClass('fade-out');
+                    background_img.addClass('fade-in');
+                    
+                    // Убираем класс fade-in после завершения анимации
+                    setTimeout(() => {
+                        if (isDestroyed) return;
+                        background_img.removeClass('fade-in');
+                    }, 300);
+                };
+                
+                background_img[0].onerror = function () {
+                    if (isDestroyed) return;
+                    background_img.removeClass('fade-out fade-in');
+                };
+            }, 300); // Задержка перед сменой изображения
         };
 
         // Добавление элемента в список
@@ -532,7 +547,7 @@
             }
         }); 
 
-        // Добавление CSS стилей для нового интерфейса (с анимацией логотипов)
+        // Добавление CSS стилей для нового интерфейса с анимациями
         Lampa.Template.add('new_interface_style', `
             <style>
             .new-interface .card--small.card--wide {
@@ -628,15 +643,21 @@
                 width: 70%;
             }
             
+            /* Стили для плавного перехода фона */
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
-                transition: none !important;
-            }
-            
-            .new-interface .full-start__background {
+                transition: opacity 0.3s ease-in-out !important;
                 height:109% !important;
                 left:0em !important;
                 top:-9.2% !important;
+            }
+            
+            .new-interface .full-start__background.fade-out {
+                opacity: 0 !important;
+            }
+            
+            .new-interface .full-start__background.fade-in {
+                opacity: 0.6 !important;
             }
             
             .new-interface .full-start__rate {
