@@ -173,46 +173,33 @@
 
         // Загрузка дополнительных данных о контенте
         this.load = function (data) {
-            if (isDestroyed) return;
+        var _this = this;
 
-            var _this = this;
+        clearTimeout(timer);
+        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
+        if (loaded[url]) return this.draw(loaded[url]);
+        timer = setTimeout(function () {
+          network.clear();
+          network.timeout(5000);
+          network.silent(url, function (movie) {
+            loaded[url] = movie;
 
-            clearTimeout(timer);
-            var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-            if (loaded[url]) return this.draw(loaded[url]);
-            timer = setTimeout(function () {
-                if (isDestroyed) return;
-                network.clear();
-                network.timeout(5000);
-                network.silent(url, function (movie) {
-                    if (isDestroyed) return;
-                    loaded[url] = movie;
-                    _this.draw(movie);
-                }, function() {
-                    console.warn('Failed to load additional data for:', data.id);
-                });
-            }, 600);
-        };
+            _this.draw(movie);
+          });
+        }, 300);
+      };
 
         this.render = function () {
-            return isDestroyed ? null : html;
-        };
+        return html;
+      };
 
-        this.empty = function () {};
+      this.empty = function () {};
 
-        // Очистка и уничтожение интерфейса
-        this.destroy = function () {
-            isDestroyed = true;
-            if (html) {
-                html.remove();
-                html = null;
-            }
-            loaded = {};
-            if (network) {
-                network.clear();
-            }
-            clearTimeout(timer);
-        };
+      this.destroy = function () {
+        html.remove();
+        loaded = {};
+        html = null;
+      };
     }
 
     // Основной компонент интерфейса
