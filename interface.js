@@ -206,7 +206,7 @@
                 }, function() {
                     console.warn('Failed to load additional data for:', data.id);
                 });
-            }, 600);
+            }, 300);
         };
 
         this.render = function () {
