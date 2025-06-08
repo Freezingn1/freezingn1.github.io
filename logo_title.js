@@ -1,79 +1,84 @@
 !function() {
     "use strict";
-    
-    // Добавляем компонент в настройки Lampa
-    Lampa.SettingsApi.addComponent({
-        component: 'logo_nazvanie',
-        name: Lampa.Lang.translate('Интерфейс карточек'),
-        icon: `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M16,216H92a52,52,0,1,0-52-52C40,200,16,216,16,216Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M112.41,116.16C131.6,90.29,179.46,32,224,32c0,44.54-58.29,92.4-84.16,111.59" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M133,90.64a84.39,84.39,0,0,1,32.41,32.41" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-        `
-    });
 
-    // Настройки отображения логотипов
-    Lampa.SettingsApi.addParam({
-        component: "logo_nazvanie",
-        param: {
-            name: "logo_glav",
-            type: "select",
-            values: { 
-                "show_all": "Все логотипы", 
-                "ru_only": "Только русские", 
-                "hide": "Скрыть логотипы"
-            },
-            default: "show_all"
-        },
-        field: {
-            name: "Настройки логотипов в карточке",
-            description: "Управление отображением логотипов вместо названий"
+    function initPlugin() {
+        // Проверяем, что Lampa и её API загружены
+        if (!window.Lampa || !Lampa.SettingsApi || !Lampa.Storage || !Lampa.TMDB) {
+            console.error("Lampa API не доступен. Плагин не будет инициализирован.");
+            return;
         }
-    });
 
-    // Настройки отображения русских названий
-    Lampa.SettingsApi.addParam({
-        component: "logo_nazvanie",
-        param: {
-            name: "russian_titles_settings",
-            type: "select",
-            values: {
-                "show_when_no_ru_logo": "Показывать, если нет русского логотипа",
-                "show_never": "Никогда не показывать",
-                "show_always": "Показывать всегда (если доступно)"
-            },
-            default: "show_when_no_ru_logo"
-        },
-        field: {
-            name: "Настройки русских названий",
-            description: "Управление отображением русских названий"
+        // Проверяем, не был ли уже загружен плагин
+        if (window.logoplugin) {
+            console.log("Плагин логотипов уже инициализирован.");
+            return;
         }
-    });
-
-    // Проверяем, не был ли уже загружен плагин
-    if (!window.logoplugin) {
         window.logoplugin = true;
 
+        // Добавляем компонент в настройки Lampa
+        Lampa.SettingsApi.addComponent({
+            component: 'logo_nazvanie',
+            name: Lampa.Lang.translate('Интерфейс карточек'),
+            icon: `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M16,216H92a52,52,0,1,0-52-52C40,200,16,216,16,216Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M112.41,116.16C131.6,90.29,179.46,32,224,32c0,44.54-58.29,92.4-84.16,111.59" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M133,90.64a84.39,84.39,0,0,1,32.41,32.41" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+            `
+        });
+
+        // Настройки отображения логотипов
+        Lampa.SettingsApi.addParam({
+            component: "logo_nazvanie",
+            param: {
+                name: "logo_glav",
+                type: "select",
+                values: { 
+                    "show_all": "Все логотипы", 
+                    "ru_only": "Только русские", 
+                    "hide": "Скрыть логотипы"
+                },
+                default: "show_all"
+            },
+            field: {
+                name: "Настройки логотипов в карточке",
+                description: "Управление отображением логотипов вместо названий"
+            }
+        });
+
+        // Настройки отображения русских названий
+        Lampa.SettingsApi.addParam({
+            component: "logo_nazvanie",
+            param: {
+                name: "russian_titles_settings",
+                type: "select",
+                values: {
+                    "show_when_no_ru_logo": "Показывать, если нет русского логотипа",
+                    "show_never": "Никогда не показывать",
+                    "show_always": "Показывать всегда (если доступно)"
+                },
+                default: "show_when_no_ru_logo"
+            },
+            field: {
+                name: "Настройки русских названий",
+                description: "Управление отображением русских названий"
+            }
+        });
+
         const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
-        const titleCache = new Map(); // Кэш для хранения русских названий
+        const titleCache = new Map();
 
         /**
          * Выбирает лучший логотип в зависимости от настроек
-         * @param {Array} logos - Массив логотипов
-         * @param {string} setting - Настройка отображения логотипов
-         * @returns {Object|null} Лучший логотип или null
          */
         function getBestLogo(logos, setting) {
             if (!logos || !logos.length) return null;
 
             let filteredLogos = [...logos];
             
-            // Фильтрация по русским логотипам, если выбрана соответствующая настройка
             if (setting === "ru_only") {
                 filteredLogos = filteredLogos.filter(l => l.iso_639_1 === 'ru');
             }
 
             if (!filteredLogos.length) return null;
 
-            // Сортируем: русские -> английские -> другие, затем по рейтингу
             return filteredLogos.sort((a, b) => {
                 const langPriority = {
                     'ru': 3,
@@ -92,8 +97,6 @@
 
         /**
          * Получает русское название для карточки
-         * @param {Object} card - Объект карточки фильма/сериала
-         * @returns {Promise<string|null>} Русское название или null
          */
         async function fetchRussianTitle(card) {
             try {
@@ -136,16 +139,13 @@
                 const originalTitle = movie.title || movie.name;
                 if (!originalTitle) return;
                 
-                // Проверяем, является ли контент аниме
                 const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                                 || /аниме|anime/i.test(originalTitle);
                 const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
                 const russianTitleSetting = Lampa.Storage.get("russian_titles_settings") || "show_when_no_ru_logo";
 
-                // Удаляем предыдущие русские названия
                 render.find('.ru-title-full').remove();
 
-                // Режим "Скрыть логотипы" - показываем только оригинальное название
                 if (logoSetting === "hide") {
                     showTextTitle();
                     if (russianTitleSetting === "show_always") {
@@ -154,10 +154,8 @@
                     return;
                 }
 
-                // Очищаем заголовок перед загрузкой
                 titleElement.empty();
 
-                // Загружаем все логотипы с TMDB
                 const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
 
                 $.get(tmdbUrl, function(data) {
@@ -165,17 +163,14 @@
                     const logo = getBestLogo(logos, logoSetting);
 
                     if (logo?.file_path) {
-                        // Показываем логотип
-                        const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
+                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
                         titleElement.html(`<img style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));" src="${imageUrl}" />`);
                         
-                        // Показываем русское название в зависимости от настроек
                         if (russianTitleSetting === "show_always" || 
                             (russianTitleSetting === "show_when_no_ru_logo" && logo.iso_639_1 !== "ru")) {
                             showRussianTitle();
                         }
                     } else {
-                        // Если логотипов нет вообще
                         showTextTitle();
                         if (russianTitleSetting === "show_always") {
                             showRussianTitle();
@@ -186,9 +181,6 @@
                     showTextTitle();
                 });
 
-                /**
-                 * Показывает русское название под заголовком
-                 */
                 function showRussianTitle() {
                     fetchRussianTitle(movie).then(title => {
                         if (title && render && render.find) {
@@ -204,9 +196,6 @@
                     });
                 }
 
-                /**
-                 * Показывает текстовый заголовок (оригинальное название)
-                 */
                 function showTextTitle() {
                     if (isAnime) {
                         titleElement.html(`<span style="font-family: 'Anime Ace', sans-serif; color: #ff6b6b;">${originalTitle}</span>`);
@@ -219,7 +208,7 @@
             }
         });
 
-        // Добавляем CSS стили для плавного появления русских названий
+        // Добавляем CSS стили
         const style = document.createElement('style');
         style.textContent = `
             .ru-title-full {
@@ -230,5 +219,21 @@
             }
         `;
         document.head.appendChild(style);
+    }
+
+    // Ждем полной загрузки страницы и готовности Lampa
+    function checkLampaLoaded() {
+        if (window.Lampa && Lampa.SettingsApi) {
+            initPlugin();
+        } else {
+            setTimeout(checkLampaLoaded, 100);
+        }
+    }
+
+    if (document.readyState === "complete") {
+        checkLampaLoaded();
+    } else {
+        document.addEventListener("DOMContentLoaded", checkLampaLoaded);
+        window.addEventListener("load", checkLampaLoaded);
     }
 }();
