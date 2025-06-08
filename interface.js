@@ -6,8 +6,6 @@
     var backgroundCache = {};
     var MAX_CACHE_SIZE = 100;
 	var background_last_path = '';
-	var logoCache = {};
-	var currentLogoId = null;
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -100,60 +98,61 @@
         
         // Применение логотипа к интерфейсу с кэшированием
         this.applyLogo = function(data, logo) {
-    if (isDestroyed || !html) return;
-
-    const titleElement = html.find('.new-interface-info__title');
-    if (!titleElement.length) return;
-
-    // Если это тот же самый контент - ничего не делаем
-    if (currentLogoId === data.id) return;
-    currentLogoId = data.id;
-
-    const cacheKey = `${data.id}_${Lampa.Storage.get('language')}`;
+            if (isDestroyed || !html) return;
     
-    // Проверяем кэш
-    if (logoCache[cacheKey]) {
-        titleElement.html(logoCache[cacheKey]);
-        return;
-    }
-
-    // Если логотип не найден
-    if (!logo || !logo.file_path) {
-        const textHtml = `<div class="fallback-title">${data.title}</div>`;
-        logoCache[cacheKey] = textHtml;
-        titleElement.html(textHtml);
-        return;
-    }
-
-    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+            const titleElement = html.find('.new-interface-info__title');
+            if (!titleElement.length) return;
     
-    // Создаем HTML для логотипа
-    const logoHtml = `
-        <img class="new-interface-logo logo-loading" 
-             src="${imageUrl}" 
-             alt="${data.title}"
-             loading="eager"
-             onerror="this.classList.add('logo-error'); this.nextElementSibling?.classList.remove('hidden')" />
-        <div class="fallback-title hidden">${data.title}</div>
-    `;
+            if (!logo || !logo.file_path) {
+                titleElement.text(data.title);
+                return;
+            }
 
-    // Сохраняем в кэш
-    logoCache[cacheKey] = logoHtml;
-    titleElement.html(logoHtml);
+            const imageUrl = Lampa.TMDB.image("/t/p/w300" + logo.file_path);
 
-    // Плавное появление
-    setTimeout(() => {
-        const logoImg = titleElement.find('.new-interface-logo');
-        if (logoImg.length) logoImg.removeClass('logo-loading');
-    }, 10);
-};
+            // Проверка кэша
+            if (imageCache[imageUrl]) {
+                titleElement.html(imageCache[imageUrl]);
+                return;
+            }
 
-// В функции destroy очищаем текущий ID
-this.destroy = function() {
-    isDestroyed = true;
-    currentLogoId = null;
-};
-	
+            // Проверка, не пытаемся ли загрузить то же самое лого повторно
+            if (titleElement.data('current-logo') === imageUrl) return;
+            titleElement.data('current-logo', imageUrl);
+
+            // Создаем временный элемент для предзагрузки
+            const tempImg = new Image();
+            tempImg.src = imageUrl;
+
+            // Обработка успешной загрузки
+            tempImg.onload = () => {
+                if (isDestroyed || !html) return;
+                
+                const logoHtml = `
+                    <img class="new-interface-logo logo-loading" 
+                         src="${imageUrl}" 
+                         alt="${data.title}"
+                         loading="eager"
+                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+                `;
+                
+                // Сохраняем в кэш
+                addToCache(imageCache, imageUrl, logoHtml);
+                titleElement.html(logoHtml);
+
+                // Плавное появление
+                setTimeout(() => {
+                    const logoImg = titleElement.find('.new-interface-logo');
+                    if (logoImg.length) logoImg.removeClass('logo-loading');
+                }, 10);
+            };
+
+            // Обработка ошибки загрузки
+            tempImg.onerror = () => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            };
+        };
 
         // Отрисовка деталей контента
         this.draw = function (data) {
@@ -642,26 +641,6 @@ this.destroy = function() {
                 min-height: 1.9em;
                 font-size: 1.3em;
             }
-			
-			.fallback-title {
-    font-size: 2.5em;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-top: 0.3em;
-    display: none;
-}
-
-.fallback-title:only-child {
-    display: block;
-}
-
-.new-interface-logo.logo-error + .fallback-title {
-    display: block;
-}
-
-.new-interface-logo.logo-error {
-    display: none;
-}
             
             .new-interface-info__split {
                 margin: 0 1em;
