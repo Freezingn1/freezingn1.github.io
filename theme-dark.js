@@ -9,7 +9,10 @@
 
 	//Подборки
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/surs.js'], function () { });
-
+	
+	//Прокси
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/tmdb.js'], function () { });
+	
 	//Настройка шапки
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/head_filter.js'], function () { });
 
