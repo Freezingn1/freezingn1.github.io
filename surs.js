@@ -434,9 +434,6 @@ function startPlugin() {
             baseUrl = applyAgeRestriction(baseUrl);
 
             owner.get(baseUrl, params, function (json) {
-				if(json.results && getStoredSetting('shuffleTrending', true)) {
-                json.results = shuffleArray(json.results);
-            }
                 if (json.results) {
                     json.results = json.results.filter(function (result) {
                         var forbiddenCountries = ['KR', 'CN', 'JP'];
