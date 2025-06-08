@@ -642,6 +642,26 @@ this.destroy = function() {
                 min-height: 1.9em;
                 font-size: 1.3em;
             }
+			
+			.fallback-title {
+    font-size: 2.5em;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-top: 0.3em;
+    display: none;
+}
+
+.fallback-title:only-child {
+    display: block;
+}
+
+.new-interface-logo.logo-error + .fallback-title {
+    display: block;
+}
+
+.new-interface-logo.logo-error {
+    display: none;
+}
             
             .new-interface-info__split {
                 margin: 0 1em;
