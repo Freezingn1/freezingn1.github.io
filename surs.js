@@ -421,24 +421,29 @@ function startPlugin() {
             }
 
             var partsData = [
-                function (callback) {
-                    var baseUrl = 'trending/all/week';
-                    baseUrl = applyAgeRestriction(baseUrl);
+        function (callback) {
+            var baseUrl = 'trending/all/week';
+            baseUrl = applyAgeRestriction(baseUrl);
 
-                    owner.get(baseUrl, params, function (json) {
-                        if (json.results) {
-                            json.results = json.results.filter(function (result) {
-                                var forbiddenCountries = ['KR', 'CN', 'JP'];
-                                return !result.origin_country || !result.origin_country.some(function (country) {
-                                    return forbiddenCountries.includes(country);
-                                });
-                            });
-                        }
-                        json.title = Lampa.Lang.translate('surs_title_trend_week');
-                        callback(json);
-                    }, callback);
+            owner.get(baseUrl, params, function (json) {
+                if (json.results) {
+                    json.results = json.results.filter(function (result) {
+                        var forbiddenCountries = ['KR', 'CN', 'JP'];
+                        return !result.origin_country || !result.origin_country.some(function (country) {
+                            return forbiddenCountries.includes(country);
+                        });
+                    });
+                    
+                    // Добавьте эту проверку и вызов shuffleArray
+                    if (getStoredSetting('shuffleTrending', true)) {
+                        shuffleArray(json.results);
+                    }
                 }
-            ];
+                json.title = Lampa.Lang.translate('surs_title_trend_week');
+                callback(json);
+            }, callback);
+        }
+    ];
 
             var CustomData = [];
 
@@ -2814,6 +2819,22 @@ function showTVShowsByGenreSelectionMenu(previousController) {
             showCirillicMenu(previousController);
         }
     });
+	
+	Lampa.SettingsApi.addParam({
+        component: 'surs',
+        param: {
+            name: 'surs_shuffle_trending',
+            type: 'button'
+        },
+        field: {
+            name: Lampa.Lang.translate('surs_shuffle_trending'),
+            description: Lampa.Lang.translate('surs_shuffle_trending_description')
+        },
+        onChange: function() {
+            var previousController = Lampa.Controller.enabled().name;
+            showShuffleTrendingMenu(previousController);
+        }
+    });
 
     function showCirillicMenu(previousController) {
         var key = 'cirillic';
@@ -2861,6 +2882,37 @@ function showTVShowsByGenreSelectionMenu(previousController) {
             showMinVotesMenu(previousController);
         }
     });
+	
+	 function showShuffleTrendingMenu(previousController) {
+        var key = 'shuffleTrending';
+        var currentValue = getStoredSetting(key, '1');
+
+        var options = [
+            { title: Lampa.Lang.translate('surs_shuffle_enabled'), value: '1' },
+            { title: Lampa.Lang.translate('surs_shuffle_disabled'), value: '0' }
+        ];
+
+        var items = options.map(function(option) {
+            return {
+                title: option.title,
+                value: option.value,
+                checkbox: true,
+                checked: currentValue === option.value
+            };
+        });
+
+        Lampa.Select.show({
+            title: Lampa.Lang.translate('surs_shuffle_trending'),
+            items: items,
+            onBack: function() {
+                Lampa.Controller.toggle(previousController || 'settings');
+            },
+            onCheck: function(selected) {
+                setStoredSetting(key, selected.value);
+                showShuffleTrendingMenu(previousController);
+            }
+        });
+    }
 
     function showMinVotesMenu(previousController) {
         var key = 'minVotes';
@@ -3550,6 +3602,26 @@ surs_ukrainian: {
     en: "Ukrainian",
     uk: "українські"
 },
+surs_shuffle_trending: {
+        ru: "Перемешивание трендов",
+        en: "Shuffle trending",
+        uk: "Перемішування трендів"
+    },
+    surs_shuffle_trending_description: {
+        ru: "Включите, чтобы перемешивать список трендов недели",
+        en: "Enable to shuffle the weekly trending list",
+        uk: "Увімкніть, щоб перемішувати список трендів тижня"
+    },
+    surs_shuffle_enabled: {
+        ru: "Включено",
+        en: "Enabled",
+        uk: "Увімкнено"
+    },
+    surs_shuffle_disabled: {
+        ru: "Выключено",
+        en: "Disabled",
+        uk: "Вимкнено"
+    },
     
 });
 
