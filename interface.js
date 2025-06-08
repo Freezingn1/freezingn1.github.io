@@ -108,7 +108,7 @@
                 return;
             }
 
-            const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+            const imageUrl = Lampa.TMDB.image("/t/p/w300" + logo.file_path);
 
             // Проверка кэша
             if (imageCache[imageUrl]) {
