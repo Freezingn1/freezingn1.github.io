@@ -616,9 +616,6 @@
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
             }
             
-            .new-interface-logo.logo-loading {
-                opacity: 0 !important;
-            }
             
             .new-interface-logo {
                 opacity: 1 !important;
