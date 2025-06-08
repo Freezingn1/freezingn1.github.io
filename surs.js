@@ -596,18 +596,15 @@ function getMovies(genre, options) {
         apiUrl = buildApiUrl(apiUrl);
         apiUrl = excludeAsia(apiUrl);
 
-        owner.get(apiUrl, params, function (json) {
-            if (json.results) {
-                if (!options.russian && !options.ukrainian) {
-                    json.results = applyFilters(json.results);
-                }
-                var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
-                                 
-                                 options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
-                json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' (' + Lampa.Lang.translate(genre.title) + ')';
-            }
-            callback(json);
-        }, callback);
+        owner.get(apiUrl, params, function(json) {
+    if(json.results) {
+        json.results = applyFilters(json.results);
+        if(getStoredSetting('shuffleTrending', true)) {
+            json.results = shuffleArray(json.results);
+        }
+    }
+    callback(json);
+}, callback);
     };
 }
 
@@ -638,19 +635,15 @@ function getTVShows(genre, options) {
 
         apiUrl = buildApiUrl(apiUrl);
 
-        owner.get(apiUrl, params, function (json) {
-            if (json.results) {
-                if (!options.russian && !options.ukrainian) {
-                    json.results = applyFilters(json.results);
-                }
-                var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
-                                 options.korean ? Lampa.Lang.translate('surs_korean') :
-                                 options.turkish ? Lampa.Lang.translate('surs_turkish') :
-                                 options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
-                json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' ' + Lampa.Lang.translate('surs_tv_shows') + ' (' + Lampa.Lang.translate(genre.title) + ')';
-            }
-            callback(json);
-        }, callback);
+        owner.get(apiUrl, params, function(json) {
+    if(json.results) {
+        json.results = applyFilters(json.results);
+        if(getStoredSetting('shuffleTrending', true)) {
+            json.results = shuffleArray(json.results);
+        }
+    }
+    callback(json);
+}, callback);
     };
 }
 
@@ -709,14 +702,15 @@ genres.forEach(function (genre) {
                     apiUrl = applyWithoutKeywords(apiUrl);
                     apiUrl = excludeAsia(apiUrl);
 
-                    owner.get(apiUrl, params, function (json) {
-                        if (json.results) {
-                            json.results = filterCyrillic(json.results);
-                        }
-
-                        json.title = Lampa.Lang.translate(contentType === 'movie' ? 'surs_top_movies' : 'surs_top_tv') + ' (' + Lampa.Lang.translate(genre.title) + ')';
-                        callback(json);
-                    }, callback);
+                    owner.get(apiUrl, params, function(json) {
+    if(json.results) {
+        json.results = applyFilters(json.results);
+        if(getStoredSetting('shuffleTrending', true)) {
+            json.results = shuffleArray(json.results);
+        }
+    }
+    callback(json);
+}, callback);
                 };
             }
 
@@ -745,21 +739,15 @@ genres.forEach(function (genre) {
                     baseUrl = applyWithoutKeywords(baseUrl);
                     baseUrl = excludeAsia(baseUrl);
 
-                    owner.get(baseUrl, params, function (json) {
-                        if (json.results) {
-                            json.results = applyFilters(json.results).filter(function (content) {
-                                var dateField = type === 'movie' ? 'release_date' : 'first_air_date';
-                                return content[dateField] &&
-                                    parseInt(content[dateField].substring(0, 4)) >= startYear &&
-                                    parseInt(content[dateField].substring(0, 4)) <= endYear;
-                            });
-                        }
-
-                        json.title = Lampa.Lang.translate(type === 'movie' ? 'surs_top_movies' : 'surs_top_tv') +
-                                     ' (' + Lampa.Lang.translate(genre.title) + ')' +
-                                     Lampa.Lang.translate('surs_for_period') + startYear + '-' + endYear;
-                        callback(json);
-                    }, callback);
+                    owner.get(apiUrl, params, function(json) {
+    if(json.results) {
+        json.results = applyFilters(json.results);
+        if(getStoredSetting('shuffleTrending', true)) {
+            json.results = shuffleArray(json.results);
+        }
+    }
+    callback(json);
+}, callback);
                 };
             }
 
