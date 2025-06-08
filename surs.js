@@ -383,6 +383,7 @@ function startPlugin() {
                     array[i] = array[j];
                     array[j] = temp;
                 }
+				return array;
             }
 
             function adjustSortForMovies(sort) {
