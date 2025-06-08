@@ -1,6 +1,18 @@
 (function () {
     'use strict';
 
+    // Глобальный кэш для изображений
+    var imageCache = {};
+    var backgroundCache = {};
+    var MAX_CACHE_SIZE = 100;
+
+    function addToCache(cache, key, value) {
+        if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
+            delete cache[Object.keys(cache)[0]];
+        }
+        cache[key] = value;
+    }
+
     // Основная функция для создания интерфейса информации о контенте
     function create() {
         var html;
@@ -22,21 +34,17 @@
                 return;
             }
 
-            // Получение настроек отображения логотипов
             const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
             
-            // Если логотипы не скрыты в настройках
             if (logoSetting !== 'hide') {
                 const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-                // Загрузка изображений (логотипов) с TMDB
                 network.silent(url, (images) => {
                     if (isDestroyed || !html) return;
 
                     let bestLogo = null;
                     
-                    // Поиск лучшего логотипа с учетом языковых предпочтений
                     if (images.logos && images.logos.length > 0) {
                         let bestRussianLogo = null;
                         let bestEnglishLogo = null;
@@ -60,7 +68,6 @@
 
                         bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
 
-                        // Если в настройках выбраны только русские логотипы и русского нет - не показываем ничего
                         if (logoSetting === 'ru_only' && !bestRussianLogo) {
                             bestLogo = null;
                         }
@@ -68,7 +75,6 @@
                     
                     this.applyLogo(data, bestLogo);
                 }, () => {
-                    // Fallback: если не удалось загрузить логотипы, показываем просто текст
                     if (!isDestroyed && html) {
                         const titleElement = html.find('.new-interface-info__title');
                         if (titleElement.length) {
@@ -77,7 +83,6 @@
                     }
                 });
             } else if (!isDestroyed && html) {
-                // Если логотипы скрыты в настройках - показываем просто текст
                 const titleElement = html.find('.new-interface-info__title');
                 if (titleElement.length) {
                     titleElement.text(data.title);
@@ -90,20 +95,25 @@
             }
         };
         
-        // Применение логотипа к интерфейсу (оптимизированная версия)
+        // Применение логотипа к интерфейсу с кэшированием
         this.applyLogo = function(data, logo) {
             if (isDestroyed || !html) return;
     
             const titleElement = html.find('.new-interface-info__title');
             if (!titleElement.length) return;
     
-            // Если логотип не найден, показываем текст
             if (!logo || !logo.file_path) {
                 titleElement.text(data.title);
                 return;
             }
 
             const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+
+            // Проверка кэша
+            if (imageCache[imageUrl]) {
+                titleElement.html(imageCache[imageUrl]);
+                return;
+            }
 
             // Проверка, не пытаемся ли загрузить то же самое лого повторно
             if (titleElement.data('current-logo') === imageUrl) return;
@@ -117,19 +127,23 @@
             tempImg.onload = () => {
                 if (isDestroyed || !html) return;
                 
-                titleElement.html(`
+                const logoHtml = `
                     <img class="new-interface-logo logo-loading" 
                          src="${imageUrl}" 
                          alt="${data.title}"
                          loading="eager"
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-                `);
+                `;
+                
+                // Сохраняем в кэш
+                addToCache(imageCache, imageUrl, logoHtml);
+                titleElement.html(logoHtml);
 
                 // Плавное появление
                 setTimeout(() => {
                     const logoImg = titleElement.find('.new-interface-logo');
                     if (logoImg.length) logoImg.removeClass('logo-loading');
-                }, 100);
+                }, 10);
             };
 
             // Обработка ошибки загрузки
@@ -139,7 +153,7 @@
             };
         };
 
-        // Отрисовка деталей контента (год, рейтинг, жанры и т.д.)
+        // Отрисовка деталей контента
         this.draw = function (data) {
             if (isDestroyed || !html) {
                 console.warn('Cannot draw - component is destroyed or HTML not initialized');
@@ -312,7 +326,7 @@
             this.activity.toggle();
         };
 
-        // Обновление фонового изображения
+        // Обновление фонового изображения с кэшированием
         this.background = function (elem) {
             if (isDestroyed) return;
 
@@ -320,12 +334,20 @@
             clearTimeout(background_timer);
             if (new_background == background_last) return;
             
+            // Проверка кэша
+            if (backgroundCache[new_background]) {
+                background_img[0].src = new_background;
+                background_img.addClass('loaded');
+                return;
+            }
+
             background_last = new_background;
             background_img.removeClass('loaded');
             
             background_img[0].onload = function () {
                 if (isDestroyed) return;
                 background_img.addClass('loaded');
+                addToCache(backgroundCache, new_background, true);
             };
             
             background_img[0].onerror = function () {
@@ -333,7 +355,7 @@
                 background_img.removeClass('loaded');
             };
             
-            background_img[0].src = background_last;
+            background_img[0].src = new_background;
         };
 
         // Добавление элемента в список
@@ -532,7 +554,7 @@
             }
         }); 
 
-        // Добавление CSS стилей для нового интерфейса (с анимацией логотипов)
+        // Добавление CSS стилей для нового интерфейса
         Lampa.Template.add('new_interface_style', `
             <style>
             .new-interface .card--small.card--wide {
