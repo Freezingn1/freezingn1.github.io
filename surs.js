@@ -1,14 +1,6 @@
 (function (  ) {
     'use strict';
-	function shuffleArray(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-    return array;
-}
+	
 
 // Опции сортировки
 var allSortOptions = [
@@ -476,9 +468,6 @@ function startPlugin() {
                             json.results = json.results.filter(function (result) {
                                 return true;
                             });
-							if (getStoredSetting('shuffleTrending', true)) {
-            json.results = shuffleArray(json.results);
-        }
                         }
                         json.title = Lampa.Lang.translate('surs_popular_persons');
                         callback(json);
@@ -512,9 +501,6 @@ function startPlugin() {
                         if (json.results) {
                             json.results = applyFilters(json.results);
                         }
-						if (getStoredSetting('shuffleTrending', true)) {
-            json.results = shuffleArray(json.results);
-        }
 
                 json.title = Lampa.Lang.translate(sort.title) + ' (' + Lampa.Lang.translate(genre.title) + ') ' + Lampa.Lang.translate('surs_on') + ' ' + serviceName;
                         callback(json);
@@ -542,9 +528,6 @@ function startPlugin() {
                         if (json.results) {
                             json.results = applyFilters(json.results);
                         }
-						if (getStoredSetting('shuffleTrending', true)) {
-            json.results = shuffleArray(json.results);
-        }
 
 json.title = Lampa.Lang.translate(sort.title) + ' ' + Lampa.Lang.translate('surs_on') + ' ' + serviceName;
                         callback(json);
@@ -609,9 +592,6 @@ function getMovies(genre, options) {
                 if (!options.russian && !options.ukrainian) {
                     json.results = applyFilters(json.results);
                 }
-				if (getStoredSetting('shuffleTrending', true)) {
-            json.results = shuffleArray(json.results);
-        }
                 var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
                                  
                                  options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
@@ -654,9 +634,6 @@ function getTVShows(genre, options) {
                 if (!options.russian && !options.ukrainian) {
                     json.results = applyFilters(json.results);
                 }
-				if (getStoredSetting('shuffleTrending', true)) {
-            json.results = shuffleArray(json.results);
-        }
                 var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
                                  options.korean ? Lampa.Lang.translate('surs_korean') :
                                  options.turkish ? Lampa.Lang.translate('surs_turkish') :
@@ -727,9 +704,6 @@ genres.forEach(function (genre) {
                         if (json.results) {
                             json.results = filterCyrillic(json.results);
                         }
-						if (getStoredSetting('shuffleTrending', true)) {
-            json.results = shuffleArray(json.results);
-        }
 
                         json.title = Lampa.Lang.translate(contentType === 'movie' ? 'surs_top_movies' : 'surs_top_tv') + ' (' + Lampa.Lang.translate(genre.title) + ')';
                         callback(json);
@@ -770,9 +744,6 @@ genres.forEach(function (genre) {
                                     parseInt(content[dateField].substring(0, 4)) >= startYear &&
                                     parseInt(content[dateField].substring(0, 4)) <= endYear;
                             });
-							if (getStoredSetting('shuffleTrending', true)) {
-            json.results = shuffleArray(json.results);
-        }
                         }
 
                         json.title = Lampa.Lang.translate(type === 'movie' ? 'surs_top_movies' : 'surs_top_tv') +
