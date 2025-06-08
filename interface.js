@@ -129,7 +129,7 @@
                 setTimeout(() => {
                     const logoImg = titleElement.find('.new-interface-logo');
                     if (logoImg.length) logoImg.removeClass('logo-loading');
-                }, 10);
+                }, 100);
             };
 
             // Обработка ошибки загрузки
