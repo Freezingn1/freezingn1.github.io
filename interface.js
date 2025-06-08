@@ -5,6 +5,7 @@
     var imageCache = {};
     var backgroundCache = {};
     var MAX_CACHE_SIZE = 100;
+	var background_last_path = '';
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -327,36 +328,47 @@
         };
 
         // Обновление фонового изображения с кэшированием
-        this.background = function (elem) {
-            if (isDestroyed) return;
+        this.background = function(elem) {
+    if (isDestroyed || !elem || !elem.backdrop_path) {
+        background_img.removeClass('loaded');
+        return;
+    }
 
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            clearTimeout(background_timer);
-            if (new_background == background_last) return;
-            
-            // Проверка кэша
-            if (backgroundCache[new_background]) {
-                background_img[0].src = new_background;
-                background_img.addClass('loaded');
-                return;
-            }
+    var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+    var new_backdrop_path = elem.backdrop_path;
 
-            background_last = new_background;
-            background_img.removeClass('loaded');
-            
-            background_img[0].onload = function () {
-                if (isDestroyed) return;
-                background_img.addClass('loaded');
-                addToCache(backgroundCache, new_background, true);
-            };
-            
-            background_img[0].onerror = function () {
-                if (isDestroyed) return;
-                background_img.removeClass('loaded');
-            };
-            
-            background_img[0].src = new_background;
-        };
+    clearTimeout(background_timer);
+    if (background_img[0].src) {
+        background_img[0].onload = null;
+        background_img[0].onerror = null;
+    }
+
+    if (new_background === background_last && new_backdrop_path === background_last_path) return;
+    
+    background_last = new_background;
+    background_last_path = new_backdrop_path;
+
+    if (backgroundCache[new_background]) {
+        background_img[0].src = new_background;
+        background_img.addClass('loaded');
+        return;
+    }
+
+    background_img.removeClass('loaded');
+    
+    background_img[0].onload = function() {
+        if (isDestroyed) return;
+        background_img.addClass('loaded');
+        addToCache(backgroundCache, new_background, true);
+    };
+    
+    background_img[0].onerror = function() {
+        if (isDestroyed) return;
+        background_img.removeClass('loaded');
+    };
+    
+    background_img[0].src = new_background;
+};
 
         // Добавление элемента в список
         this.append = function (element) {
