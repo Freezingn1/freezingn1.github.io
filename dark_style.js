@@ -320,7 +320,7 @@
             }
 			
 			body {
-				margin: 1px !important;
+				margin: 1 !important;
 			}
             
             /* Градиентный текст для рейтинга */
