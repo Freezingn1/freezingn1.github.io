@@ -1,6 +1,14 @@
 (function (  ) {
     'use strict';
-   
+	function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
 
 // Опции сортировки
 var allSortOptions = [
@@ -463,15 +471,15 @@ function startPlugin() {
                 return function (callback) {
                     var baseUrl = 'person/popular';
 
-                    owner.get(baseUrl, params, function (json) {
-                        if (json.results) {
-                            json.results = json.results.filter(function (result) {
-                                return true;
-                            });
-                        }
-                        json.title = Lampa.Lang.translate('surs_popular_persons');
-                        callback(json);
-                    }, callback);
+                    owner.get(apiUrl, params, function(json) {
+    if(json.results) {
+        json.results = applyFilters(json.results);
+        if(getStoredSetting('shuffleTrending', true)) {
+            json.results = shuffleArray(json.results);
+        }
+    }
+    callback(json);
+}, callback);
                 };
             }
 
@@ -497,14 +505,15 @@ function startPlugin() {
                     }
                     apiUrl = excludeAsia(apiUrl);
 
-                    owner.get(apiUrl, params, function (json) {
-                        if (json.results) {
-                            json.results = applyFilters(json.results);
-                        }
-
-                json.title = Lampa.Lang.translate(sort.title) + ' (' + Lampa.Lang.translate(genre.title) + ') ' + Lampa.Lang.translate('surs_on') + ' ' + serviceName;
-                        callback(json);
-                    }, callback);
+                    owner.get(apiUrl, params, function(json) {
+    if(json.results) {
+        json.results = applyFilters(json.results);
+        if(getStoredSetting('shuffleTrending', true)) {
+            json.results = shuffleArray(json.results);
+        }
+    }
+    callback(json);
+}, callback);
                 };
             }
 
