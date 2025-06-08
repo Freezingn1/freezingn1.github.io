@@ -421,29 +421,24 @@ function startPlugin() {
             }
 
             var partsData = [
-        function (callback) {
-            var baseUrl = 'trending/all/week';
-            baseUrl = applyAgeRestriction(baseUrl);
+                function (callback) {
+                    var baseUrl = 'trending/all/week';
+                    baseUrl = applyAgeRestriction(baseUrl);
 
-            owner.get(baseUrl, params, function (json) {
-                if (json.results) {
-                    json.results = json.results.filter(function (result) {
-                        var forbiddenCountries = ['KR', 'CN', 'JP'];
-                        return !result.origin_country || !result.origin_country.some(function (country) {
-                            return forbiddenCountries.includes(country);
-                        });
-                    });
-                    
-                    // Добавьте эту проверку и вызов shuffleArray
-                    if (getStoredSetting('shuffleTrending', true)) {
-                        shuffleArray(json.results);
-                    }
+                    owner.get(baseUrl, params, function (json) {
+                        if (json.results) {
+                            json.results = json.results.filter(function (result) {
+                                var forbiddenCountries = ['KR', 'CN', 'JP'];
+                                return !result.origin_country || !result.origin_country.some(function (country) {
+                                    return forbiddenCountries.includes(country);
+                                });
+                            });
+                        }
+                        json.title = Lampa.Lang.translate('surs_title_trend_week');
+                        callback(json);
+                    }, callback);
                 }
-                json.title = Lampa.Lang.translate('surs_title_trend_week');
-                callback(json);
-            }, callback);
-        }
-    ];
+            ];
 
             var CustomData = [];
 
