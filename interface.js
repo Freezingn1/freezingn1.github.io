@@ -4,8 +4,8 @@
     // Глобальный кэш для изображений
     var imageCache = {};
     var backgroundCache = {};
-    var MAX_CACHE_SIZE = 200; // Увеличен размер кэша
-    var background_last_path = '';
+    var MAX_CACHE_SIZE = 100;
+	var background_last_path = '';
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -21,7 +21,6 @@
         var network = new Lampa.Reguest();
         var loaded = {}; // Кэш загруженных данных
         var isDestroyed = false; // Флаг уничтожения компонента
-        var lastRequestUrl = ''; // Для предотвращения дублирующих запросов
 
         // Создание HTML-структуры интерфейса
         this.create = function () {
@@ -42,54 +41,48 @@
                 const type = data.name ? 'tv' : 'movie';
                 const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-                // Проверка на дублирующий запрос
-                if (url !== lastRequestUrl) {
-                    lastRequestUrl = url;
-                    network.silent(url, (images) => {
-                        if (isDestroyed || !html) return;
+                network.silent(url, (images) => {
+                    if (isDestroyed || !html) return;
 
-                        let bestLogo = null;
-                        
-                        if (images.logos && images.logos.length > 0) {
-                            let bestRussianLogo = null;
-                            let bestEnglishLogo = null;
-                            let bestOtherLogo = null;
+                    let bestLogo = null;
+                    
+                    if (images.logos && images.logos.length > 0) {
+                        let bestRussianLogo = null;
+                        let bestEnglishLogo = null;
+                        let bestOtherLogo = null;
 
-                            // Оптимизированный поиск логотипов
-                            for (let i = 0; i < images.logos.length; i++) {
-                                const logo = images.logos[i];
-                                if (logo.iso_639_1 === 'ru') {
-                                    if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
-                                        bestRussianLogo = logo;
-                                    }
-                                }
-                                else if (logo.iso_639_1 === 'en') {
-                                    if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
-                                        bestEnglishLogo = logo;
-                                    }
-                                }
-                                else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
-                                    bestOtherLogo = logo;
+                        images.logos.forEach(logo => {
+                            if (logo.iso_639_1 === 'ru') {
+                                if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
+                                    bestRussianLogo = logo;
                                 }
                             }
-
-                            bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-
-                            if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                                bestLogo = null;
+                            else if (logo.iso_639_1 === 'en') {
+                                if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
+                                    bestEnglishLogo = logo;
+                                }
                             }
+                            else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
+                                bestOtherLogo = logo;
+                            }
+                        });
+
+                        bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
+
+                        if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                            bestLogo = null;
                         }
-                        
-                        this.applyLogo(data, bestLogo);
-                    }, () => {
-                        if (!isDestroyed && html) {
-                            const titleElement = html.find('.new-interface-info__title');
-                            if (titleElement.length) {
-                                titleElement.text(data.title);
-                            }
+                    }
+                    
+                    this.applyLogo(data, bestLogo);
+                }, () => {
+                    if (!isDestroyed && html) {
+                        const titleElement = html.find('.new-interface-info__title');
+                        if (titleElement.length) {
+                            titleElement.text(data.title);
                         }
-                    });
-                }
+                    }
+                });
             } else if (!isDestroyed && html) {
                 const titleElement = html.find('.new-interface-info__title');
                 if (titleElement.length) {
@@ -139,7 +132,7 @@
                     <img class="new-interface-logo logo-loading" 
                          src="${imageUrl}" 
                          alt="${data.title}"
-                         loading="lazy"
+                         loading="eager"
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `;
                 
@@ -186,12 +179,8 @@
                 if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
                 if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
                 
-                // Минимизация операций с DOM
-                const headHtml = head.join(', ');
-                const detailsHtml = details.join('<span class="new-interface-info__split">&#9679;</span>');
-                
-                html.find('.new-interface-info__head').empty().append(headHtml);
-                html.find('.new-interface-info__details').html(detailsHtml);
+                html.find('.new-interface-info__head').empty().append(head.join(', '));
+                html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
             } catch (e) {
                 console.error('Error in draw method:', e);
             }
@@ -205,10 +194,7 @@
 
             clearTimeout(timer);
             var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
-            
-            // Проверка кэша перед запросом
             if (loaded[url]) return this.draw(loaded[url]);
-            
             timer = setTimeout(function () {
                 if (isDestroyed) return;
                 network.clear();
@@ -220,7 +206,7 @@
                 }, function() {
                     console.warn('Failed to load additional data for:', data.id);
                 });
-            }, 300); // Задержка для debounce
+            }, 300);
         };
 
         this.render = function () {
@@ -241,7 +227,6 @@
                 network.clear();
             }
             clearTimeout(timer);
-            lastRequestUrl = '';
         };
     }
 
@@ -264,7 +249,6 @@
         var background_last = '';
         var background_timer;
         var isDestroyed = false;
-        var lastBackgroundUrl = ''; // Для предотвращения дублирующих загрузок
 
         this.create = function () {};
 
@@ -343,54 +327,48 @@
             this.activity.toggle();
         };
 
-        // Оптимизированный метод обновления фонового изображения
+        // Обновление фонового изображения с кэшированием
         this.background = function(elem) {
-            if (isDestroyed || !elem || !elem.backdrop_path) {
-                background_img.removeClass('loaded');
-                return;
-            }
+    if (isDestroyed || !elem || !elem.backdrop_path) {
+        background_img.removeClass('loaded');
+        return;
+    }
 
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            var new_backdrop_path = elem.backdrop_path;
+    var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+    var new_backdrop_path = elem.backdrop_path;
 
-            clearTimeout(background_timer);
-            
-            // Проверка на дублирующую загрузку
-            if (new_background === background_last && new_backdrop_path === background_last_path) return;
-            if (new_background === lastBackgroundUrl) return;
-            
-            lastBackgroundUrl = new_background;
-            background_last = new_background;
-            background_last_path = new_backdrop_path;
+    clearTimeout(background_timer);
+    if (background_img[0].src) {
+        background_img[0].onload = null;
+        background_img[0].onerror = null;
+    }
 
-            // Очистка предыдущих обработчиков
-            background_img[0].onload = null;
-            background_img[0].onerror = null;
+    if (new_background === background_last && new_backdrop_path === background_last_path) return;
+    
+    background_last = new_background;
+    background_last_path = new_backdrop_path;
 
-            // Проверка кэша
-            if (backgroundCache[new_background]) {
-                background_img[0].src = new_background;
-                background_img.addClass('loaded');
-                return;
-            }
+    if (backgroundCache[new_background]) {
+        background_img[0].src = new_background;
+        background_img.addClass('loaded');
+        return;
+    }
 
-            background_img.removeClass('loaded');
-            
-            // Установка обработчиков
-            background_img[0].onload = function() {
-                if (isDestroyed) return;
-                background_img.addClass('loaded');
-                addToCache(backgroundCache, new_background, true);
-            };
-            
-            background_img[0].onerror = function() {
-                if (isDestroyed) return;
-                background_img.removeClass('loaded');
-            };
-            
-            // Загрузка изображения
-            background_img[0].src = new_background;
-        };
+    background_img.removeClass('loaded');
+    
+    background_img[0].onload = function() {
+        if (isDestroyed) return;
+        background_img.addClass('loaded');
+        addToCache(backgroundCache, new_background, true);
+    };
+    
+    background_img[0].onerror = function() {
+        if (isDestroyed) return;
+        background_img.removeClass('loaded');
+    };
+    
+    background_img[0].src = new_background;
+};
 
         // Добавление элемента в список
         this.append = function (element) {
@@ -538,7 +516,6 @@
             network = null;
             lezydata = null;
             clearTimeout(background_timer);
-            lastBackgroundUrl = '';
         };
     }
 
@@ -594,7 +571,6 @@
             <style>
             .new-interface .card--small.card--wide {
                 width: 18.3em;
-                will-change: transform;
             }
             
             .new-interface-info {
@@ -650,8 +626,8 @@
                 height: auto;
                 min-height: 1em;
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
-                will-change: opacity;
             }
+            
             
             .new-interface-logo {
                 opacity: 1 !important;
@@ -685,8 +661,7 @@
             
             .new-interface .full-start__background {
                 opacity: 0.6 !important;
-                transition: opacity 0.3s ease !important;
-                will-change: opacity;
+                transition: none !important;
             }
             
             .new-interface .full-start__background {
