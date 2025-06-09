@@ -178,7 +178,7 @@
             _this.draw(movie);
           });
         }, 300);
-      }, 1000);
+      };
 
       this.render = function () {
         return isDestroyed ? null : html;
