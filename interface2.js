@@ -521,7 +521,7 @@
             min-height: 1em;
             filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.2s ease;
         }
         
         .new-interface-logo.loaded {
