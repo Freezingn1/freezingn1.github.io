@@ -155,7 +155,7 @@
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
-        }, 1000);
+        }, 500);
       };
 
       this.draw = function (data) {
@@ -324,7 +324,7 @@
           setTimeout(function () {
             background_img[0].src = background_last;
           }, 300);
-        }, 1000);
+        }, 500);
       };
 
       this.append = function (element) {
