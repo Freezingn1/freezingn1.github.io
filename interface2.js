@@ -131,7 +131,7 @@
             setTimeout(() => {
                 const logoImg = titleElement.find('.new-interface-logo');
                 if (logoImg.length) logoImg.removeClass('logo-loading');
-            }, 1000);
+            }, 10);
         };
 
         tempImg.onerror = () => {
@@ -177,7 +177,7 @@
             loaded[url] = movie;
             _this.draw(movie);
           });
-        }, 300);
+        }, 1000);
       };
 
       this.render = function () {
