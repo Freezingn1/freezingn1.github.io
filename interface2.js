@@ -198,7 +198,7 @@
             loaded[url] = movie;
             _this.draw(movie);
           });
-        }, 600);
+        }, 1000);
       };
 
       this.render = function () {
