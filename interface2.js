@@ -162,14 +162,17 @@
         var details = [];
         var countries = Lampa.Api.sources.tmdb.parseCountries(data);
         var pg = Lampa.Api.sources.tmdb.parsePG(data);
+		
         if (create !== '0000') head.push('<span>' + create + '</span>');
-        if (countries.length > 0) head.push(countries.join(', '));
-        if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
-        if (data.genres && data.genres.length > 0) details.push(data.genres.map(function (item) {
-          return Lampa.Utils.capitalizeFirstLetter(item.name);
-        }).join(' | '));
-        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+                if (countries.length > 0) head.push(countries.join(', '));
+                if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+                if (data.number_of_episodes && data.number_of_episodes > 0) {
+                    details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+                }
+                
+                if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+                if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+		
         html.find('.new-interface-info__head').empty().append(head.join(', '));
         html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
       };
