@@ -84,7 +84,7 @@
         }
 
         if (!isDestroyed && html) {
-            html.find('.new-interface-info__head,.new-interface-info__details').text('---');
+            /* html.find('.new-interface-info__head,.new-interface-info__details').text('---'); */
             html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
             this.load(data);
