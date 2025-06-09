@@ -245,6 +245,7 @@
         var info;
         var lezydata;
         var viewall = Lampa.Storage.field('card_views_type') == 'view' || Lampa.Storage.field('navigation_type') == 'mouse';
+		var wide_posters = Lampa.Storage.get('wide_posters') !== 'false';
         var background_img = html.find('.full-start__background');
         var background_last = '';
         var background_timer;
@@ -384,7 +385,7 @@
                 cardClass: element.cardClass,
                 genres: object.genres,
                 object: object,
-                card_wide: true,
+                card_wide: wide_posters,
                 nomore: element.nomore
             });
             item.create();
@@ -565,6 +566,24 @@
                 description: "Управление отображением логотипов вместо названий"
             }
         }); 
+		
+		Lampa.SettingsApi.addParam({
+			component: "styleint",
+			param: {
+				name: "wide_posters",
+				type: "select",
+				values: { 
+					"true": "Широкие постеры", 
+					"false": "Обычные постеры"
+				},
+				default: "true"
+			},
+			field: {
+				name: "Тип постеров",
+				description: "Переключение между широкими и обычными постерами"
+			}
+		});
+		
 
         // Добавление CSS стилей для нового интерфейса
         Lampa.Template.add('new_interface_style', `
