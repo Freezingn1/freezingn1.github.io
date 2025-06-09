@@ -132,7 +132,7 @@
                     <img class="new-interface-logo logo-loading" 
                          src="${imageUrl}" 
                          alt="${data.title}"
-                         loading="lazy"  <!-- Ленивая загрузка -->
+                         loading="lazy"
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `;
                 
