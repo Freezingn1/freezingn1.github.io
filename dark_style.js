@@ -377,6 +377,15 @@
             }
 
             /* Мобильные стили */
+			@media screen and (max-width: 480px) {
+			.full-start-new__right {
+				background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0)), to(rgba(0, 0, 0, 0)));
+				background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%);
+				background: -o-linear-gradient(top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%);
+				background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%);
+			}
+		}
+			
             @media screen and (max-width: 480px) {
                 .settings__content,
                 .selectbox__content {
