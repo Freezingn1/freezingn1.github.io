@@ -96,7 +96,7 @@
             }
         };
         
-        // Применение логотипа к интерфейсу с кэшированием и ленивой загрузкой
+        // Применение логотипа к интерфейсу с кэшированием
         this.applyLogo = function(data, logo) {
             if (isDestroyed || !html) return;
     
@@ -132,7 +132,7 @@
                     <img class="new-interface-logo logo-loading" 
                          src="${imageUrl}" 
                          alt="${data.title}"
-                         loading="lazy"
+                         loading="eager"
                          onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
                 `;
                 
@@ -239,7 +239,7 @@
             scroll_by_item: true
         });
         var items = [];
-        var html = $('<div class="new-interface"><img class="full-start__background" loading="lazy"></div>'); // Ленивая загрузка фона
+        var html = $('<div class="new-interface"><img class="full-start__background"></div>');
         var active = 0;
         var newlampa = Lampa.Manifest.app_digital >= 166;
         var info;
@@ -327,7 +327,7 @@
             this.activity.toggle();
         };
 
-        // Обновление фонового изображения с кэшированием и ленивой загрузкой
+        // Обновление фонового изображения с кэшированием
         this.background = function(elem) {
             if (isDestroyed || !elem || !elem.backdrop_path) {
                 background_img.removeClass('loaded');
@@ -370,7 +370,7 @@
             background_img[0].src = new_background;
         };
 
-        // Добавление элемента в список с ленивой загрузкой изображений
+        // Добавление элемента в список
         this.append = function (element) {
             if (isDestroyed) return;
 
@@ -385,8 +385,7 @@
                 genres: object.genres,
                 object: object,
                 card_wide: true,
-                nomore: element.nomore,
-                lazyLoad: true // Включение ленивой загрузки для карточек
+                nomore: element.nomore
             });
             item.create();
             item.onDown = this.down.bind(this);
@@ -522,6 +521,7 @@
 
     // Инициализация плагина
     function startPlugin() {
+        // Добавляем класс для контроля видимости
         document.body.classList.add('interface-loading');
 
         window.plugin_interface_ready = true;
@@ -745,6 +745,7 @@
             startPlugin();
         } else {
             window.addEventListener('load', function() {
+                // Дополнительная задержка для предзагрузчика
                 setTimeout(startPlugin, 500);
             });
         }
