@@ -5,7 +5,7 @@
     var imageCache = {};
     var backgroundCache = {};
     var MAX_CACHE_SIZE = 100;
-    var background_last_path = '';
+	var background_last_path = '';
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -108,7 +108,7 @@
                 return;
             }
 
-            const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+            const imageUrl = Lampa.TMDB.image("/t/p/w300" + logo.file_path);
 
             // Проверка кэша
             if (imageCache[imageUrl]) {
@@ -329,46 +329,46 @@
 
         // Обновление фонового изображения с кэшированием
         this.background = function(elem) {
-            if (isDestroyed || !elem || !elem.backdrop_path) {
-                background_img.removeClass('loaded');
-                return;
-            }
+    if (isDestroyed || !elem || !elem.backdrop_path) {
+        background_img.removeClass('loaded');
+        return;
+    }
 
-            var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-            var new_backdrop_path = elem.backdrop_path;
+    var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
+    var new_backdrop_path = elem.backdrop_path;
 
-            clearTimeout(background_timer);
-            if (background_img[0].src) {
-                background_img[0].onload = null;
-                background_img[0].onerror = null;
-            }
+    clearTimeout(background_timer);
+    if (background_img[0].src) {
+        background_img[0].onload = null;
+        background_img[0].onerror = null;
+    }
 
-            if (new_background === background_last && new_backdrop_path === background_last_path) return;
-            
-            background_last = new_background;
-            background_last_path = new_backdrop_path;
+    if (new_background === background_last && new_backdrop_path === background_last_path) return;
+    
+    background_last = new_background;
+    background_last_path = new_backdrop_path;
 
-            if (backgroundCache[new_background]) {
-                background_img[0].src = new_background;
-                background_img.addClass('loaded');
-                return;
-            }
+    if (backgroundCache[new_background]) {
+        background_img[0].src = new_background;
+        background_img.addClass('loaded');
+        return;
+    }
 
-            background_img.removeClass('loaded');
-            
-            background_img[0].onload = function() {
-                if (isDestroyed) return;
-                background_img.addClass('loaded');
-                addToCache(backgroundCache, new_background, true);
-            };
-            
-            background_img[0].onerror = function() {
-                if (isDestroyed) return;
-                background_img.removeClass('loaded');
-            };
-            
-            background_img[0].src = new_background;
-        };
+    background_img.removeClass('loaded');
+    
+    background_img[0].onload = function() {
+        if (isDestroyed) return;
+        background_img.addClass('loaded');
+        addToCache(backgroundCache, new_background, true);
+    };
+    
+    background_img[0].onerror = function() {
+        if (isDestroyed) return;
+        background_img.removeClass('loaded');
+    };
+    
+    background_img[0].src = new_background;
+};
 
         // Добавление элемента в список
         this.append = function (element) {
@@ -384,7 +384,7 @@
                 cardClass: element.cardClass,
                 genres: object.genres,
                 object: object,
-                card_wide: false,
+                card_wide: true,
                 nomore: element.nomore
             });
             item.create();
@@ -521,9 +521,6 @@
 
     // Инициализация плагина
     function startPlugin() {
-        // Добавляем класс для контроля видимости
-        document.body.classList.add('interface-loading');
-
         window.plugin_interface_ready = true;
         var old_interface = Lampa.InteractionMain;
         var new_interface = component;
@@ -572,17 +569,6 @@
         // Добавление CSS стилей для нового интерфейса
         Lampa.Template.add('new_interface_style', `
             <style>
-            .interface-loading .new-interface {
-                opacity: 0;
-                visibility: hidden;
-            }
-
-            .new-interface {
-                opacity: 1;
-                visibility: visible;
-                transition: opacity 0.3s ease, visibility 0.3s ease;
-            }
-
             .new-interface .card--small.card--wide {
                 width: 18.3em;
             }
@@ -641,6 +627,7 @@
                 min-height: 1em;
                 filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
             }
+            
             
             .new-interface-logo {
                 opacity: 1 !important;
@@ -732,27 +719,8 @@
         
         // Добавление стилей в DOM
         $('body').append(Lampa.Template.get('new_interface_style', {}, true));
-
-        // Убираем класс после полной загрузки
-        setTimeout(function() {
-            document.body.classList.remove('interface-loading');
-        }, 1000);
     }
 
-    // Ждем полной загрузки страницы и всех ресурсов
-    function initialize() {
-        if (document.readyState === 'complete') {
-            startPlugin();
-        } else {
-            window.addEventListener('load', function() {
-                // Дополнительная задержка для предзагрузчика
-                setTimeout(startPlugin, 500);
-            });
-        }
-    }
-
-    // Инициализируем плагин только если он еще не был инициализирован
-    if (!window.plugin_interface_ready) {
-        initialize();
-    }
+    // Инициализация плагина, если он еще не был инициализирован
+    if (!window.plugin_interface_ready) startPlugin();
 })();
