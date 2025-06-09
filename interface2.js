@@ -92,66 +92,74 @@
       };
 
       this.applyLogo = function(data, logo) {
-        if (isDestroyed || !html) return;
+    if (isDestroyed || !html) return;
 
-        const titleElement = html.find('.new-interface-info__title');
-        if (!titleElement.length) return;
+    const titleElement = html.find('.new-interface-info__title');
+    if (!titleElement.length) return;
 
-        clearTimeout(logo_timer);
+    clearTimeout(logo_timer);
 
-        if (!logo || !logo.file_path) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            }, 1000);
-            return;
-        }
-
-        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-
-        if (imageCache[imageUrl]) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.html(imageCache[imageUrl]);
-            }, 1000);
-            return;
-        }
-
-        if (titleElement.data('current-logo') === imageUrl) return;
-        titleElement.data('current-logo', imageUrl);
-
+    if (!logo || !logo.file_path) {
         logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
-
-            const tempImg = new Image();
-            tempImg.src = imageUrl;
-
-            tempImg.onload = () => {
-                if (isDestroyed || !html) return;
-                
-                const logoHtml = `
-                    <img class="new-interface-logo logo-loading" 
-                         src="${imageUrl}" 
-                         alt="${data.title}"
-                         loading="eager"
-                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-                `;
-                
-                addToCache(imageCache, imageUrl, logoHtml);
-                titleElement.html(logoHtml);
-
-                setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) logoImg.removeClass('logo-loading');
-                }, 10);
-            };
-
-            tempImg.onerror = () => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            };
+            titleElement.text(data.title);
         }, 1000);
-      };
+        return;
+    }
+
+    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+
+    if (imageCache[imageUrl]) {
+        logo_timer = setTimeout(() => {
+            if (isDestroyed || !html) return;
+            titleElement.html(imageCache[imageUrl]);
+            // Добавляем класс loaded после небольшой задержки
+            setTimeout(() => {
+                titleElement.find('.new-interface-logo').addClass('loaded');
+            }, 10);
+        }, 1000);
+        return;
+    }
+
+    if (titleElement.data('current-logo') === imageUrl) return;
+    titleElement.data('current-logo', imageUrl);
+
+    logo_timer = setTimeout(() => {
+        if (isDestroyed || !html) return;
+
+        const tempImg = new Image();
+        tempImg.src = imageUrl;
+
+        tempImg.onload = () => {
+            if (isDestroyed || !html) return;
+            
+            const logoHtml = `
+                <img class="new-interface-logo logo-loading" 
+                     src="${imageUrl}" 
+                     alt="${data.title}"
+                     loading="eager"
+                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+            `;
+            
+            addToCache(imageCache, imageUrl, logoHtml);
+            titleElement.html(logoHtml);
+
+            setTimeout(() => {
+                const logoImg = titleElement.find('.new-interface-logo');
+                if (logoImg.length) {
+                    logoImg.removeClass('logo-loading');
+                    // Добавляем класс loaded для плавного появления
+                    logoImg.addClass('loaded');
+                }
+            }, 10);
+        };
+
+        tempImg.onerror = () => {
+            if (isDestroyed || !html) return;
+            titleElement.text(data.title);
+        };
+    }, 1000);
+};
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
@@ -458,7 +466,7 @@
         return new use(object);
       };
 
-      Lampa.Template.add('new_interface_style', "\n        <style>\n        .new-interface .card--small.card--wide {\n            width: 18.3em;\n        }\n        \n        .new-interface-info {\n            position: relative;\n            padding: 1.5em;\n            height: 26em;\n        }\n        \n        .new-interface-info__body {\n            width: 80%;\n            padding-top: 1.1em;\n        }\n        \n        .new-interface-info__head {\n            color: rgba(255, 255, 255, 0.6);\n margin-bottom: 0em;\n font-size: 1.3em;\n min-height: 1em;\n        }\n        \n        .new-interface-info__head span {\n            color: #fff;\n        }\n        \n        .new-interface-info__title {\n            font-size: 4em;\n margin-top: 0.1em;\n font-weight: 800;\n -o-text-overflow: \".\";\n            text-overflow: \".\";\n margin-bottom: 0em;\n overflow: hidden;\n  display: -webkit-box;\n -webkit-line-clamp: 3;\n line-clamp: 3;\n -webkit-box-orient: vertical;\n margin-left: -0.03em;\n line-height: 1;\n text-shadow: 2px 3px 1px #00000040;\n max-width: 9em;\n text-transform: uppercase;\n letter-spacing: -2px;\n word-spacing: 5px;\n        }\n        \n .new-interface-logo {\n margin-top: 0.3em;\n margin-bottom: 0.3em;\n max-width: 7em;\n max-height: 3em;\n object-fit: contain;\n width: auto;\n height: auto;\n min-height: 1em;\n filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));\n } \n  \n .new-interface-logo { \n opacity: 1 !important; \n } \n                \n        .new-interface-info__details {\n            margin-bottom: 1.6em;\n display: flex;\n align-items: center;\n flex-wrap: wrap;\n min-height: 1.9em;\n font-size: 1.3em;\n        }\n        \n        .new-interface-info__split {\n            margin: 0 1em;\n            font-size: 0.7em;\n        }\n        \n        .new-interface-info__description {\n       display: none;\n          font-size: 1.2em;\n            font-weight: 300;\n            line-height: 1.5;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n                        -webkit-line-clamp: 4;\n            line-clamp: 4;\n            -webkit-box-orient: vertical;\n            width: 70%;\n        }\n        \n        .new-interface .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .full-start__background {\n            height: 108%;\n            top: -6em;\n        }\n        \n        .new-interface .full-start__rate {\n            font-size: 1.3em;\n            margin-right: 0;\n        }\n        \n        .new-interface .card__promo {\n            display: none;\n        }\n        \n        .new-interface .card.card--wide+.card-more .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .card.card--wide .card-watched {\n            display: none !important;\n        }\n        \n        body.light--version .new-interface-info__body {\n            width: 69%;\n            padding-top: 1.5em;\n        }\n        \n        body.light--version .new-interface-info {\n            height: 25.3em;\n        }\n\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{\n            animation: animation-card-focus 0.2s\n        }\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{\n            animation: animation-trigger-enter 0.2s forwards\n        }\n        </style>\n    ");
+      Lampa.Template.add('new_interface_style', "\n        <style>\n        .new-interface .card--small.card--wide {\n            width: 18.3em;\n        }\n        \n        .new-interface-info {\n            position: relative;\n            padding: 1.5em;\n            height: 26em;\n        }\n        \n        .new-interface-info__body {\n            width: 80%;\n            padding-top: 1.1em;\n        }\n        \n        .new-interface-info__head {\n            color: rgba(255, 255, 255, 0.6);\n margin-bottom: 0em;\n font-size: 1.3em;\n min-height: 1em;\n        }\n        \n        .new-interface-info__head span {\n            color: #fff;\n        }\n        \n        .new-interface-info__title {\n            font-size: 4em;\n margin-top: 0.1em;\n font-weight: 800;\n -o-text-overflow: \".\";\n            text-overflow: \".\";\n margin-bottom: 0em;\n overflow: hidden;\n  display: -webkit-box;\n -webkit-line-clamp: 3;\n line-clamp: 3;\n -webkit-box-orient: vertical;\n margin-left: -0.03em;\n line-height: 1;\n text-shadow: 2px 3px 1px #00000040;\n max-width: 9em;\n text-transform: uppercase;\n letter-spacing: -2px;\n word-spacing: 5px;\n        }\n        \n .new-interface-logo {\n margin-top: 0.3em;\n margin-bottom: 0.3em;\n max-width: 7em;\n max-height: 3em;\n object-fit: contain;\n width: auto;\n height: auto;\n min-height: 1em;\n filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));\n } \n  \n .new-interface-logo { \n opacity: 1 !important; \n } \n                \n        .new-interface-info__details {\n            margin-bottom: 1.6em;\n display: flex;\n align-items: center;\n flex-wrap: wrap;\n min-height: 1.9em;\n font-size: 1.3em;\n        }\n        \n        .new-interface-info__split {\n            margin: 0 1em;\n            font-size: 0.7em;\n        }\n        \n        .new-interface-info__description {\n       display: none;\n          font-size: 1.2em;\n            font-weight: 300;\n            line-height: 1.5;\n            overflow: hidden;\n            -o-text-overflow: \".\";\n            text-overflow: \".\";\n                        -webkit-line-clamp: 4;\n            line-clamp: 4;\n            -webkit-box-orient: vertical;\n            width: 70%;\n        }\n        \n        .new-interface .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .full-start__background {\n            height: 108%;\n            top: -6em;\n        }\n        \n        .new-interface .full-start__rate {\n            font-size: 1.3em;\n            margin-right: 0;\n        }\n        \n        .new-interface .card__promo {\n            display: none;\n        }\n        \n        .new-interface .card.card--wide+.card-more .card-more__box {\n            padding-bottom: 95%;\n        }\n        \n        .new-interface .card.card--wide .card-watched {\n            display: none !important;\n        }\n        \n        body.light--version .new-interface-info__body {\n            width: 69%;\n            padding-top: 1.5em;\n        }\n        \n        body.light--version .new-interface-info {\n            height: 25.3em;\n        }\n\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{\n            animation: animation-card-focus 0.2s\n        }\n        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{\n            animation: animation-trigger-enter 0.2s forwards\n        }\n   \n .new-interface-logo { \n opacity: 0; \n transition: opacity 0.3s ease; \n } \n \n .new-interface-logo.loaded {  \n opacity: 1; \n } \n  \n .logo-loading {  \n opacity: 0; \n } \n     </style>\n    ");
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
     }
 
