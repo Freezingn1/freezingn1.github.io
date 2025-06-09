@@ -384,7 +384,7 @@
                 cardClass: element.cardClass,
                 genres: object.genres,
                 object: object,
-                card_wide: false,
+                card_wide: true,
                 nomore: element.nomore
             });
             item.create();
