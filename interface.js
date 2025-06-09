@@ -249,6 +249,7 @@
         var background_last = '';
         var background_timer;
         var isDestroyed = false;
+        var wide_posters = Lampa.Storage.get('wide_posters') !== 'false'; // Добавляем переменную для хранения состояния
 
         this.create = function () {};
 
@@ -384,7 +385,7 @@
                 cardClass: element.cardClass,
                 genres: object.genres,
                 object: object,
-                card_wide: true,
+                card_wide: wide_posters, // Используем переменную wide_posters вместо true
                 nomore: element.nomore
             });
             item.create();
@@ -567,7 +568,33 @@
                 name: "Настройки логотипов на главной",
                 description: "Управление отображением логотипов вместо названий"
             }
-        }); 
+        });
+
+        // Добавление параметра настройки широких постеров
+        Lampa.SettingsApi.addParam({
+            component: "styleint",
+            param: {
+                name: "wide_posters",
+                type: "select",
+                values: { 
+                    "true": "Широкие постеры", 
+                    "false": "Обычные постеры"
+                },
+                default: "true"
+            },
+            field: {
+                name: "Тип постеров",
+                description: "Переключение между широкими и обычными постерами"
+            },
+            onSave: function() {
+                // Применяем изменения без перезагрузки страницы
+                if (window.currentInterface) {
+                    window.currentInterface.destroy();
+                    window.currentInterface = null;
+                    Lampa.Activity.reload();
+                }
+            }
+        });
 
         // Добавление CSS стилей для нового интерфейса
         Lampa.Template.add('new_interface_style', `
