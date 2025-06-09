@@ -177,8 +177,8 @@
             loaded[url] = movie;
             _this.draw(movie);
           });
-        }, 1000);
-      };
+        }, 300);
+      }, 1000);
 
       this.render = function () {
         return isDestroyed ? null : html;
