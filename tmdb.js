@@ -11,15 +11,10 @@
         path_api: Lampa.Utils.protocol() + 'apitmdb.kurwa-bober.ninja/3/'
     };
     var imageDomains = [
-        'image.tmdb.org',
-        'imagetmdb.com'
+        'imagetmdb.com/'
     ];
     var apiDomains = [
-        'api.themoviedb.org',
-        'apitmdb.kurwa-bober.ninja',
-        'tmdb.kurwa-bober.ninja',
-        'apitmdb.standby.cub.red',
-        'apitmdb.cub.red'
+        'apitmdb.kurwa-bober.ninja/3/'
     ];
     (function() {
         // check connect
