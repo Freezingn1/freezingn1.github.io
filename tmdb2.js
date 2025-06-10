@@ -76,7 +76,7 @@
         var plugins = Lampa.Storage.get('plugins', '[]');
 
         for (var i=0; i < plugins.length; i++) {
-            if (plugins[i].url.indexOf('://cub.red/plugin/tmdb-proxy') > 0) {
+            if (plugins[i].url.indexOf('://cub.rip/plugin/tmdb-proxy') > 0) {
                 addCubProxy = false;
                 plugins[i].status = 1;
             }
