@@ -470,6 +470,10 @@
 		.full-start__pg, .full-start__status {
 			font-size: 0.9em;
 		}
+		
+		.full-start-new__rate-line .full-start__pg {
+			font-size: 0.9em;
+		}
         
         .new-interface-info {
             position: relative;
