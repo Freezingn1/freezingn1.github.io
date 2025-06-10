@@ -454,9 +454,9 @@
 }	
 
 @media screen and (max-width: 480px) {
-.tag-count__count {
-    color: #ffffff;
-    background: var(--accent-gradient) !important;
+.full-descr__info-body {
+    justify-content: center !important;
+    display: flex;
 }
 }			
 			
