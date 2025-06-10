@@ -466,6 +466,10 @@
         .new-interface .card--small.card--wide {
             width: 18.3em;
         }
+		
+		.full-start__pg, .full-start__status {
+			font-size: 0.9em;
+		}
         
         .new-interface-info {
             position: relative;
