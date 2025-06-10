@@ -2,7 +2,7 @@
     'use strict';
 
 	//Стильный интерфейс
-	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/interface.js'], function () { });
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/interface2.js'], function () { });
 	
 	//Тёмная тема
         Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/dark_style.js'], function () { });
