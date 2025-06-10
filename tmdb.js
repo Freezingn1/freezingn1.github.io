@@ -16,10 +16,10 @@
     ];
     var apiDomains = [
         'api.themoviedb.org',
-        'apitmdb.kurwa-bober.ninja'
+        'apitmdb.kurwa-bober.ninja',
         'tmdb.kurwa-bober.ninja',
         'apitmdb.standby.cub.red',
-        'apitmdb.cub.red',
+        'apitmdb.cub.red'
     ];
     (function() {
         // check connect
