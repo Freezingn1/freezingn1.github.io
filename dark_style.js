@@ -421,6 +421,31 @@
 					max-height: 6em;
 				}
 				}
+				
+				
+@media screen and (max-width: 580px) {
+    .full-descr__text {
+        text-align: justify;
+    }
+}
+
+@media screen and (max-width: 580px) {
+.items-line__head {
+    justify-content: center !important;
+}
+}
+
+@media screen and (max-width: 580px) {
+.full-descr__details {
+    justify-content: center !important;
+}
+}
+
+@media screen and (max-width: 480px) {
+    .full-descr__tags {
+        justify-content: center !important;
+    }
+}				
 			
             
             @media screen and (max-width: 580px) {
