@@ -172,11 +172,11 @@
         if (countries.length > 0) head.push(countries.join(', '));
         if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
         if (data.number_of_episodes && data.number_of_episodes > 0) {
-            details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+            details.push('<span class="full-start__ep">Эпизодов ' + data.number_of_episodes + '</span>');
         }
         
         if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
-        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+        if (pg) details.push('<span class="full-start__ep" style="font-size: 0.9em;">' + pg + '</span>');
         
         html.find('.new-interface-info__head').empty().append(head.join(', '));
         html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
@@ -467,13 +467,9 @@
             width: 18.3em;
         }
 		
-		.full-start__pg, .full-start__status {
+		.full-start__ep, .full-start__status {
 			font-size: 0.9em;
-		}
-		
-		.full-start-new__rate-line .full-start__pg {
-			font-size: 0.9em;
-		}
+		}		
         
         .new-interface-info {
             position: relative;
