@@ -306,7 +306,7 @@
       };
 
       this.background = function (elem) {
-        var new_background = Lampa.Api.img(elem.backdrop_path, 'original');
+        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
         clearTimeout(background_timer);
         if (new_background == background_last) return;
         background_timer = setTimeout(function () {
