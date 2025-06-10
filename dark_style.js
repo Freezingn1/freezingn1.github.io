@@ -445,7 +445,20 @@
     .full-descr__tags {
         justify-content: center !important;
     }
-}				
+}
+
+@media screen and (max-width: 480px) {
+.items-line__more {
+    display: none;
+}
+}	
+
+@media screen and (max-width: 480px) {
+.tag-count__count {
+    color: #ffffff;
+    background: var(--accent-gradient) !important;
+}
+}			
 			
             
             @media screen and (max-width: 580px) {
