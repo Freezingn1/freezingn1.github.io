@@ -30,66 +30,68 @@
 
     const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
 
-    // Сначала обновляем фон
-    Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
+    // Задержка для фона и логотипов
+    setTimeout(() => {
+        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
 
-    if (logoSetting !== 'hide') {
-        const type = data.name ? 'tv' : 'movie';
-        const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+        if (logoSetting !== 'hide') {
+            const type = data.name ? 'tv' : 'movie';
+            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-        network.silent(url, (images) => {
-            if (isDestroyed || !html) return;
+            network.silent(url, (images) => {
+                if (isDestroyed || !html) return;
 
-            let bestLogo = null;
+                let bestLogo = null;
 
-            if (images.logos && images.logos.length > 0) {
-                let bestRussianLogo = null;
-                let bestEnglishLogo = null;
-                let bestOtherLogo = null;
+                if (images.logos && images.logos.length > 0) {
+                    let bestRussianLogo = null;
+                    let bestEnglishLogo = null;
+                    let bestOtherLogo = null;
 
-                images.logos.forEach(logo => {
-                    if (logo.iso_639_1 === 'ru') {
-                        if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
-                            bestRussianLogo = logo;
+                    images.logos.forEach(logo => {
+                        if (logo.iso_639_1 === 'ru') {
+                            if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
+                                bestRussianLogo = logo;
+                            }
                         }
-                    }
-                    else if (logo.iso_639_1 === 'en') {
-                        if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
-                            bestEnglishLogo = logo;
+                        else if (logo.iso_639_1 === 'en') {
+                            if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
+                                bestEnglishLogo = logo;
+                            }
                         }
+                        else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
+                            bestOtherLogo = logo;
+                        }
+                    });
+
+                    bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
+
+                    if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                        bestLogo = null;
                     }
-                    else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
-                        bestOtherLogo = logo;
+                }
+
+                this.applyLogo(data, bestLogo);
+            }, () => {
+                if (!isDestroyed && html) {
+                    const titleElement = html.find('.new-interface-info__title');
+                    if (titleElement.length) {
+                        titleElement.text(data.title);
                     }
-                });
-
-                bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-
-                if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                    bestLogo = null;
                 }
+            });
+        } else if (!isDestroyed && html) {
+            const titleElement = html.find('.new-interface-info__title');
+            if (titleElement.length) {
+                titleElement.text(data.title);
             }
-
-            this.applyLogo(data, bestLogo);
-        }, () => {
-            if (!isDestroyed && html) {
-                const titleElement = html.find('.new-interface-info__title');
-                if (titleElement.length) {
-                    titleElement.text(data.title);
-                }
-            }
-        });
-    } else if (!isDestroyed && html) {
-        const titleElement = html.find('.new-interface-info__title');
-        if (titleElement.length) {
-            titleElement.text(data.title);
         }
-    }
 
-    if (!isDestroyed && html) {
-        html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
-        this.load(data);
-    }
+        if (!isDestroyed && html) {
+            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
+            this.load(data);
+        }
+    }, 500); // Задержка 500 мс для синхронизации
 };
 
       this.applyLogo = function(data, logo) {
@@ -101,11 +103,8 @@
     clearTimeout(logo_timer);
 
     if (!logo || !logo.file_path) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            }, 500);
-            return;
+        titleElement.text(data.title);
+        return;
     }
 
     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
