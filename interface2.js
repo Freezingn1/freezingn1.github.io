@@ -109,6 +109,25 @@
 
     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
+    // Проверка кэша в localStorage перед загрузкой
+    if (typeof localStorage !== 'undefined') {
+        try {
+            const cachedUrl = localStorage.getItem('tmdb_logo_' + logo.file_path);
+            if (cachedUrl && cachedUrl === imageUrl) {
+                // Использовать кэшированное изображение
+                if (imageCache[imageUrl]) {
+                    titleElement.html(imageCache[imageUrl]);
+                    setTimeout(() => {
+                        titleElement.find('.new-interface-logo').css('opacity', 1);
+                    }, 10);
+                    return;
+                }
+            }
+        } catch (e) {
+            // localStorage недоступен
+        }
+    }
+
     if (imageCache[imageUrl]) {
         logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
@@ -142,6 +161,16 @@
             `;
             
             addToCache(imageCache, imageUrl, logoHtml);
+            
+            // Сохраняем в localStorage после успешной загрузки
+            if (typeof localStorage !== 'undefined') {
+                try {
+                    localStorage.setItem('tmdb_logo_' + logo.file_path, imageUrl);
+                } catch (e) {
+                    // localStorage может быть переполнен
+                }
+            }
+            
             titleElement.html(logoHtml);
 
             setTimeout(() => {
@@ -154,10 +183,10 @@
 
         tempImg.onerror = () => {
             if (isDestroyed || !html) return;
-            if (attempt < 2) { // Максимум 3 попытки (0, 1, 2)
+            if (attempt < 2) {
                 setTimeout(() => {
                     this.applyLogo(data, logo, attempt + 1);
-                }, 1000 * (attempt + 1)); // Увеличиваем задержку с каждой попыткой
+                }, 1000 * (attempt + 1));
             } else {
                 titleElement.text(data.title);
             }
