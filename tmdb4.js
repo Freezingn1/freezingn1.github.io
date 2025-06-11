@@ -7,20 +7,20 @@
         name: 'TMDB My Proxy',
         version: '1.1.1',
         description: 'Проксирование постеров и API сайта TMDB',
-        path_image: Lampa.Utils.protocol() + 'lampa.byskaz.ru/tmdb/img/',
-        path_api: Lampa.Utils.protocol() + 'lampa.byskaz.ru/tmdb/api/3/'
+        path_image: Lampa.Utils.protocol() + 'lam.maxvol.pro/tmdb/img/',
+        path_api: Lampa.Utils.protocol() + 'lam.maxvol.pro/tmdb/api/3/'
     };
     var imageDomains = [
         'image.tmdb.org',
         'tmdbimg.rootu.top',
-		'lampa.byskaz.ru/tmdb/img/',
+		'lam.maxvol.pro/tmdb/img/',
         'imagetmdb.com'
     ];
     var apiDomains = [
         'api.themoviedb.org',
         'tmdbapi.rootu.top',
         'apitmdb.standby.cub.red',
-		'lampa.byskaz.ru/tmdb/api/3/',
+		'lam.maxvol.pro/tmdb/api/3/',
         'apitmdb.cub.red',
     ];
     (function() {
