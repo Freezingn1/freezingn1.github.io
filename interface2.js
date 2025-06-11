@@ -91,72 +91,116 @@
       };
 
       this.applyLogo = function(data, logo) {
-        if (isDestroyed || !html) return;
+    if (isDestroyed || !html) return;
 
-        const titleElement = html.find('.new-interface-info__title');
-        if (!titleElement.length) return;
+    const titleElement = html.find('.new-interface-info__title');
+    if (!titleElement.length) return;
 
-        clearTimeout(logo_timer);
+    clearTimeout(logo_timer);
 
-        if (!logo || !logo.file_path) {
-            logo_timer = setTimeout(() => {
+    if (!logo || !logo.file_path) {
+        // Плавное исчезновение текущего логотипа
+        const currentLogo = titleElement.find('.new-interface-logo');
+        if (currentLogo.length) {
+            currentLogo.css('opacity', 0);
+            setTimeout(() => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
-            }, 500);
-            return;
+            }, 300); // Время должно совпадать с временем transition
+        } else {
+            titleElement.text(data.title);
         }
+        return;
+    }
 
-        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
-        if (imageCache[imageUrl]) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
+    if (imageCache[imageUrl]) {
+        logo_timer = setTimeout(() => {
+            if (isDestroyed || !html) return;
+            // Плавное исчезновение текущего логотипа перед заменой
+            const currentLogo = titleElement.find('.new-interface-logo');
+            if (currentLogo.length) {
+                currentLogo.css('opacity', 0);
+                setTimeout(() => {
+                    if (isDestroyed || !html) return;
+                    titleElement.html(imageCache[imageUrl]);
+                    setTimeout(() => {
+                        titleElement.find('.new-interface-logo').css('opacity', 1);
+                    }, 300);
+                }, 300);
+            } else {
                 titleElement.html(imageCache[imageUrl]);
                 setTimeout(() => {
                     titleElement.find('.new-interface-logo').css('opacity', 1);
                 }, 300);
-            }, 500);
-            return;
-        }
+            }
+        }, 500);
+        return;
+    }
 
-        if (titleElement.data('current-logo') === imageUrl) return;
-        titleElement.data('current-logo', imageUrl);
+    if (titleElement.data('current-logo') === imageUrl) return;
+    titleElement.data('current-logo', imageUrl);
 
-        logo_timer = setTimeout(() => {
+    logo_timer = setTimeout(() => {
+        if (isDestroyed || !html) return;
+
+        const tempImg = new Image();
+        tempImg.src = imageUrl;
+
+        tempImg.onload = () => {
             if (isDestroyed || !html) return;
-
-            const tempImg = new Image();
-            tempImg.src = imageUrl;
-
-            tempImg.onload = () => {
-                if (isDestroyed || !html) return;
-                
-                const logoHtml = `
-                    <img class="new-interface-logo" 
-                         src="${imageUrl}" 
-                         alt="${data.title}"
-                         loading="eager"
-                         style="opacity: 0;"
-                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-                `;
-                
-                addToCache(imageCache, imageUrl, logoHtml);
+            
+            const logoHtml = `
+                <img class="new-interface-logo" 
+                     src="${imageUrl}" 
+                     alt="${data.title}"
+                     loading="eager"
+                     style="opacity: 0;"
+                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+            `;
+            
+            addToCache(imageCache, imageUrl, logoHtml);
+            
+            // Плавное исчезновение текущего логотипа перед заменой
+            const currentLogo = titleElement.find('.new-interface-logo');
+            if (currentLogo.length) {
+                currentLogo.css('opacity', 0);
+                setTimeout(() => {
+                    if (isDestroyed || !html) return;
+                    titleElement.html(logoHtml);
+                    setTimeout(() => {
+                        const logoImg = titleElement.find('.new-interface-logo');
+                        if (logoImg.length) {
+                            logoImg.css('opacity', 1);
+                        }
+                    }, 300);
+                }, 300);
+            } else {
                 titleElement.html(logoHtml);
-
                 setTimeout(() => {
                     const logoImg = titleElement.find('.new-interface-logo');
                     if (logoImg.length) {
                         logoImg.css('opacity', 1);
                     }
                 }, 300);
-            };
+            }
+        };
 
-            tempImg.onerror = () => {
-                if (isDestroyed || !html) return;
+        tempImg.onerror = () => {
+            if (isDestroyed || !html) return;
+            const currentLogo = titleElement.find('.new-interface-logo');
+            if (currentLogo.length) {
+                currentLogo.css('opacity', 0);
+                setTimeout(() => {
+                    titleElement.text(data.title);
+                }, 300);
+            } else {
                 titleElement.text(data.title);
-            };
-        }, 500);
-      };
+            }
+        };
+    }, 500);
+};
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
