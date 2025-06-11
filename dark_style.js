@@ -458,7 +458,13 @@
     justify-content: center !important;
     display: flex;
 }
-}			
+}		
+
+@media screen and (max-width: 480px) {
+.full-descr__details > * {
+    text-align: center;
+}
+}	
 			
             
             @media screen and (max-width: 580px) {
