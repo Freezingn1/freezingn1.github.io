@@ -6,7 +6,7 @@
       name: 'TMDB Proxy',
       version: '1.0.3',
       description: 'Проксирование постеров и API сайта TMDB',
-      path_image: 'tmdbimg.rootu.top/',
+      path_image: 'lam.maxvol.pro/tmdb/img/',
       path_api: 'lam.maxvol.pro/tmdb/api/3/'
     };
 
