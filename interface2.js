@@ -90,11 +90,8 @@
         }
       };
 
-      this.applyLogo = function(data, logo, retryCount = 0) {
+      this.applyLogo = function(data, logo) {
     if (isDestroyed || !html) return;
-
-    const MAX_RETRIES = 2; // Максимальное количество попыток
-    const RETRY_DELAY = 1000; // Задержка между попытками (1 секунда)
 
     const titleElement = html.find('.new-interface-info__title');
     if (!titleElement.length) return;
