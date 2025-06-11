@@ -1,100 +1,58 @@
-(function () {
+(function() {
     'use strict';
 
-    // Конфигурация
-    const config = {
-        maxRetries: 3,          // Максимальное количество попыток
-        retryDelay: 1000,       // Задержка между попытками (мс)
-        requestTimeout: 5000,   // Таймаут запроса (мс)
-        maxConcurrentRequests: 5, // Максимальное количество одновременных запросов
-        fallbackToDirect: true  // Переключиться на прямое подключение при неудаче
-    };
+    // Настройки
+    const MAX_RETRIES = 3;      // Макс. попытки
+    const RETRY_DELAY = 1000;   // Задержка между попытками (мс)
+    const USE_PROXY = Lampa.Storage.field('proxy_tmdb'); // Берём значение из настроек
 
-    // Очередь и счетчик запросов
-    let activeRequests = 0;
-    const requestQueue = [];
+    // Базовые URL
+    const PROXY_API_URL = 'https://lampa.byskaz.ru/tmdb/api/3/';
+    const PROXY_IMG_URL = 'https://lampa.byskaz.ru/tmdb/img/';
+    const DIRECT_API_URL = 'https://api.themoviedb.org/3/';
+    const DIRECT_IMG_URL = 'https://image.tmdb.org/';
 
-    // Прокси и базовые URL
-    const proxyUrls = {
-        image: 'http://lampa.byskaz.ru/tmdb/img/',
-        api: 'http://lampa.byskaz.ru/tmdb/api/3/'
-    };
-
-    const directUrls = {
-        image: () => Lampa.Utils.protocol() + 'image.tmdb.org/',
-        api: () => Lampa.Utils.protocol() + 'api.themoviedb.org/3/'
-    };
-
-    // Функция для выполнения запроса с учетом ограничений
-    async function executeRequest(url) {
-        if (activeRequests >= config.maxConcurrentRequests) {
-            await new Promise(resolve => requestQueue.push(resolve));
-        }
-
-        activeRequests++;
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), config.requestTimeout);
-
-            const response = await fetch(url, { signal: controller.signal });
-            clearTimeout(timeoutId);
-
-            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-            return response;
-        } finally {
-            activeRequests--;
-            if (requestQueue.length > 0) requestQueue.shift()();
-        }
-    }
-
-    // Функция с повторными попытками
-    async function fetchWithRetry(url, isProxy) {
+    // Универсальный запрос с повторами
+    async function fetchWithRetry(url) {
         let lastError;
         
-        for (let i = 0; i < config.maxRetries; i++) {
+        for (let i = 0; i < MAX_RETRIES; i++) {
             try {
-                return await executeRequest(url);
+                const response = await fetch(url);
+                if (response.ok) return response;
+                throw new Error(`HTTP ${response.status}`);
             } catch (error) {
                 lastError = error;
-                console.warn(`Attempt ${i + 1} failed for ${url}:`, error.message);
-                
-                // Если это не последняя попытка - ждем перед повторным запросом
-                if (i < config.maxRetries - 1) {
-                    await new Promise(resolve => setTimeout(resolve, config.retryDelay));
-                }
+                console.warn(`Попытка ${i + 1} не удалась (${url})`, error.message);
+                if (i < MAX_RETRIES - 1) await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
             }
         }
-
-        // Если включено резервное прямое подключение и использовался прокси
-        if (config.fallbackToDirect && isProxy) {
-            console.log('Falling back to direct connection');
-            const directUrl = url.replace(proxyUrls.api, directUrls.api()).replace(proxyUrls.image, directUrls.image());
-            return executeRequest(directUrl);
-        }
-
-        throw lastError || new Error('Unknown error');
+        
+        throw lastError;
     }
 
-    // Модифицированные функции TMDB
-    Lampa.TMDB.image = function (url) {
-        const useProxy = Lampa.Storage.field('proxy_tmdb');
-        const fullUrl = useProxy ? proxyUrls.image + url : directUrls.image() + url;
-        return fetchWithRetry(fullUrl, useProxy).then(response => response.url);
+    // Переопределяем методы TMDB
+    Lampa.TMDB.api = async function(url) {
+        const targetUrl = USE_PROXY ? PROXY_API_URL + url : DIRECT_API_URL + url;
+        try {
+            const response = await fetchWithRetry(targetUrl);
+            return response.json();
+        } catch (error) {
+            console.error('Ошибка API запроса:', error);
+            throw error;
+        }
     };
 
-    Lampa.TMDB.api = function (url) {
-        const useProxy = Lampa.Storage.field('proxy_tmdb');
-        const fullUrl = useProxy ? proxyUrls.api + url : directUrls.api() + url;
-        return fetchWithRetry(fullUrl, useProxy).then(response => response.json());
+    Lampa.TMDB.image = function(url) {
+        return USE_PROXY ? PROXY_IMG_URL + url : DIRECT_IMG_URL + url;
     };
 
-    // Удаление настроек прокси из интерфейса
-    Lampa.Settings.listener.follow('open', function (e) {
-        if (e.name == 'tmdb') {
+    // Убираем настройки прокси из интерфейса
+    Lampa.Settings.listener.follow('open', function(e) {
+        if (e.name === 'tmdb') {
             e.body.find('[data-parent="proxy"]').remove();
         }
     });
 
-    // Логирование для отладки
-    console.log('TMDB Proxy initialized with configuration:', config);
+    console.log('TMDB Proxy: инициализирован (используется ' + (USE_PROXY ? 'ПРОКСИ' : 'ПРЯМОЕ подключение') + ')');
 })();
