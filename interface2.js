@@ -26,69 +26,71 @@
       };
 
       this.update = function (data) {
-        if (isDestroyed || !html) return;
+    if (isDestroyed || !html) return;
 
-        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
-        
-        if (logoSetting !== 'hide') {
-            const type = data.name ? 'tv' : 'movie';
-            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
+    const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
 
-            network.silent(url, (images) => {
-                if (isDestroyed || !html) return;
+    // Сначала обновляем фон
+    Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
 
-                let bestLogo = null;
-                
-                if (images.logos && images.logos.length > 0) {
-                    let bestRussianLogo = null;
-                    let bestEnglishLogo = null;
-                    let bestOtherLogo = null;
+    if (logoSetting !== 'hide') {
+        const type = data.name ? 'tv' : 'movie';
+        const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-                    images.logos.forEach(logo => {
-                        if (logo.iso_639_1 === 'ru') {
-                            if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
-                                bestRussianLogo = logo;
-                            }
+        network.silent(url, (images) => {
+            if (isDestroyed || !html) return;
+
+            let bestLogo = null;
+
+            if (images.logos && images.logos.length > 0) {
+                let bestRussianLogo = null;
+                let bestEnglishLogo = null;
+                let bestOtherLogo = null;
+
+                images.logos.forEach(logo => {
+                    if (logo.iso_639_1 === 'ru') {
+                        if (!bestRussianLogo || logo.vote_average > bestRussianLogo.vote_average) {
+                            bestRussianLogo = logo;
                         }
-                        else if (logo.iso_639_1 === 'en') {
-                            if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
-                                bestEnglishLogo = logo;
-                            }
-                        }
-                        else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
-                            bestOtherLogo = logo;
-                        }
-                    });
-
-                    bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-
-                    if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                        bestLogo = null;
                     }
-                }
-                
-                this.applyLogo(data, bestLogo);
-            }, () => {
-                if (!isDestroyed && html) {
-                    const titleElement = html.find('.new-interface-info__title');
-                    if (titleElement.length) {
-                        titleElement.text(data.title);
+                    else if (logo.iso_639_1 === 'en') {
+                        if (!bestEnglishLogo || logo.vote_average > bestEnglishLogo.vote_average) {
+                            bestEnglishLogo = logo;
+                        }
                     }
+                    else if (!bestOtherLogo || logo.vote_average > bestOtherLogo.vote_average) {
+                        bestOtherLogo = logo;
+                    }
+                });
+
+                bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
+
+                if (logoSetting === 'ru_only' && !bestRussianLogo) {
+                    bestLogo = null;
                 }
-            });
-        } else if (!isDestroyed && html) {
-            const titleElement = html.find('.new-interface-info__title');
-            if (titleElement.length) {
-                titleElement.text(data.title);
             }
-        }
 
-        if (!isDestroyed && html) {
-            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
-            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-            this.load(data);
+            this.applyLogo(data, bestLogo);
+        }, () => {
+            if (!isDestroyed && html) {
+                const titleElement = html.find('.new-interface-info__title');
+                if (titleElement.length) {
+                    titleElement.text(data.title);
+                }
+            }
+        });
+    } else if (!isDestroyed && html) {
+        const titleElement = html.find('.new-interface-info__title');
+        if (titleElement.length) {
+            titleElement.text(data.title);
         }
-      };
+    }
+
+    if (!isDestroyed && html) {
+        html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
+        this.load(data);
+    }
+};
 
       this.applyLogo = function(data, logo) {
     if (isDestroyed || !html) return;
@@ -99,107 +101,53 @@
     clearTimeout(logo_timer);
 
     if (!logo || !logo.file_path) {
-        // Плавное исчезновение текущего логотипа
-        const currentLogo = titleElement.find('.new-interface-logo');
-        if (currentLogo.length) {
-            currentLogo.css('opacity', 0);
-            setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            }, 300); // Время должно совпадать с временем transition
-        } else {
-            titleElement.text(data.title);
-        }
+        titleElement.text(data.title);
         return;
     }
 
     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
     if (imageCache[imageUrl]) {
-        logo_timer = setTimeout(() => {
-            if (isDestroyed || !html) return;
-            // Плавное исчезновение текущего логотипа перед заменой
-            const currentLogo = titleElement.find('.new-interface-logo');
-            if (currentLogo.length) {
-                currentLogo.css('opacity', 0);
-                setTimeout(() => {
-                    if (isDestroyed || !html) return;
-                    titleElement.html(imageCache[imageUrl]);
-                    setTimeout(() => {
-                        titleElement.find('.new-interface-logo').css('opacity', 1);
-                    }, 300);
-                }, 300);
-            } else {
-                titleElement.html(imageCache[imageUrl]);
-                setTimeout(() => {
-                    titleElement.find('.new-interface-logo').css('opacity', 1);
-                }, 300);
-            }
-        }, 500);
+        titleElement.html(imageCache[imageUrl]);
+        setTimeout(() => {
+            titleElement.find('.new-interface-logo').css('opacity', 1);
+        }, 10);
         return;
     }
 
     if (titleElement.data('current-logo') === imageUrl) return;
     titleElement.data('current-logo', imageUrl);
 
-    logo_timer = setTimeout(() => {
+    const tempImg = new Image();
+    tempImg.src = imageUrl;
+
+    tempImg.onload = () => {
         if (isDestroyed || !html) return;
 
-        const tempImg = new Image();
-        tempImg.src = imageUrl;
+        const logoHtml = `
+            <img class="new-interface-logo" 
+                 src="${imageUrl}" 
+                 alt="${data.title}"
+                 loading="eager"
+                 style="opacity: 0;"
+                 onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+        `;
 
-        tempImg.onload = () => {
-            if (isDestroyed || !html) return;
-            
-            const logoHtml = `
-                <img class="new-interface-logo" 
-                     src="${imageUrl}" 
-                     alt="${data.title}"
-                     loading="eager"
-                     style="opacity: 0;"
-                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-            `;
-            
-            addToCache(imageCache, imageUrl, logoHtml);
-            
-            // Плавное исчезновение текущего логотипа перед заменой
-            const currentLogo = titleElement.find('.new-interface-logo');
-            if (currentLogo.length) {
-                currentLogo.css('opacity', 0);
-                setTimeout(() => {
-                    if (isDestroyed || !html) return;
-                    titleElement.html(logoHtml);
-                    setTimeout(() => {
-                        const logoImg = titleElement.find('.new-interface-logo');
-                        if (logoImg.length) {
-                            logoImg.css('opacity', 1);
-                        }
-                    }, 300);
-                }, 300);
-            } else {
-                titleElement.html(logoHtml);
-                setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) {
-                        logoImg.css('opacity', 1);
-                    }
-                }, 300);
-            }
-        };
+        addToCache(imageCache, imageUrl, logoHtml);
+        titleElement.html(logoHtml);
 
-        tempImg.onerror = () => {
-            if (isDestroyed || !html) return;
-            const currentLogo = titleElement.find('.new-interface-logo');
-            if (currentLogo.length) {
-                currentLogo.css('opacity', 0);
-                setTimeout(() => {
-                    titleElement.text(data.title);
-                }, 300);
-            } else {
-                titleElement.text(data.title);
+        setTimeout(() => {
+            const logoImg = titleElement.find('.new-interface-logo');
+            if (logoImg.length) {
+                logoImg.css('opacity', 1);
             }
-        };
-    }, 500);
+        }, 10);
+    };
+
+    tempImg.onerror = () => {
+        if (isDestroyed || !html) return;
+        titleElement.text(data.title);
+    };
 };
 
       this.draw = function (data) {
@@ -242,7 +190,7 @@
             loaded[url] = movie;
             _this.draw(movie);
           });
-        }, 500);
+        }, 1000);
       };
 
       this.render = function () {
