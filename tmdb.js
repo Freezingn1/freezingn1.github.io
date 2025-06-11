@@ -10,12 +10,12 @@
         path_image: Lampa.Utils.protocol() + 'tmdbimg.rootu.top/',
         path_api: Lampa.Utils.protocol() + 'apitmdb.cub.red/3/'
     };
-    var imageDomains = [
-        'tmdbimg.rootu.top',
-        'imagetmdb.com'
+    var imageDomains = [	
+		'image.tmdb.org',
+		'media.themoviedb.org'
     ];
     var apiDomains = [
-        'apitmdb.cub.red',
+		'api.themoviedb.org',
     ];
     (function() {
         // check connect
