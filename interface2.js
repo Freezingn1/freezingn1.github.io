@@ -102,7 +102,7 @@
         logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
             titleElement.text(data.title);
-        }, 300); // Первая задержка: 300 мс
+        }, 500); // Задержка перед скрытием текста (как у фона)
         return;
     }
 
@@ -114,8 +114,8 @@
             titleElement.html(imageCache[imageUrl]);
             setTimeout(() => {
                 titleElement.find('.new-interface-logo').css('opacity', 1);
-            }, 500); // Вторая задержка: 500 мс
-        }, 300); // Первая задержка: 300 мс
+            }, 300); // Задержка перед появлением лого
+        }, 500); // Задержка перед вставкой HTML
         return;
     }
 
@@ -148,14 +148,14 @@
                 if (logoImg.length) {
                     logoImg.css('opacity', 1);
                 }
-            }, 500); // Вторая задержка: 500 мс
+            }, 300); // Задержка перед появлением лого
         };
 
         tempImg.onerror = () => {
             if (isDestroyed || !html) return;
             titleElement.text(data.title);
         };
-    }, 300); // Первая задержка: 300 мс
+    }, 500); // Задержка перед загрузкой изображения
 };
 
       this.draw = function (data) {
