@@ -147,7 +147,7 @@
     tempImg.onerror = () => {
         if (isDestroyed || !html) return;
         titleElement.text(data.title);
-    };
+    }, 500);
 };
 
       this.draw = function (data) {
