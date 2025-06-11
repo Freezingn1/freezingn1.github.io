@@ -94,7 +94,7 @@
     if (isDestroyed || !html) return;
 
     const MAX_RETRIES = 2; // Максимальное количество попыток
-    const RETRY_DELAY = 300; // Задержка между попытками (1 секунда)
+    const RETRY_DELAY = 1000; // Задержка между попытками (1 секунда)
 
     const titleElement = html.find('.new-interface-info__title');
     if (!titleElement.length) return;
@@ -164,24 +164,41 @@
             `;
             
             addToCache(imageCache, imageUrl, logoHtml);
-            titleElement.html(logoHtml);
-
-            setTimeout(() => {
-                const logoImg = titleElement.find('.new-interface-logo');
-                if (logoImg.length) logoImg.css('opacity', 1);
-            }, 300);
+            
+            // Плавное исчезновение текущего логотипа перед заменой
+            const currentLogo = titleElement.find('.new-interface-logo');
+            if (currentLogo.length) {
+                currentLogo.css('opacity', 0);
+                setTimeout(() => {
+                    if (isDestroyed || !html) return;
+                    titleElement.html(logoHtml);
+                    setTimeout(() => {
+                        const logoImg = titleElement.find('.new-interface-logo');
+                        if (logoImg.length) {
+                            logoImg.css('opacity', 1);
+                        }
+                    }, 300);
+                }, 300);
+            } else {
+                titleElement.html(logoHtml);
+                setTimeout(() => {
+                    const logoImg = titleElement.find('.new-interface-logo');
+                    if (logoImg.length) {
+                        logoImg.css('opacity', 1);
+                    }
+                }, 300);
+            }
         };
 
         tempImg.onerror = () => {
             if (isDestroyed || !html) return;
-
-            if (retryCount < MAX_RETRIES) {
-                console.log(`Retrying logo load (attempt ${retryCount + 1})...`);
+            const currentLogo = titleElement.find('.new-interface-logo');
+            if (currentLogo.length) {
+                currentLogo.css('opacity', 0);
                 setTimeout(() => {
-                    this.applyLogo(data, logo, retryCount + 1);
-                }, RETRY_DELAY);
+                    titleElement.text(data.title);
+                }, 300);
             } else {
-                console.error("Failed to load logo after retries");
                 titleElement.text(data.title);
             }
         };
