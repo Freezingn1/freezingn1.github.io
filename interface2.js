@@ -68,14 +68,15 @@
                 }
                 
                 this.applyLogo(data, bestLogo);
-            }, () => {
-                if (!isDestroyed && html) {
-                    const titleElement = html.find('.new-interface-info__title');
-                    if (titleElement.length) {
-                        titleElement.text(data.title);
-                    }
-                }
-            });
+            }, (error) => {
+    if (!isDestroyed && html) {
+        const titleElement = html.find('.new-interface-info__title');
+        if (titleElement.length) {
+            titleElement.text(data.title);
+        }
+    }
+    console.error('Error loading logos:', error);
+});
         } else if (!isDestroyed && html) {
             const titleElement = html.find('.new-interface-info__title');
             if (titleElement.length) {
@@ -90,73 +91,79 @@
         }
       };
 
-      this.applyLogo = function(data, logo) {
-        if (isDestroyed || !html) return;
+      this.applyLogo = function(data, logo, attempt = 0) {
+    if (isDestroyed || !html) return;
 
-        const titleElement = html.find('.new-interface-info__title');
-        if (!titleElement.length) return;
+    const titleElement = html.find('.new-interface-info__title');
+    if (!titleElement.length) return;
 
-        clearTimeout(logo_timer);
+    clearTimeout(logo_timer);
 
-        if (!logo || !logo.file_path) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            }, 1000);
-            return;
-        }
-
-        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-
-        if (imageCache[imageUrl]) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.html(imageCache[imageUrl]);
-                setTimeout(() => {
-                    titleElement.find('.new-interface-logo').css('opacity', 1);
-                }, 10);
-            }, 1000);
-            return;
-        }
-
-        if (titleElement.data('current-logo') === imageUrl) return;
-        titleElement.data('current-logo', imageUrl);
-
+    if (!logo || !logo.file_path) {
         logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
+            titleElement.text(data.title);
+        }, 1000);
+        return;
+    }
 
-            const tempImg = new Image();
-            tempImg.src = imageUrl;
+    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
-            tempImg.onload = () => {
-                if (isDestroyed || !html) return;
-                
-                const logoHtml = `
-                    <img class="new-interface-logo" 
-                         src="${imageUrl}" 
-                         alt="${data.title}"
-                         loading="eager"
-                         style="opacity: 0;"
-                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-                `;
-                
-                addToCache(imageCache, imageUrl, logoHtml);
-                titleElement.html(logoHtml);
+    if (imageCache[imageUrl]) {
+        logo_timer = setTimeout(() => {
+            if (isDestroyed || !html) return;
+            titleElement.html(imageCache[imageUrl]);
+            setTimeout(() => {
+                titleElement.find('.new-interface-logo').css('opacity', 1);
+            }, 10);
+        }, 1000);
+        return;
+    }
 
+    if (titleElement.data('current-logo') === imageUrl) return;
+    titleElement.data('current-logo', imageUrl);
+
+    logo_timer = setTimeout(() => {
+        if (isDestroyed || !html) return;
+
+        const tempImg = new Image();
+        tempImg.src = imageUrl;
+
+        tempImg.onload = () => {
+            if (isDestroyed || !html) return;
+            
+            const logoHtml = `
+                <img class="new-interface-logo" 
+                     src="${imageUrl}" 
+                     alt="${data.title}"
+                     loading="eager"
+                     style="opacity: 0;"
+                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+            `;
+            
+            addToCache(imageCache, imageUrl, logoHtml);
+            titleElement.html(logoHtml);
+
+            setTimeout(() => {
+                const logoImg = titleElement.find('.new-interface-logo');
+                if (logoImg.length) {
+                    logoImg.css('opacity', 1);
+                }
+            }, 10);
+        };
+
+        tempImg.onerror = () => {
+            if (isDestroyed || !html) return;
+            if (attempt < 2) { // Максимум 3 попытки (0, 1, 2)
                 setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) {
-                        logoImg.css('opacity', 1);
-                    }
-                }, 10);
-            };
-
-            tempImg.onerror = () => {
-                if (isDestroyed || !html) return;
+                    this.applyLogo(data, logo, attempt + 1);
+                }, 1000 * (attempt + 1)); // Увеличиваем задержку с каждой попыткой
+            } else {
                 titleElement.text(data.title);
-            };
-        }, 500);
-      };
+            }
+        };
+    }, 500);
+};
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
@@ -192,7 +199,7 @@
         timer = setTimeout(function () {
           if (isDestroyed) return;
           network.clear();
-          network.timeout(5000);
+          network.timeout(10000);
           network.silent(url, function (movie) {
             if (isDestroyed) return;
             loaded[url] = movie;
