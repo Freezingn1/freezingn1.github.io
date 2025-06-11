@@ -101,8 +101,11 @@
     clearTimeout(logo_timer);
 
     if (!logo || !logo.file_path) {
-        titleElement.text(data.title);
-        return;
+            logo_timer = setTimeout(() => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            }, 500);
+            return;
     }
 
     const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
@@ -147,7 +150,7 @@
     tempImg.onerror = () => {
         if (isDestroyed || !html) return;
         titleElement.text(data.title);
-    }, 500);
+    };
 };
 
       this.draw = function (data) {
