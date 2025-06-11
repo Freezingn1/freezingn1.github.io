@@ -26,14 +26,10 @@
       };
 
       this.update = function (data) {
-    if (isDestroyed || !html) return;
+        if (isDestroyed || !html) return;
 
-    const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
-
-    // Задержка для фона и логотипов
-    setTimeout(() => {
-        Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
-
+        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+        
         if (logoSetting !== 'hide') {
             const type = data.name ? 'tv' : 'movie';
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
@@ -42,7 +38,7 @@
                 if (isDestroyed || !html) return;
 
                 let bestLogo = null;
-
+                
                 if (images.logos && images.logos.length > 0) {
                     let bestRussianLogo = null;
                     let bestEnglishLogo = null;
@@ -70,7 +66,7 @@
                         bestLogo = null;
                     }
                 }
-
+                
                 this.applyLogo(data, bestLogo);
             }, () => {
                 if (!isDestroyed && html) {
@@ -89,68 +85,78 @@
 
         if (!isDestroyed && html) {
             html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
+            Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
             this.load(data);
         }
-    }, 1000); // Задержка 500 мс для синхронизации
-};
+      };
 
       this.applyLogo = function(data, logo) {
-    if (isDestroyed || !html) return;
-
-    const titleElement = html.find('.new-interface-info__title');
-    if (!titleElement.length) return;
-
-    clearTimeout(logo_timer);
-
-    if (!logo || !logo.file_path) {
-        titleElement.text(data.title);
-        return;
-    }
-
-    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-
-    if (imageCache[imageUrl]) {
-        titleElement.html(imageCache[imageUrl]);
-        setTimeout(() => {
-            titleElement.find('.new-interface-logo').css('opacity', 1);
-        }, 10);
-        return;
-    }
-
-    if (titleElement.data('current-logo') === imageUrl) return;
-    titleElement.data('current-logo', imageUrl);
-
-    const tempImg = new Image();
-    tempImg.src = imageUrl;
-
-    tempImg.onload = () => {
         if (isDestroyed || !html) return;
 
-        const logoHtml = `
-            <img class="new-interface-logo" 
-                 src="${imageUrl}" 
-                 alt="${data.title}"
-                 loading="eager"
-                 style="opacity: 0;"
-                 onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-        `;
+        const titleElement = html.find('.new-interface-info__title');
+        if (!titleElement.length) return;
 
-        addToCache(imageCache, imageUrl, logoHtml);
-        titleElement.html(logoHtml);
+        clearTimeout(logo_timer);
 
-        setTimeout(() => {
-            const logoImg = titleElement.find('.new-interface-logo');
-            if (logoImg.length) {
-                logoImg.css('opacity', 1);
-            }
-        }, 10);
-    };
+        if (!logo || !logo.file_path) {
+            logo_timer = setTimeout(() => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            }, 1000);
+            return;
+        }
 
-    tempImg.onerror = () => {
-        if (isDestroyed || !html) return;
-        titleElement.text(data.title);
-    };
-};
+        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+
+        if (imageCache[imageUrl]) {
+            logo_timer = setTimeout(() => {
+                if (isDestroyed || !html) return;
+                titleElement.html(imageCache[imageUrl]);
+                setTimeout(() => {
+                    titleElement.find('.new-interface-logo').css('opacity', 1);
+                }, 10);
+            }, 1000);
+            return;
+        }
+
+        if (titleElement.data('current-logo') === imageUrl) return;
+        titleElement.data('current-logo', imageUrl);
+
+        logo_timer = setTimeout(() => {
+            if (isDestroyed || !html) return;
+
+            const tempImg = new Image();
+            tempImg.src = imageUrl;
+
+            tempImg.onload = () => {
+                if (isDestroyed || !html) return;
+                
+                const logoHtml = `
+                    <img class="new-interface-logo" 
+                         src="${imageUrl}" 
+                         alt="${data.title}"
+                         loading="eager"
+                         style="opacity: 0;"
+                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+                `;
+                
+                addToCache(imageCache, imageUrl, logoHtml);
+                titleElement.html(logoHtml);
+
+                setTimeout(() => {
+                    const logoImg = titleElement.find('.new-interface-logo');
+                    if (logoImg.length) {
+                        logoImg.css('opacity', 1);
+                    }
+                }, 10);
+            };
+
+            tempImg.onerror = () => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            };
+        }, 500);
+      };
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
