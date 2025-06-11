@@ -7,8 +7,8 @@
         name: 'TMDB My Proxy',
         version: '1.1.1',
         description: 'Проксирование постеров и API сайта TMDB',
-        path_image: Lampa.Utils.protocol() + 'tmdbimg.rootu.top/',
-        path_api: Lampa.Utils.protocol() + 'apitmdb.kurwa-bober.ninja/3/'
+        path_image: Lampa.Utils.protocol() + 'image.tmdb.org/',
+        path_api: Lampa.Utils.protocol() + 'apitmdb.cub.red/3/'
     };
     var imageDomains = [
         'image.tmdb.org',
