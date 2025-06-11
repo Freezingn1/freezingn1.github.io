@@ -91,7 +91,7 @@
             html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
             this.load(data);
         }
-    }, 500); // Задержка 500 мс для синхронизации
+    }, 600); // Задержка 500 мс для синхронизации
 };
 
       this.applyLogo = function(data, logo) {
