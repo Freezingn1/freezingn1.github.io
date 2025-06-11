@@ -9,7 +9,7 @@
 
     Lampa.TMDB.api = function (url) {
         var base = Lampa.Utils.protocol() + 'api.themoviedb.org/3/' + url;
-        return Lampa.Storage.field('proxy_tmdb') ? 'https://lampa.byskaz.ru/tmdb/api/3/' + url : base;
+        return Lampa.Storage.field('proxy_tmdb') ? 'http://lampa.byskaz.ru/tmdb/api/3/' + url : base;
     };
 
     Lampa.Settings.listener.follow('open', function (e) {
