@@ -6,8 +6,8 @@
       name: 'TMDB Proxy',
       version: '1.0.3',
       description: 'Проксирование постеров и API сайта TMDB',
-      path_image: Lampa.Utils.protocol() + 'tmdbimg.rootu.top/',
-      path_api: Lampa.Utils.protocol() + 'apitmdb.cub.red/3/'
+      path_image: 'tmdbimg.rootu.top/',
+      path_api: 'lam.maxvol.pro/tmdb/api/3/'
     };
 
     function filter(u) {
