@@ -3,7 +3,7 @@
 
     Lampa.TMDB.image = function (url) {
         var base = Lampa.Utils.protocol() + 'image.tmdb.org/' + url;
-        return Lampa.Storage.field('proxy_tmdb') ? 'http://lam.maxvol.pro/tmdb/img/' + url : base;
+        return Lampa.Storage.field('proxy_tmdb') ? 'https://lam.maxvol.pro/tmdb/img/' + url : base;
     };
 	
 
