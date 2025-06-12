@@ -32,7 +32,7 @@
         
         if (logoSetting !== 'hide') {
             const type = data.name ? 'tv' : 'movie';
-            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=f83446fde4dacae2924b41ff789d2bb0');
+            const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
             network.silent(url, (images) => {
                 if (isDestroyed || !html) return;
@@ -187,7 +187,7 @@
         var _this = this;
 
         clearTimeout(timer);
-        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=f83446fde4dacae2924b41ff789d2bb0' + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
+        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
         if (loaded[url]) return this.draw(loaded[url]);
         timer = setTimeout(function () {
           if (isDestroyed) return;
