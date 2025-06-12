@@ -7,7 +7,30 @@
         apn: 'https://apn.watch/'
     };
 
-    
+    async function initializeServers() {
+        try {
+            const response = await fetch('https://api.lampishe.cc/mods/vip_online');
+            const data = await response.json();
+            
+            for (const server of data.servers) {
+                try {
+                    const testResponse = await fetch(`https://cors.lampishe.cc/?url=${server}`);
+                    if (testResponse.ok) {
+                        Defined.localhost = `https://cors.lampishe.cc/?url=${server}/`;
+                        break;
+                    }
+                } catch (error) {
+                    console.error(`Failed to connect to server ${server}:`, error);
+                }
+            }
+            
+            if (!Defined.localhost) {
+                console.error('No working servers found');
+            }
+        } catch (error) {
+            console.error('Failed to fetch server list:', error);
+        }
+    }
 
     initializeServers();
 
@@ -300,13 +323,13 @@
             });
         };
         /**
-         * Подготовка
+         * РџРѕРґРіРѕС‚РѕРІРєР°
          */
         this.create = function() {
             return this.render();
         };
         /**
-         * Начать поиск
+         * РќР°С‡Р°С‚СЊ РїРѕРёСЃРє
          */
         this.search = function() { //this.loading(true)
             this.filter({
@@ -347,7 +370,7 @@
                             }
                             text = object.movie.title;
                         }
-                        if (text == 'По умолчанию') {
+                        if (text == 'РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ') {
                             text = object.movie.title;
                         }
                     }
@@ -602,7 +625,7 @@
                 var name = elem.title || elem.text;
                 elem.title = name;
                 elem.time = elem.time || '';
-                elem.info = info.join('<span class="online-prestige-split">●</span>');
+                elem.info = info.join('<span class="online-prestige-split">в—Џ</span>');
                 var item = Lampa.Template.get('lampac_prestige_folder', elem);
                 item.on('hover:enter', function() {
                     _this5.reset();
@@ -648,7 +671,7 @@
             images = [];
         };
         /**
-         * Очистить список файлов
+         * РћС‡РёСЃС‚РёС‚СЊ СЃРїРёСЃРѕРє С„Р°Р№Р»РѕРІ
          */
         this.reset = function() {
             last = false;
@@ -661,7 +684,7 @@
             scroll.body().append(Lampa.Template.get('lampac_content_loading'));
         };
         /**
-         * Загрузка
+         * Р—Р°РіСЂСѓР·РєР°
          */
         this.loading = function(status) {
             if (status) this.activity.loader(true);
@@ -671,7 +694,7 @@
             }
         };
         /**
-         * Построить фильтр
+         * РџРѕСЃС‚СЂРѕРёС‚СЊ С„РёР»СЊС‚СЂ
          */
         this.filter = function(filter_items, choice) {
             var _this6 = this;
@@ -715,7 +738,7 @@
             this.selected(filter_items);
         };
         /**
-         * Показать что выбрано в фильтре
+         * РџРѕРєР°Р·Р°С‚СЊ С‡С‚Рѕ РІС‹Р±СЂР°РЅРѕ РІ С„РёР»СЊС‚СЂРµ
          */
         this.selected = function(filter_items) {
             var need = this.getChoice(),
@@ -776,7 +799,7 @@
             } else body.append('<span>' + Lampa.Lang.translate('lampac_no_watch_history') + '</span>');
         };
         /**
-         * Отрисовка файлов
+         * РћС‚СЂРёСЃРѕРІРєР° С„Р°Р№Р»РѕРІ
          */
         this.draw = function(items) {
             var _this7 = this;
@@ -798,7 +821,7 @@
                     }) : false;
                     var episode_num = element.episode || index + 1;
                     var episode_last = choice.episodes_view[element.season];
-                    var voice_name = choice.voice_name || (filter_find.voice[0] ? filter_find.voice[0].title : false) || element.voice_name || (serial ? 'Неизвестно' : element.text) || 'Неизвестно';
+                    var voice_name = choice.voice_name || (filter_find.voice[0] ? filter_find.voice[0].title : false) || element.voice_name || (serial ? 'РќРµРёР·РІРµСЃС‚РЅРѕ' : element.text) || 'РќРµРёР·РІРµСЃС‚РЅРѕ';
                     if (element.quality) {
                         element.qualitys = element.quality;
                         element.quality = Lampa.Arrays.getKeys(element.quality)[0];
@@ -835,7 +858,7 @@
                     if (element.info) info.push(element.info);
                     if (info.length) element.info = info.map(function(i) {
                         return '<span>' + i + '</span>';
-                    }).join('<span class="online-prestige-split">●</span>');
+                    }).join('<span class="online-prestige-split">в—Џ</span>');
                     var html = Lampa.Template.get('lampac_prestige_full', element);
                     var loader = html.find('.online-prestige__loader');
                     var image = html.find('.online-prestige__img');
@@ -952,7 +975,7 @@
                             time: Lampa.Utils.secondsToTime((episode ? episode.runtime : object.movie.runtime) * 60, true),
                             info: info.length ? info.map(function(i) {
                                 return '<span>' + i + '</span>';
-                            }).join('<span class="online-prestige-split">●</span>') : '',
+                            }).join('<span class="online-prestige-split">в—Џ</span>') : '',
                             title: episode.name,
                             quality: day > 0 ? txt : ''
                         });
@@ -993,7 +1016,7 @@
             });
         };
         /**
-         * Меню
+         * РњРµРЅСЋ
          */
         this.contextMenu = function(params) {
             params.html.on('hover:long', function() {
@@ -1013,7 +1036,7 @@
                         });
                     }
                     menu.push({
-                        title: Lampa.Lang.translate('player_lauch') + ' - Встроенный',
+                        title: Lampa.Lang.translate('player_lauch') + ' - Р’СЃС‚СЂРѕРµРЅРЅС‹Р№',
                         player: 'lampa'
                     });
                     menu.push({
@@ -1125,7 +1148,7 @@
             });
         };
         /**
-         * Показать пустой результат
+         * РџРѕРєР°Р·Р°С‚СЊ РїСѓСЃС‚РѕР№ СЂРµР·СѓР»СЊС‚Р°С‚
          */
         this.empty = function() {
             var html = Lampa.Template.get('lampac_does_not_answer', {});
@@ -1184,7 +1207,7 @@
             return last_episode;
         };
         /**
-         * Начать навигацию по файлам
+         * РќР°С‡Р°С‚СЊ РЅР°РІРёРіР°С†РёСЋ РїРѕ С„Р°Р№Р»Р°Рј
          */
         this.start = function() {
             if (Lampa.Activity.active().activity !== this.activity) return;
@@ -1244,13 +1267,13 @@
         var manifst = {
             type: 'video',
             version: '1.2.3',
-            name: 'Онлайн просмотр',
-            description: 'Плагин для просмотра онлайн сериалов и фильмов',
+            name: 'РћРЅР»Р°Р№РЅ РїСЂРѕСЃРјРѕС‚СЂ',
+            description: 'РџР»Р°РіРёРЅ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° РѕРЅР»Р°Р№РЅ СЃРµСЂРёР°Р»РѕРІ Рё С„РёР»СЊРјРѕРІ',
             component: 'lampac',
             onContextMenu: function onContextMenu(object) {
                 return {
                     name: Lampa.Lang.translate('lampac_watch'),
-                    description: 'Плагин для просмотра онлайн сериалов и фильмов'
+                    description: 'РџР»Р°РіРёРЅ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° РѕРЅР»Р°Р№РЅ СЃРµСЂРёР°Р»РѕРІ Рё С„РёР»СЊРјРѕРІ'
                 };
             },
             onContextLauch: function onContextLauch(object) {
@@ -1271,103 +1294,103 @@
         Lampa.Manifest.plugins = manifst;
         Lampa.Lang.add({
             lampac_watch: { //
-                ru: 'Смотреть онлайн',
+                ru: 'РЎРјРѕС‚СЂРµС‚СЊ РѕРЅР»Р°Р№РЅ',
                 en: 'Watch online',
-                ua: 'Дивитися онлайн',
-                zh: '在线观看'
+                ua: 'Р”РёРІРёС‚РёСЃСЏ РѕРЅР»Р°Р№РЅ',
+                zh: 'ењЁзєїи§‚зњ‹'
             },
             lampac_video: { //
-                ru: 'Видео',
+                ru: 'Р’РёРґРµРѕ',
                 en: 'Video',
-                ua: 'Відео',
-                zh: '视频'
+                ua: 'Р’С–РґРµРѕ',
+                zh: 'и§†йў‘'
             },
             lampac_no_watch_history: {
-                ru: 'Нет истории просмотра',
+                ru: 'РќРµС‚ РёСЃС‚РѕСЂРёРё РїСЂРѕСЃРјРѕС‚СЂР°',
                 en: 'No browsing history',
-                ua: 'Немає історії перегляду',
-                zh: '没有浏览历史'
+                ua: 'РќРµРјР°С” С–СЃС‚РѕСЂС–С— РїРµСЂРµРіР»СЏРґСѓ',
+                zh: 'жІЎжњ‰жµЏи§€еЋ†еЏІ'
             },
             lampac_nolink: {
-                ru: 'Не удалось извлечь ссылку',
-                uk: 'Неможливо отримати посилання',
+                ru: 'РќРµ СѓРґР°Р»РѕСЃСЊ РёР·РІР»РµС‡СЊ СЃСЃС‹Р»РєСѓ',
+                uk: 'РќРµРјРѕР¶Р»РёРІРѕ РѕС‚СЂРёРјР°С‚Рё РїРѕСЃРёР»Р°РЅРЅСЏ',
                 en: 'Failed to fetch link',
-                zh: '获取链接失败'
+                zh: 'иЋ·еЏ–й“ѕжЋҐе¤±иґҐ'
             },
             lampac_balanser: { //
-                ru: 'Балансер',
-                uk: 'Балансер',
+                ru: 'Р‘Р°Р»Р°РЅСЃРµСЂ',
+                uk: 'Р‘Р°Р»Р°РЅСЃРµСЂ',
                 en: 'Balancer',
-                zh: '平衡器'
+                zh: 'е№іиЎЎе™Ё'
             },
             helper_online_file: { //
-                ru: 'Удерживайте клавишу "ОК" для вызова контекстного меню',
-                uk: 'Утримуйте клавішу "ОК" для виклику контекстного меню',
+                ru: 'РЈРґРµСЂР¶РёРІР°Р№С‚Рµ РєР»Р°РІРёС€Сѓ "РћРљ" РґР»СЏ РІС‹Р·РѕРІР° РєРѕРЅС‚РµРєСЃС‚РЅРѕРіРѕ РјРµРЅСЋ',
+                uk: 'РЈС‚СЂРёРјСѓР№С‚Рµ РєР»Р°РІС–С€Сѓ "РћРљ" РґР»СЏ РІРёРєР»РёРєСѓ РєРѕРЅС‚РµРєСЃС‚РЅРѕРіРѕ РјРµРЅСЋ',
                 en: 'Hold the "OK" key to bring up the context menu',
-                zh: '按住"确定"键调出上下文菜单'
+                zh: 'жЊ‰дЅЏ"зЎ®е®љ"й”®и°ѓе‡єдёЉдё‹ж–‡иЏњеЌ•'
             },
             title_vip: { //
-                ru: 'VIP Онлайн',
-                uk: 'Онлайн',
+                ru: 'VIP РћРЅР»Р°Р№РЅ',
+                uk: 'РћРЅР»Р°Р№РЅ',
                 en: 'Online',
-                zh: '在线的'
+                zh: 'ењЁзєїзљ„'
             },
             lampac_voice_subscribe: { //
-                ru: 'Подписаться на перевод',
-                uk: 'Підписатися на переклад',
+                ru: 'РџРѕРґРїРёСЃР°С‚СЊСЃСЏ РЅР° РїРµСЂРµРІРѕРґ',
+                uk: 'РџС–РґРїРёСЃР°С‚РёСЃСЏ РЅР° РїРµСЂРµРєР»Р°Рґ',
                 en: 'Subscribe to translation',
-                zh: '订阅翻译'
+                zh: 'и®ўй…зї»иЇ‘'
             },
             lampac_voice_success: { //
-                ru: 'Вы успешно подписались',
-                uk: 'Ви успішно підписалися',
+                ru: 'Р’С‹ СѓСЃРїРµС€РЅРѕ РїРѕРґРїРёСЃР°Р»РёСЃСЊ',
+                uk: 'Р’Рё СѓСЃРїС–С€РЅРѕ РїС–РґРїРёСЃР°Р»РёСЃСЏ',
                 en: 'You have successfully subscribed',
-                zh: '您已成功订阅'
+                zh: 'ж‚Ёе·Іж€ђеЉџи®ўй…'
             },
             lampac_voice_error: { //
-                ru: 'Возникла ошибка',
-                uk: 'Виникла помилка',
+                ru: 'Р’РѕР·РЅРёРєР»Р° РѕС€РёР±РєР°',
+                uk: 'Р’РёРЅРёРєР»Р° РїРѕРјРёР»РєР°',
                 en: 'An error has occurred',
-                zh: '发生了错误'
+                zh: 'еЏ‘з”џдє†й”™иЇЇ'
             },
             lampac_clear_all_marks: { //
-                ru: 'Очистить все метки',
-                uk: 'Очистити всі мітки',
+                ru: 'РћС‡РёСЃС‚РёС‚СЊ РІСЃРµ РјРµС‚РєРё',
+                uk: 'РћС‡РёСЃС‚РёС‚Рё РІСЃС– РјС–С‚РєРё',
                 en: 'Clear all labels',
-                zh: '清除所有标签'
+                zh: 'жё…й™¤ж‰Ђжњ‰ж ‡з­ѕ'
             },
             lampac_clear_all_timecodes: { //
-                ru: 'Очистить все тайм-коды',
-                uk: 'Очистити всі тайм-коди',
+                ru: 'РћС‡РёСЃС‚РёС‚СЊ РІСЃРµ С‚Р°Р№Рј-РєРѕРґС‹',
+                uk: 'РћС‡РёСЃС‚РёС‚Рё РІСЃС– С‚Р°Р№Рј-РєРѕРґРё',
                 en: 'Clear all timecodes',
-                zh: '清除所有时间代码'
+                zh: 'жё…й™¤ж‰Ђжњ‰ж—¶й—ґд»Јз Ѓ'
             },
             lampac_change_balanser: { //
-                ru: 'Изменить балансер',
-                uk: 'Змінити балансер',
+                ru: 'РР·РјРµРЅРёС‚СЊ Р±Р°Р»Р°РЅСЃРµСЂ',
+                uk: 'Р—РјС–РЅРёС‚Рё Р±Р°Р»Р°РЅСЃРµСЂ',
                 en: 'Change balancer',
-                zh: '更改平衡器'
+                zh: 'ж›ґж”№е№іиЎЎе™Ё'
             },
             lampac_balanser_dont_work: { //
-                ru: 'Балансер ({balanser}) не отвечает на запрос.',
-                uk: 'Балансер ({balanser}) не відповідає на запит.',
+                ru: 'Р‘Р°Р»Р°РЅСЃРµСЂ ({balanser}) РЅРµ РѕС‚РІРµС‡Р°РµС‚ РЅР° Р·Р°РїСЂРѕСЃ.',
+                uk: 'Р‘Р°Р»Р°РЅСЃРµСЂ ({balanser}) РЅРµ РІС–РґРїРѕРІС–РґР°С” РЅР° Р·Р°РїРёС‚.',
                 en: 'Balancer ({balanser}) does not respond to the request.',
-                zh: '平衡器（{balanser}）未响应请求。'
+                zh: 'е№іиЎЎе™Ёпј€{balanser}пј‰жњЄе“Ќеє”иЇ·ж±‚гЂ‚'
             },
             lampac_balanser_timeout: { //
-                ru: 'Балансер будет переключен автоматически через <span class="timeout">10</span> секунд.',
-                uk: 'Балансер буде переключено автоматично через <span class="timeout">10</span> секунд.',
+                ru: 'Р‘Р°Р»Р°РЅСЃРµСЂ Р±СѓРґРµС‚ РїРµСЂРµРєР»СЋС‡РµРЅ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё С‡РµСЂРµР· <span class="timeout">10</span> СЃРµРєСѓРЅРґ.',
+                uk: 'Р‘Р°Р»Р°РЅСЃРµСЂ Р±СѓРґРµ РїРµСЂРµРєР»СЋС‡РµРЅРѕ Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ С‡РµСЂРµР· <span class="timeout">10</span> СЃРµРєСѓРЅРґ.',
                 en: 'Balancer will be switched automatically in <span class="timeout">10</span> seconds.',
-                zh: '平衡器将在<span class="timeout">10</span>秒内自动切换。'
+                zh: 'е№іиЎЎе™Ёе°†ењЁ<span class="timeout">10</span>з§’е†…и‡ЄеЉЁе€‡жЌўгЂ‚'
             },
             lampac_does_not_answer_text: {
-                ru: 'Сервер не отвечает на запрос.',
-                uk: 'Сервер не відповідає на запит.',
+                ru: 'РЎРµСЂРІРµСЂ РЅРµ РѕС‚РІРµС‡Р°РµС‚ РЅР° Р·Р°РїСЂРѕСЃ.',
+                uk: 'РЎРµСЂРІРµСЂ РЅРµ РІС–РґРїРѕРІС–РґР°С” РЅР° Р·Р°РїРёС‚.',
                 en: 'Server does not respond to the request.',
-                zh: '服务器未响应请求。'
+                zh: 'жњЌеЉЎе™ЁжњЄе“Ќеє”иЇ·ж±‚гЂ‚'
             }
         });
-        Lampa.Template.add('lampac_css', "\n        <style>\n        @charset 'UTF-8';.online-prestige{position:relative;-webkit-border-radius:.3em;border-radius:.3em;background-color:rgba(0,0,0,0.3);display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex}.online-prestige__body{padding:1.2em;line-height:1.3;-webkit-box-flex:1;-webkit-flex-grow:1;-moz-box-flex:1;-ms-flex-positive:1;flex-grow:1;position:relative}@media screen and (max-width:480px){.online-prestige__body{padding:.8em 1.2em}}.online-prestige__img{position:relative;width:13em;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;min-height:8.2em}.online-prestige__img>img{position:absolute;top:0;left:0;width:100%;height:100%;-o-object-fit:cover;object-fit:cover;-webkit-border-radius:.3em;border-radius:.3em;opacity:0;-webkit-transition:opacity .3s;-o-transition:opacity .3s;-moz-transition:opacity .3s;transition:opacity .3s}.online-prestige__img--loaded>img{opacity:1}@media screen and (max-width:480px){.online-prestige__img{width:7em;min-height:6em}}.online-prestige__folder{padding:1em;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0}.online-prestige__folder>svg{width:4.4em !important;height:4.4em !important}.online-prestige__viewed{position:absolute;top:1em;left:1em;background:rgba(0,0,0,0.45);-webkit-border-radius:100%;border-radius:100%;padding:.25em;font-size:.76em}.online-prestige__viewed>svg{width:1.5em !important;height:1.5em !important}.online-prestige__episode-number{position:absolute;top:0;left:0;right:0;bottom:0;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;-moz-box-pack:center;-ms-flex-pack:center;justify-content:center;font-size:2em}.online-prestige__loader{position:absolute;top:50%;left:50%;width:2em;height:2em;margin-left:-1em;margin-top:-1em;background:url(./img/loader.svg) no-repeat center center;-webkit-background-size:contain;-o-background-size:contain;background-size:contain}.online-prestige__head,.online-prestige__footer{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;-moz-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}.online-prestige__timeline{margin:.8em 0}.online-prestige__timeline>.time-line{display:block !important}.online-prestige__title{font-size:1.7em;overflow:hidden;-o-text-overflow:ellipsis;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical}@media screen and (max-width:480px){.online-prestige__title{font-size:1.4em}}.online-prestige__time{padding-left:2em}.online-prestige__info{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}.online-prestige__info>*{overflow:hidden;-o-text-overflow:ellipsis;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical}.online-prestige__quality{padding-left:1em;white-space:nowrap}.online-prestige__scan-file{position:absolute;bottom:0;left:0;right:0}.online-prestige__scan-file .broadcast__scan{margin:0}.online-prestige .online-prestige-split{font-size:.8em;margin:0 1em;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0}.online-prestige.focus::after{content:'';position:absolute;top:-0.6em;left:-0.6em;right:-0.6em;bottom:-0.6em;-webkit-border-radius:.7em;border-radius:.7em;border:solid .3em #fff;z-index:-1;pointer-events:none}.online-prestige+.online-prestige{margin-top:1.5em}.online-prestige--folder .online-prestige__footer{margin-top:.8em}.online-prestige-watched{padding:1em}.online-prestige-watched__icon>svg{width:1.5em;height:1.5em}.online-prestige-watched__body{padding-left:1em;padding-top:.1em;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;flex-wrap:wrap}.online-prestige-watched__body>span+span::before{content:' ● ';vertical-align:top;display:inline-block;margin:0 .5em}.online-prestige-rate{display:-webkit-inline-box;display:-webkit-inline-flex;display:-moz-inline-box;display:-ms-inline-flexbox;display:inline-flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}.online-prestige-rate>svg{width:1.3em !important;height:1.3em !important}.online-prestige-rate>span{font-weight:600;font-size:1.1em;padding-left:.7em}.online-empty{line-height:1.4}.online-empty__title{font-size:1.8em;margin-bottom:.3em}.online-empty__time{font-size:1.2em;font-weight:300;margin-bottom:1.6em}.online-empty__buttons{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex}.online-empty__buttons>*+*{margin-left:1em}.online-empty__button{background:rgba(0,0,0,0.3);font-size:1.2em;padding:.5em 1.2em;-webkit-border-radius:.2em;border-radius:.2em;margin-bottom:2.4em}.online-empty__button.focus{background:#c22222;color:white}.online-empty__templates .online-empty-template:nth-child(2){opacity:.5}.online-empty__templates .online-empty-template:nth-child(3){opacity:.2}.online-empty-template{background-color:rgba(255,255,255,0.3);padding:1em;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;-webkit-border-radius:.3em;border-radius:.3em}.online-empty-template>*{background:rgba(0,0,0,0.3);-webkit-border-radius:.3em;border-radius:.3em}.online-empty-template__ico{width:4em;height:4em;margin-right:2.4em}.online-empty-template__body{height:1.7em;width:70%}.online-empty-template+.online-empty-template{margin-top:1em}\n        </style>\n    ");
+        Lampa.Template.add('lampac_css', "\n        <style>\n        @charset 'UTF-8';.online-prestige{position:relative;-webkit-border-radius:.3em;border-radius:.3em;background-color:rgba(0,0,0,0.3);display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex}.online-prestige__body{padding:1.2em;line-height:1.3;-webkit-box-flex:1;-webkit-flex-grow:1;-moz-box-flex:1;-ms-flex-positive:1;flex-grow:1;position:relative}@media screen and (max-width:480px){.online-prestige__body{padding:.8em 1.2em}}.online-prestige__img{position:relative;width:13em;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0;min-height:8.2em}.online-prestige__img>img{position:absolute;top:0;left:0;width:100%;height:100%;-o-object-fit:cover;object-fit:cover;-webkit-border-radius:.3em;border-radius:.3em;opacity:0;-webkit-transition:opacity .3s;-o-transition:opacity .3s;-moz-transition:opacity .3s;transition:opacity .3s}.online-prestige__img--loaded>img{opacity:1}@media screen and (max-width:480px){.online-prestige__img{width:7em;min-height:6em}}.online-prestige__folder{padding:1em;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0}.online-prestige__folder>svg{width:4.4em !important;height:4.4em !important}.online-prestige__viewed{position:absolute;top:1em;left:1em;background:rgba(0,0,0,0.45);-webkit-border-radius:100%;border-radius:100%;padding:.25em;font-size:.76em}.online-prestige__viewed>svg{width:1.5em !important;height:1.5em !important}.online-prestige__episode-number{position:absolute;top:0;left:0;right:0;bottom:0;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;-moz-box-pack:center;-ms-flex-pack:center;justify-content:center;font-size:2em}.online-prestige__loader{position:absolute;top:50%;left:50%;width:2em;height:2em;margin-left:-1em;margin-top:-1em;background:url(./img/loader.svg) no-repeat center center;-webkit-background-size:contain;-o-background-size:contain;background-size:contain}.online-prestige__head,.online-prestige__footer{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;-moz-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}.online-prestige__timeline{margin:.8em 0}.online-prestige__timeline>.time-line{display:block !important}.online-prestige__title{font-size:1.7em;overflow:hidden;-o-text-overflow:ellipsis;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical}@media screen and (max-width:480px){.online-prestige__title{font-size:1.4em}}.online-prestige__time{padding-left:2em}.online-prestige__info{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}.online-prestige__info>*{overflow:hidden;-o-text-overflow:ellipsis;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical}.online-prestige__quality{padding-left:1em;white-space:nowrap}.online-prestige__scan-file{position:absolute;bottom:0;left:0;right:0}.online-prestige__scan-file .broadcast__scan{margin:0}.online-prestige .online-prestige-split{font-size:.8em;margin:0 1em;-webkit-flex-shrink:0;-ms-flex-negative:0;flex-shrink:0}.online-prestige.focus::after{content:'';position:absolute;top:-0.6em;left:-0.6em;right:-0.6em;bottom:-0.6em;-webkit-border-radius:.7em;border-radius:.7em;border:solid .3em #fff;z-index:-1;pointer-events:none}.online-prestige+.online-prestige{margin-top:1.5em}.online-prestige--folder .online-prestige__footer{margin-top:.8em}.online-prestige-watched{padding:1em}.online-prestige-watched__icon>svg{width:1.5em;height:1.5em}.online-prestige-watched__body{padding-left:1em;padding-top:.1em;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-flex-wrap:wrap;-ms-flex-wrap:wrap;flex-wrap:wrap}.online-prestige-watched__body>span+span::before{content:' в—Џ ';vertical-align:top;display:inline-block;margin:0 .5em}.online-prestige-rate{display:-webkit-inline-box;display:-webkit-inline-flex;display:-moz-inline-box;display:-ms-inline-flexbox;display:inline-flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center}.online-prestige-rate>svg{width:1.3em !important;height:1.3em !important}.online-prestige-rate>span{font-weight:600;font-size:1.1em;padding-left:.7em}.online-empty{line-height:1.4}.online-empty__title{font-size:1.8em;margin-bottom:.3em}.online-empty__time{font-size:1.2em;font-weight:300;margin-bottom:1.6em}.online-empty__buttons{display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex}.online-empty__buttons>*+*{margin-left:1em}.online-empty__button{background:rgba(0,0,0,0.3);font-size:1.2em;padding:.5em 1.2em;-webkit-border-radius:.2em;border-radius:.2em;margin-bottom:2.4em}.online-empty__button.focus{background:#c22222;color:white}.online-empty__templates .online-empty-template:nth-child(2){opacity:.5}.online-empty__templates .online-empty-template:nth-child(3){opacity:.2}.online-empty-template{background-color:rgba(255,255,255,0.3);padding:1em;display:-webkit-box;display:-webkit-flex;display:-moz-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-moz-box-align:center;-ms-flex-align:center;align-items:center;-webkit-border-radius:.3em;border-radius:.3em}.online-empty-template>*{background:rgba(0,0,0,0.3);-webkit-border-radius:.3em;border-radius:.3em}.online-empty-template__ico{width:4em;height:4em;margin-right:2.4em}.online-empty-template__body{height:1.7em;width:70%}.online-empty-template+.online-empty-template{margin-top:1em}\n        </style>\n    ");
         $('body').append(Lampa.Template.get('lampac_css', {}, true));
 
         function resetTemplates() {
@@ -1478,7 +1501,7 @@
                     </svg>
                 </div>
                 <div class="online-prestige-watched__body">
-                    <!-- Здесь может быть какой-то контент -->
+                    <!-- Р—РґРµСЃСЊ РјРѕР¶РµС‚ Р±С‹С‚СЊ РєР°РєРѕР№-С‚Рѕ РєРѕРЅС‚РµРЅС‚ -->
                 </div>
             </div>`);
         }
@@ -1488,8 +1511,8 @@
   <path d="M 51.041 8.443 L 228.982 110.285 C 231.808 111.913 240.399 116.854 240.399 127.503 C 240.399 138.143 231.803 143.084 228.982 144.712 L 51.021 246.564 C 47.058 248.852 43.244 250.383 37.571 250.383 C 27.208 250.383 20.239 242.898 20.239 231.762 L 20.239 23.235 C 20.239 12.104 27.208 4.623 37.571 4.623 C 43.244 4.623 47.058 6.149 51.041 8.443 Z M 52.372 162.918 L 85.673 162.918 L 111.795 100.081 L 88.008 100.081 L 72.387 142.904 L 71.491 142.904 L 70.866 100.081 L 48.328 100.081 Z M 105.6 162.918 L 127.862 162.918 L 138.9 100.081 L 116.639 100.081 Z M 135.219 162.918 L 157.486 162.918 L 159.908 149.187 L 168.346 149.187 C 185.646 148.751 199.782 136.74 198.205 120.596 C 196.997 108.201 186.732 99.82 176.159 100.081 L 146.171 100.081 Z M 162.959 131.41 L 165.294 118.216 L 170.317 118.216 C 173.281 118.216 175.35 119.562 175.35 122.701 C 175.35 127.821 172.293 131.41 168.079 131.41 Z" fill="currentColor"></path>
 </svg>
     
-        <span>VIP Онлайн</span>
-    </div>`; // нужна заглушка, а то при страте лампы говорит пусто
+        <span>VIP РћРЅР»Р°Р№РЅ</span>
+    </div>`; // РЅСѓР¶РЅР° Р·Р°РіР»СѓС€РєР°, Р° С‚Рѕ РїСЂРё СЃС‚СЂР°С‚Рµ Р»Р°РјРїС‹ РіРѕРІРѕСЂРёС‚ РїСѓСЃС‚Рѕ
 
 
         Lampa.Listener.follow('full', function(e) {
@@ -1502,7 +1525,7 @@
   <path d="M 51.041 8.443 L 228.982 110.285 C 231.808 111.913 240.399 116.854 240.399 127.503 C 240.399 138.143 231.803 143.084 228.982 144.712 L 51.021 246.564 C 47.058 248.852 43.244 250.383 37.571 250.383 C 27.208 250.383 20.239 242.898 20.239 231.762 L 20.239 23.235 C 20.239 12.104 27.208 4.623 37.571 4.623 C 43.244 4.623 47.058 6.149 51.041 8.443 Z M 52.372 162.918 L 85.673 162.918 L 111.795 100.081 L 88.008 100.081 L 72.387 142.904 L 71.491 142.904 L 70.866 100.081 L 48.328 100.081 Z M 105.6 162.918 L 127.862 162.918 L 138.9 100.081 L 116.639 100.081 Z M 135.219 162.918 L 157.486 162.918 L 159.908 149.187 L 168.346 149.187 C 185.646 148.751 199.782 136.74 198.205 120.596 C 196.997 108.201 186.732 99.82 176.159 100.081 L 146.171 100.081 Z M 162.959 131.41 L 165.294 118.216 L 170.317 118.216 C 173.281 118.216 175.35 119.562 175.35 122.701 C 175.35 127.821 172.293 131.41 168.079 131.41 Z" fill="currentColor"></path>
 </svg>
                   
-                      <span>VIP Онлайн</span>`);
+                      <span>VIP РћРЅР»Р°Р№РЅ</span>`);
                         if (Lampa.Storage.get('card_interfice_type') === 'new') {
                             if ($('.watch--vip').lenght > 1) $('.watch--vip')[1].remove()
                             $('.watch--vip').insertBefore($('.view--torrent'));
@@ -1516,7 +1539,7 @@
 
 
 
-        Lampa.Component.add('lampac', component); //то же самое
+        Lampa.Component.add('lampac', component); //С‚Рѕ Р¶Рµ СЃР°РјРѕРµ
         resetTemplates();
 
         function addButton(e) {
