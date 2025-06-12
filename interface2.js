@@ -91,75 +91,72 @@
       };
 
       this.applyLogo = function(data, logo) {
-    if (isDestroyed || !html) return;
-
-    const titleElement = html.find('.new-interface-info__title');
-    if (!titleElement.length) return;
-
-    clearTimeout(logo_timer);
-
-    if (!logo || !logo.file_path) {
-        logo_timer = setTimeout(() => {
-            if (isDestroyed || !html) return;
-            titleElement.text(data.title);
-        }, 1000);
-        return;
-    }
-
-    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-
-    // Если уже в кеше — используем
-    if (imageCache[imageUrl]) {
-        logo_timer = setTimeout(() => {
-            if (isDestroyed || !html) return;
-            titleElement.html(imageCache[imageUrl]);
-            setTimeout(() => {
-                titleElement.find('.new-interface-logo').css('opacity', 1);
-            }, 10);
-        }, 1000);
-        return;
-    }
-
-    // Не перезагружать один и тот же логотип
-    if (titleElement.data('current-logo') === imageUrl) return;
-    titleElement.data('current-logo', imageUrl);
-
-    logo_timer = setTimeout(() => {
         if (isDestroyed || !html) return;
 
-        const tempImg = new Image();
-        tempImg.src = imageUrl;
+        const titleElement = html.find('.new-interface-info__title');
+        if (!titleElement.length) return;
 
-        tempImg.onload = () => {
+        clearTimeout(logo_timer);
+
+        if (!logo || !logo.file_path) {
+            logo_timer = setTimeout(() => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            }, 1000);
+            return;
+        }
+
+        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
+
+        if (imageCache[imageUrl]) {
+            logo_timer = setTimeout(() => {
+                if (isDestroyed || !html) return;
+                titleElement.html(imageCache[imageUrl]);
+                setTimeout(() => {
+                    titleElement.find('.new-interface-logo').css('opacity', 1);
+                }, 10);
+            }, 1000);
+            return;
+        }
+
+        if (titleElement.data('current-logo') === imageUrl) return;
+        titleElement.data('current-logo', imageUrl);
+
+        logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
 
-            const logoHtml = `
-                <img class="new-interface-logo" 
-                     src="${imageUrl}" 
-                     alt="${data.title}"
-                     loading="eager"
-                     style="opacity: 0;"
-                     onerror="console.warn('Ошибка загрузки логотипа:', this.src); this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-            `;
+            const tempImg = new Image();
+            tempImg.src = imageUrl;
 
-            addToCache(imageCache, imageUrl, logoHtml);
-            titleElement.html(logoHtml);
+            tempImg.onload = () => {
+                if (isDestroyed || !html) return;
+                
+                const logoHtml = `
+                    <img class="new-interface-logo" 
+                         src="${imageUrl}" 
+                         alt="${data.title}"
+                         loading="eager"
+                         style="opacity: 0;"
+                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+                `;
+                
+                addToCache(imageCache, imageUrl, logoHtml);
+                titleElement.html(logoHtml);
 
-            setTimeout(() => {
-                const logoImg = titleElement.find('.new-interface-logo');
-                if (logoImg.length) {
-                    logoImg.css('opacity', 1);
-                }
-            }, 10);
-        };
+                setTimeout(() => {
+                    const logoImg = titleElement.find('.new-interface-logo');
+                    if (logoImg.length) {
+                        logoImg.css('opacity', 1);
+                    }
+                }, 10);
+            };
 
-        tempImg.onerror = () => {
-            if (isDestroyed || !html) return;
-            console.warn("Не удалось загрузить логотип (onerror):", imageUrl);
-            titleElement.text(data.title);
-        };
-    }, 500);
-};
+            tempImg.onerror = () => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            };
+        }, 500);
+      };
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
