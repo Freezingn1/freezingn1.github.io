@@ -7,30 +7,7 @@
         apn: 'https://apn.watch/'
     };
 
-    async function initializeServers() {
-        try {
-            const response = await fetch('https://api.lampishe.cc/mods/vip_online');
-            const data = await response.json();
-            
-            for (const server of data.servers) {
-                try {
-                    const testResponse = await fetch(`https://cors.lampishe.cc/?url=${server}`);
-                    if (testResponse.ok) {
-                        Defined.localhost = `https://cors.lampishe.cc/?url=${server}/`;
-                        break;
-                    }
-                } catch (error) {
-                    console.error(`Failed to connect to server ${server}:`, error);
-                }
-            }
-            
-            if (!Defined.localhost) {
-                console.error('No working servers found');
-            }
-        } catch (error) {
-            console.error('Failed to fetch server list:', error);
-        }
-    }
+    
 
     initializeServers();
 
