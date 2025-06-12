@@ -29,11 +29,18 @@
         if (isDestroyed || !html) return;
 
         const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+		
+		const cacheKey = `logo_${data.id}_${logoSetting}`;
+			if (imageCache[cacheKey]) {
+				this.applyLogo(data, imageCache[cacheKey]);
+				return; // Не делать запрос, если есть в кэше
+			}
         
         if (logoSetting !== 'hide') {
             const type = data.name ? 'tv' : 'movie';
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
+		setTimeout(() => {
             network.silent(url, (images) => {
                 if (isDestroyed || !html) return;
 
@@ -68,7 +75,8 @@
                 }
                 
                 this.applyLogo(data, bestLogo);
-            }, () => {
+            }, (error) => {
+				console.error('TMDB API error:', error);
                 if (!isDestroyed && html) {
                     const titleElement = html.find('.new-interface-info__title');
                     if (titleElement.length) {
@@ -76,6 +84,7 @@
                     }
                 }
             });
+		}, 500);
         } else if (!isDestroyed && html) {
             const titleElement = html.find('.new-interface-info__title');
             if (titleElement.length) {
@@ -105,6 +114,11 @@
             }, 1000);
             return;
         }
+		
+		if (logo && logo.file_path) {
+			const cacheKey = `logo_${data.id}_${logoSetting}`;
+			addToCache(imageCache, cacheKey, logo); // Сохраняем в кэш
+		}
 
         const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
@@ -152,9 +166,10 @@
             };
 
             tempImg.onerror = () => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            };
+				if (isDestroyed || !html) return;
+				console.error('Failed to load logo:', imageUrl); // Логируем ошибку
+				titleElement.text(data.title); // Fallback на текст
+			};
         }, 500);
       };
 
