@@ -30,12 +30,6 @@
 
         const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
 		
-		const cacheKey = `logo_${data.id}_${logoSetting}`;
-			if (imageCache[cacheKey]) {
-				this.applyLogo(data, imageCache[cacheKey]);
-				return; // Не делать запрос, если есть в кэше
-			}
-        
         if (logoSetting !== 'hide') {
             const type = data.name ? 'tv' : 'movie';
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
@@ -99,79 +93,64 @@
         }
       };
 
-      this.applyLogo = function(data, logo) {
-        if (isDestroyed || !html) return;
+      this.applyLogo = function(data, logo, logoSetting) {
+    if (isDestroyed || !html) return;
 
-        const titleElement = html.find('.new-interface-info__title');
-        if (!titleElement.length) return;
+    const titleElement = html.find('.new-interface-info__title');
+    if (!titleElement.length) return;
 
-        clearTimeout(logo_timer);
+    clearTimeout(logo_timer);
 
-        if (!logo || !logo.file_path) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            }, 1000);
-            return;
-        }
-		
-		if (logo && logo.file_path) {
-			const cacheKey = `logo_${data.id}_${logoSetting}`;
-			addToCache(imageCache, cacheKey, logo); // Сохраняем в кэш
-		}
-
-        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
-
-        if (imageCache[imageUrl]) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.html(imageCache[imageUrl]);
-                setTimeout(() => {
-                    titleElement.find('.new-interface-logo').css('opacity', 1);
-                }, 10);
-            }, 1000);
-            return;
-        }
-
-        if (titleElement.data('current-logo') === imageUrl) return;
-        titleElement.data('current-logo', imageUrl);
-
+    // Fallback если нет логотипа
+    if (!logo || !logo.file_path) {
         logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
+            titleElement.text(data.title);
+        }, 1000);
+        return;
+    }
 
-            const tempImg = new Image();
-            tempImg.src = imageUrl;
+    const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
-            tempImg.onload = () => {
-                if (isDestroyed || !html) return;
-                
-                const logoHtml = `
-                    <img class="new-interface-logo" 
-                         src="${imageUrl}" 
-                         alt="${data.title}"
-                         loading="eager"
-                         style="opacity: 0;"
-                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-                `;
-                
-                addToCache(imageCache, imageUrl, logoHtml);
-                titleElement.html(logoHtml);
+    // Проверяем кэш по imageUrl (как в оригинальном коде)
+    if (imageCache[imageUrl]) {
+        logo_timer = setTimeout(() => {
+            if (isDestroyed || !html) return;
+            titleElement.html(imageCache[imageUrl]);
+            setTimeout(() => {
+                titleElement.find('.new-interface-logo').css('opacity', 1);
+            }, 10);
+        }, 1000);
+        return;
+    }
 
-                setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) {
-                        logoImg.css('opacity', 1);
-                    }
-                }, 10);
-            };
+    // Не обновляем если тот же логотип
+    if (titleElement.data('current-logo') === imageUrl) return;
+    titleElement.data('current-logo', imageUrl);
 
-            tempImg.onerror = () => {
-				if (isDestroyed || !html) return;
-				console.error('Failed to load logo:', imageUrl); // Логируем ошибку
-				titleElement.text(data.title); // Fallback на текст
-			};
-        }, 500);
-      };
+    // Генерация HTML для логотипа
+    const logoHtml = `
+        <img class="new-interface-logo" 
+             src="${imageUrl}" 
+             alt="${data.title}"
+             loading="eager"
+             style="opacity: 0;"
+             onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+    `;
+
+    // Сохраняем в кэш (по imageUrl, как в оригинале)
+    addToCache(imageCache, imageUrl, logoHtml);
+
+    // Отображаем логотип
+    logo_timer = setTimeout(() => {
+        if (isDestroyed || !html) return;
+        titleElement.html(logoHtml);
+        setTimeout(() => {
+            const logoImg = titleElement.find('.new-interface-logo');
+            if (logoImg.length) logoImg.css('opacity', 1);
+        }, 10);
+    }, 500);
+};
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
