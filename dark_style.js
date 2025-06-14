@@ -306,7 +306,8 @@
             }
 			
 			.card__quality {
-				display: none;
+				color: #fff;
+				background: var(--accent-gradient) !important;
 			}
             
             .modal {
