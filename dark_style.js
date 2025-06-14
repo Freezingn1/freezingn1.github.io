@@ -304,6 +304,10 @@
             .notification-date {
                 background: var(--accent-gradient) !important;
             }
+			
+			.card__quality {
+				display: none;
+			}
             
             .modal {
                 position: fixed;
