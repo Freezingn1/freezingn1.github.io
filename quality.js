@@ -5,11 +5,7 @@
     var api_url = Lampa.Utils.protocol() + Lampa.Manifest.cub_domain + '/api/quality/';
 
     function get(url, page, resolve, reject) {
-      var account = Lampa.Storage.get('account', '{}');
-
-      network.silent(api_url + url + '/' + page, resolve, reject, false, {
-    headers: { token: 'BYPASS' }
-});
+      network.silent(api_url + url + '/' + page, resolve, reject, false, {});
     }
 
     function main(oncomplite, onerror) {
