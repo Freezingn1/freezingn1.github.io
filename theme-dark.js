@@ -26,7 +26,7 @@
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/pubtorr.js'], function () { });
 
 	//Онлайн
-	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/cinema.js'], function () { });
+	Lampa.Utils.putScriptAsync(['https://lam.maxvol.pro/online.js'], function () { });
 
 	//HDRezka
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/hdrezka.js'], function () { });
