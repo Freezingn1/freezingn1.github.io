@@ -51,7 +51,7 @@
       base: 'maxvol',
       name: 'Maxvol Jackett',
       settings: {
-        url: 'https://jac.maxvol.pro',
+        url: 'http://jac.maxvol.pro',
         key: '1',
         parser_torrent_type: 'jackett'
       }
@@ -85,33 +85,27 @@
             //if ($(mySelector).text() !== 'Не выбран') return resolve();
 
             $.ajax({
-              url: myLink,
-              method: 'GET',
-              success: function success(response, textStatus, xhr) {
-                var color;
-                if (xhr.status === 200) {
-                  color = '1aff00'; // Успех
-                } else if (xhr.status === 401) {
-                  color = 'ff2e36'; // Ошибка авторизации
-                } else {
-                  color = 'ff2e36'; // Другие ошибки
-                }
-                $(mySelector).css('color', color);
-
-                // Кешируем ответ только в случае успеха или ошибки авторизации
-                if (color) {
-                  cache[myLink] = {
-                    color: color
-                  };
-                }
-              },
-              error: function error() {
-                $(mySelector).css('color', 'ff2e36');
-              },
-              complete: function complete() {
-                return resolve();
-              }
-            });
+  url: myLink,
+  method: 'GET',
+  timeout: 10000, // 10 секунд ожидания
+  success: function (response, textStatus, xhr) {
+    var color;
+    if (xhr.status === 200) {
+      color = '#1aff00'; // Успех (зелёный)
+    } else if (xhr.status === 401) {
+      color = '#ff2e36'; // Ошибка авторизации (красный)
+    } else {
+      color = '#ff2e36'; // Другие ошибки (красный)
+    }
+    $(mySelector).css('color', color);
+    cache[myLink] = { color: color }; // Кешируем ответ
+  },
+  error: function (xhr) {
+    console.error('Ошибка запроса:', xhr.status, xhr.statusText);
+    $(mySelector).css('color', '#ff2e36'); // При любой ошибке — красный
+  },
+  complete: resolve
+});
           });
         });
         return Promise.all(requests).then(function () {
