@@ -296,6 +296,10 @@
             .modal__title {
                 background: linear-gradient(rgb(221 204 204), var(--accent-color)) text !important;
             }
+			
+			.card__quality {
+				display: none;
+			}
             
             .notification-item {
                 border: 2px solid var(--accent-color) !important;
