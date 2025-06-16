@@ -51,7 +51,7 @@
       base: 'maxvol',
       name: 'Maxvol Jackett',
       settings: {
-        url: 'http://jac.maxvol.pro',
+        url: 'https://jac.maxvol.pro',
         key: '1',
         parser_torrent_type: 'jackett'
       }
