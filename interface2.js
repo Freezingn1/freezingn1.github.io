@@ -28,9 +28,9 @@
       this.update = function (data) {
         if (isDestroyed || !html) return;
 
-        const logoSetting = Lampa.Storage.get('logo_glav2') || 'show_all';
+        const logoSetting = Lampa.Storage.get('logo_start') || 'logo_on';
         
-        if (logoSetting !== 'hide') {
+        if (logoSetting === 'logo_on') {
             const type = data.name ? 'tv' : 'movie';
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
@@ -61,10 +61,6 @@
                     });
 
                     bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
-
-                    if (logoSetting === 'ru_only' && !bestRussianLogo) {
-                        bestLogo = null;
-                    }
                 }
                 
                 this.applyLogo(data, bestLogo);
@@ -461,19 +457,48 @@
         return new use(object);
       };
 
+      // Добавляем настройки для стильного интерфейса
+      Lampa.SettingsApi.addComponent({
+          component: 'styleinter',
+          name: Lampa.Lang.translate('Стильный интерфейс'),
+          icon: `
+          <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 16 5-7 6 6.5m6.5 2.5L16 13l-4.286 6M14 10h.01M4 19h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z"/>
+          </svg>
+          `
+      });
+
+      // Настройки отображения логотипов
+      Lampa.SettingsApi.addParam({
+          component: "styleinter",
+          param: {
+              name: "logo_start",
+              type: "select",
+              values: { 
+                  "logo_on": "Включить логотипы", 
+                  "logo_off": "Выключить логотипы", 
+              },
+              default: "logo_on"
+          },
+          field: {
+              name: "Отображение логотипов",
+              description: "Управление отображением логотипов в стильном интерфейсе"
+          }
+      });
+
       Lampa.Template.add('new_interface_style', `
         <style>
         .new-interface .card--small.card--wide {
             width: 18.3em;
         }
-		
-		.full-start__pg, .full-start__status {
-			font-size: 0.9em;
-		}
-		
-		.full-start-new__rate-line .full-start__pg {
-			font-size: 0.9em;
-		}
+        
+        .full-start__pg, .full-start__status {
+            font-size: 0.9em;
+        }
+        
+        .full-start-new__rate-line .full-start__pg {
+            font-size: 0.9em;
+        }
         
         .new-interface-info {
             position: relative;
