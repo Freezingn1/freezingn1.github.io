@@ -76,15 +76,6 @@ var allStreamingServicesRUS = [
     { id: 3882, title: 'More.TV' }
 ];
 
-function renderVisibleItemsOnly() {
-    var container = document.querySelector('.cards-container');
-    var visibleItems = calculateVisibleItems(container);
-    
-    // Отрисовываем только видимые элементы
-    visibleItems.forEach(function(item) {
-        renderItem(item);
-    });
-}
 
 var debounceTimer;
 function handleScroll() {
@@ -93,6 +84,59 @@ function handleScroll() {
         // Проверить, нужно ли загружать новые данные
         loadNextPageIfNeeded();
     }, 200);
+}
+
+function loadNextPageIfNeeded() {
+    const container = document.querySelector('.cards-container');
+    if (!container) return;
+
+    const scrollPosition = window.scrollY + window.innerHeight;
+    const containerBottom = container.offsetTop + container.offsetHeight;
+
+    if (scrollPosition >= containerBottom - 500) { // Загружаем заранее
+        loadNextPage();
+    }
+}
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const card = entry.target;
+            // Загружаем изображение
+            const img = card.querySelector('.card__img');
+            if (img && img.dataset.src) {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            }
+            // Отключаем наблюдение после загрузки
+            observer.unobserve(card);
+        }
+    });
+}, {
+    rootMargin: '200px', // Начинать загрузку заранее
+    threshold: 0.5
+});
+
+function initLazyLoading() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        // Добавляем data-src вместо src для отложенной загрузки
+        const img = card.querySelector('.card__img');
+        if (img && !img.dataset.src && img.src) {
+            img.dataset.src = img.src;
+            img.removeAttribute('src');
+        }
+        observer.observe(card);
+    });
+}
+
+// Инициализация при загрузке новых карточек
+window.addEventListener('DOMContentLoaded', initLazyLoading);
+/* window.addEventListener('scroll', initLazyLoading); // На случай динамической подгрузки */
+
+function renderVisibleItemsOnly() {
+    const items = document.querySelectorAll('.card');
+    items.forEach(item => observer.observe(item));
 }
 
 window.addEventListener('scroll', handleScroll);
@@ -240,13 +284,13 @@ function startPlugin() {
             var _this = this;
             this.img_poster.onload = function () {};
             this.img_poster.onerror = function () {
-                _this.img_poster.src = './img/img_broken.svg';
+                _this.img_poster.src = 'https://lampac666.ucoz.net/logo/image-broken-svgrepo-com.svg';
             };
             this.img_episode.onload = function () {
                 _this.card.querySelector('.full-episode__img').classList.add('full-episode__img--loaded');
             };
             this.img_episode.onerror = function () {
-                _this.img_episode.src = './img/img_broken.svg';
+                _this.img_episode.src = 'https://lampac666.ucoz.net/logo/image-broken-svgrepo-com.svg';
             };
         };
 
