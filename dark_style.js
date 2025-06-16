@@ -56,12 +56,7 @@
 
         Object.entries(elementsToStyle).forEach(([selector, styles]) => {
             safeAddStyleToElements(selector, styles);
-        });
-		
-		// Удаляем .card__quality (добавьте этот блок)
-		document.querySelectorAll('.card__quality').forEach(el => {
-			el.remove();
-		});
+        });		
 
         stylesApplied = true;
     }
