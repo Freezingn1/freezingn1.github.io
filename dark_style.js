@@ -57,6 +57,11 @@
         Object.entries(elementsToStyle).forEach(([selector, styles]) => {
             safeAddStyleToElements(selector, styles);
         });
+		
+		// Удаляем .card__quality (добавьте этот блок)
+		document.querySelectorAll('.card__quality').forEach(el => {
+			el.remove();
+		});
 
         stylesApplied = true;
     }
@@ -297,9 +302,6 @@
                 background: linear-gradient(rgb(221 204 204), var(--accent-color)) text !important;
             }
 			
-			.card__quality {
-				display: none;
-			}
             
             .notification-item {
                 border: 2px solid var(--accent-color) !important;
