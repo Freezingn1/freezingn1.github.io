@@ -151,7 +151,7 @@
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
-        }, 500);
+        }, 300);
       };
 
       this.draw = function (data) {
