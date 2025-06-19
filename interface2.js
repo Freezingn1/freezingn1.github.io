@@ -96,7 +96,7 @@
         clearTimeout(logo_timer);
 
         const currentLogo = titleElement.find('.new-interface-logo');
-        const fadeOutDuration = 200;
+        const fadeOutDuration = 500;
 
         if (!logo || !logo.file_path) {
             if (currentLogo.length) {
