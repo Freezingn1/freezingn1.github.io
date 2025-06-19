@@ -4,7 +4,6 @@
     // Глобальный кэш для изображений
     var imageCache = {};
     var MAX_CACHE_SIZE = 100;
-    var preloadImages = {}; // Для предварительной загрузки логотипов
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -88,73 +87,38 @@
       };
 
       this.applyLogo = function(data, logo) {
+    if (isDestroyed || !html) return;
+
+    const titleElement = html.find('.new-interface-info__title');
+    if (!titleElement.length) return;
+
+    clearTimeout(logo_timer);
+
+    if (!logo || !logo.file_path) {
+        logo_timer = setTimeout(() => {
+            if (isDestroyed || !html) return;
+            titleElement.text(data.title);
+        }, 1000);
+        return;
+    }
+
+    const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
+
+    if (titleElement.data('current-logo') === imageUrl) return;
+    titleElement.data('current-logo', imageUrl);
+
+    logo_timer = setTimeout(() => {
         if (isDestroyed || !html) return;
 
-        const titleElement = html.find('.new-interface-info__title');
-        if (!titleElement.length) return;
-
-        clearTimeout(logo_timer);
-
-        const currentLogo = titleElement.find('.new-interface-logo');
-        const fadeOutDuration = 500;
-
-        if (!logo || !logo.file_path) {
-            if (currentLogo.length) {
-                currentLogo.css('transition', `opacity ${fadeOutDuration}ms ease`);
-                currentLogo.css('opacity', 0);
-                
-                logo_timer = setTimeout(() => {
-                    if (isDestroyed || !html) return;
-                    titleElement.text(data.title);
-                }, fadeOutDuration);
-            } else {
-                titleElement.text(data.title);
-            }
-            return;
-        }
-
-        const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
-
-        if (titleElement.data('current-logo') === imageUrl) return;
-        titleElement.data('current-logo', imageUrl);
-
-        // Предварительная загрузка изображения
-        if (!preloadImages[imageUrl]) {
-            preloadImages[imageUrl] = true;
-            new Image().src = imageUrl;
-        }
-
-        const applyNewLogo = (logoHtml) => {
-            if (currentLogo.length) {
-                currentLogo.css('transition', `opacity ${fadeOutDuration}ms ease`);
-                currentLogo.css('opacity', 0);
-                
-                setTimeout(() => {
-                    if (isDestroyed || !html) return;
-                    
-                    titleElement.html(logoHtml);
-                    const newLogo = titleElement.find('.new-interface-logo');
-                    newLogo.css('opacity', 0);
-                    
-                    setTimeout(() => {
-                        newLogo.css('transition', 'opacity 0.5s ease');
-                        newLogo.css('opacity', 1);
-                    }, 20);
-                }, fadeOutDuration);
-            } else {
-                titleElement.html(logoHtml);
-                const newLogo = titleElement.find('.new-interface-logo');
-                newLogo.css('opacity', 0);
-                
-                setTimeout(() => {
-                    newLogo.css('transition', 'opacity 0.5s ease');
-                    newLogo.css('opacity', 1);
-                }, 20);
-            }
-        };
-
         if (imageCache[imageUrl]) {
-            applyNewLogo(imageCache[imageUrl]);
+            // Добавляем класс для плавного появления
+            const cachedLogo = $(imageCache[imageUrl]);
+            cachedLogo.css('opacity', 0);
+            
+            titleElement.html(cachedLogo);
+            setTimeout(() => {
+                cachedLogo.css('opacity', 1);
+            }, 10);
             return;
         }
 
@@ -174,14 +138,22 @@
             `;
             
             addToCache(imageCache, imageUrl, logoHtml);
-            applyNewLogo(logoHtml);
+            titleElement.html(logoHtml);
+
+            setTimeout(() => {
+                const logoImg = titleElement.find('.new-interface-logo');
+                if (logoImg.length) {
+                    logoImg.css('opacity', 1);
+                }
+            }, 10);
         };
 
         tempImg.onerror = () => {
             if (isDestroyed || !html) return;
             titleElement.text(data.title);
         };
-      };
+    }, 500);
+};
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
@@ -570,7 +542,6 @@
             text-transform: uppercase;
             letter-spacing: -2px;
             word-spacing: 5px;
-            position: relative;
         }
         
         .new-interface-logo {
@@ -584,11 +555,13 @@
             min-height: 1em;
             filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
             opacity: 0;
-            transition: opacity 0.5s ease !important;
-            will-change: opacity;
-            backface-visibility: hidden;
+            transition: opacity 0.5s ease;
         }
         
+        .new-interface-logo.loaded {
+            opacity: 1;
+        }
+                
         .new-interface-info__details {
             margin-bottom: 1.6em;
             display: flex;
