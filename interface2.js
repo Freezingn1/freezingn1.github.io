@@ -87,72 +87,73 @@
       };
 
       this.applyLogo = function(data, logo) {
-        if (isDestroyed || !html) return;
+    if (isDestroyed || !html) return;
 
-        const titleElement = html.find('.new-interface-info__title');
-        if (!titleElement.length) return;
+    const titleElement = html.find('.new-interface-info__title');
+    if (!titleElement.length) return;
 
-        clearTimeout(logo_timer);
+    clearTimeout(logo_timer);
 
-        if (!logo || !logo.file_path) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            }, 1000);
-            return;
-        }
-
-        const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
-
-        if (imageCache[imageUrl]) {
-            logo_timer = setTimeout(() => {
-                if (isDestroyed || !html) return;
-                titleElement.html(imageCache[imageUrl]);
-                setTimeout(() => {
-                    titleElement.find('.new-interface-logo').css('opacity', 1);
-                }, 10);
-            }, 1000);
-            return;
-        }
-
-        if (titleElement.data('current-logo') === imageUrl) return;
-        titleElement.data('current-logo', imageUrl);
-
+    if (!logo || !logo.file_path) {
         logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
+            titleElement.text(data.title);
+        }, 1000);
+        return;
+    }
 
-            const tempImg = new Image();
-            tempImg.src = imageUrl;
+    const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
 
-            tempImg.onload = () => {
-                if (isDestroyed || !html) return;
-                
-                const logoHtml = `
-                    <img class="new-interface-logo" 
-                         src="${imageUrl}" 
-                         alt="${data.title}"
-                         loading="eager"
-                         style="opacity: 0;"
-                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-                `;
-                
-                addToCache(imageCache, imageUrl, logoHtml);
-                titleElement.html(logoHtml);
+    if (titleElement.data('current-logo') === imageUrl) return;
+    titleElement.data('current-logo', imageUrl);
 
-                setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) {
-                        logoImg.css('opacity', 1);
-                    }
-                }, 10);
-            };
+    logo_timer = setTimeout(() => {
+        if (isDestroyed || !html) return;
 
-            tempImg.onerror = () => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            };
-        }, 500);
-      };
+        if (imageCache[imageUrl]) {
+            // Добавляем класс для плавного появления
+            const cachedLogo = $(imageCache[imageUrl]);
+            cachedLogo.css('opacity', 0);
+            
+            titleElement.html(cachedLogo);
+            setTimeout(() => {
+                cachedLogo.css('opacity', 1);
+            }, 10);
+            return;
+        }
+
+        const tempImg = new Image();
+        tempImg.src = imageUrl;
+
+        tempImg.onload = () => {
+            if (isDestroyed || !html) return;
+            
+            const logoHtml = `
+                <img class="new-interface-logo" 
+                     src="${imageUrl}" 
+                     alt="${data.title}"
+                     loading="eager"
+                     style="opacity: 0;"
+                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+            `;
+            
+            addToCache(imageCache, imageUrl, logoHtml);
+            titleElement.html(logoHtml);
+
+            setTimeout(() => {
+                const logoImg = titleElement.find('.new-interface-logo');
+                if (logoImg.length) {
+                    logoImg.css('opacity', 1);
+                }
+            }, 10);
+        };
+
+        tempImg.onerror = () => {
+            if (isDestroyed || !html) return;
+            titleElement.text(data.title);
+        };
+    }, 500);
+};
 
       this.draw = function (data) {
         if (isDestroyed || !html) return;
