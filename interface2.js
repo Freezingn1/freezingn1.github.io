@@ -110,7 +110,7 @@
                 titleElement.html(imageCache[imageUrl]);
                 setTimeout(() => {
                     titleElement.find('.new-interface-logo').css('opacity', 1);
-                }, 10);
+                }, 300);
             }, 500);
             return;
         }
@@ -144,14 +144,14 @@
                     if (logoImg.length) {
                         logoImg.css('opacity', 1);
                     }
-                }, 10);
+                }, 300);
             };
 
             tempImg.onerror = () => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
-        }, 500);
+        }, 400);
       };
 
       this.draw = function (data) {
