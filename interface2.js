@@ -98,7 +98,7 @@
             logo_timer = setTimeout(() => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
-            }, 100);
+            }, 500);
             return;
         }
 
@@ -111,7 +111,7 @@
                 setTimeout(() => {
                     titleElement.find('.new-interface-logo').css('opacity', 1);
                 }, 10);
-            }, 500);
+            }, 100);
             return;
         }
 
@@ -151,7 +151,7 @@
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
-        }, 100);
+        }, 500);
       };
 
       this.draw = function (data) {
