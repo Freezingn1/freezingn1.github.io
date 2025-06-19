@@ -111,7 +111,7 @@
                 setTimeout(() => {
                     titleElement.find('.new-interface-logo').css('opacity', 1);
                 }, 10);
-            }, 100);
+            }, 1000);
             return;
         }
 
