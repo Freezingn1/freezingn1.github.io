@@ -111,7 +111,7 @@
                 setTimeout(() => {
                     titleElement.find('.new-interface-logo').css('opacity', 1);
                 }, 10);
-            }, 500);
+            }, 1000);
             return;
         }
 
@@ -151,7 +151,7 @@
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
-        }, 500);
+        }, 1000);
       };
 
       this.draw = function (data) {
