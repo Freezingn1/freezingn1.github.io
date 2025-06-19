@@ -4,7 +4,9 @@
     // Глобальный кэш для изображений
     var imageCache = {};
     var MAX_CACHE_SIZE = 100;
-    var preloadImages = {}; // Для предварительной загрузки логотипов
+    var preloadImages = {};
+    var currentLogoRequest = null; // Текущий запрос логотипа
+    var lastAppliedLogo = null; // Последний примененный логотип
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -20,6 +22,7 @@
       var loaded = {};
       var isDestroyed = false;
       var logo_timer;
+      var pendingLogoUpdate = null; // Ожидающее обновление логотипа
 
       this.create = function () {
         if (isDestroyed) return;
@@ -35,7 +38,13 @@
             const type = data.name ? 'tv' : 'movie';
             const url = Lampa.TMDB.api(type + '/' + data.id + '/images?api_key=' + Lampa.TMDB.key());
 
-            network.silent(url, (images) => {
+            // Отменяем предыдущий запрос, если он есть
+            if (currentLogoRequest) {
+                network.clear(currentLogoRequest);
+                currentLogoRequest = null;
+            }
+
+            currentLogoRequest = network.silent(url, (images) => {
                 if (isDestroyed || !html) return;
 
                 let bestLogo = null;
@@ -64,20 +73,18 @@
                     bestLogo = bestRussianLogo || bestEnglishLogo || bestOtherLogo;
                 }
                 
-                this.applyLogo(data, bestLogo);
+                // Сохраняем ожидающее обновление
+                pendingLogoUpdate = {data: data, logo: bestLogo};
+                this.processPendingLogo();
             }, () => {
                 if (!isDestroyed && html) {
-                    const titleElement = html.find('.new-interface-info__title');
-                    if (titleElement.length) {
-                        titleElement.text(data.title);
-                    }
+                    pendingLogoUpdate = {data: data, logo: null};
+                    this.processPendingLogo();
                 }
             });
         } else if (!isDestroyed && html) {
-            const titleElement = html.find('.new-interface-info__title');
-            if (titleElement.length) {
-                titleElement.text(data.title);
-            }
+            pendingLogoUpdate = {data: data, logo: null};
+            this.processPendingLogo();
         }
 
         if (!isDestroyed && html) {
@@ -85,6 +92,22 @@
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
             this.load(data);
         }
+      };
+
+      this.processPendingLogo = function() {
+        if (!pendingLogoUpdate || isDestroyed || !html) return;
+        
+        const {data, logo} = pendingLogoUpdate;
+        const currentDataId = data.id;
+        
+        // Задержка синхронизирована с фоновыми изображениями (300ms)
+        setTimeout(() => {
+            // Проверяем, что за это время не было нового обновления
+            if (pendingLogoUpdate && pendingLogoUpdate.data.id === currentDataId) {
+                this.applyLogo(data, logo);
+                pendingLogoUpdate = null;
+            }
+        }, 300);
       };
 
       this.applyLogo = function(data, logo) {
@@ -96,7 +119,12 @@
         clearTimeout(logo_timer);
 
         const currentLogo = titleElement.find('.new-interface-logo');
-        const fadeOutDuration = 500;
+        const fadeOutDuration = 200;
+
+        // Проверяем, не пытаемся ли применить тот же логотип
+        const imageUrl = logo ? Lampa.TMDB.image("/t/p/w400" + logo.file_path) : null;
+        if (lastAppliedLogo === imageUrl) return;
+        lastAppliedLogo = imageUrl;
 
         if (!logo || !logo.file_path) {
             if (currentLogo.length) {
@@ -104,7 +132,7 @@
                 currentLogo.css('opacity', 0);
                 
                 logo_timer = setTimeout(() => {
-                    if (isDestroyed || !html) return;
+                    if (isDestroyed || !html || lastAppliedLogo !== imageUrl) return;
                     titleElement.text(data.title);
                 }, fadeOutDuration);
             } else {
@@ -112,11 +140,6 @@
             }
             return;
         }
-
-        const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
-
-        if (titleElement.data('current-logo') === imageUrl) return;
-        titleElement.data('current-logo', imageUrl);
 
         // Предварительная загрузка изображения
         if (!preloadImages[imageUrl]) {
@@ -130,13 +153,14 @@
                 currentLogo.css('opacity', 0);
                 
                 setTimeout(() => {
-                    if (isDestroyed || !html) return;
+                    if (isDestroyed || !html || lastAppliedLogo !== imageUrl) return;
                     
                     titleElement.html(logoHtml);
                     const newLogo = titleElement.find('.new-interface-logo');
                     newLogo.css('opacity', 0);
                     
                     setTimeout(() => {
+                        if (isDestroyed || !html || lastAppliedLogo !== imageUrl) return;
                         newLogo.css('transition', 'opacity 0.5s ease');
                         newLogo.css('opacity', 1);
                     }, 20);
@@ -147,6 +171,7 @@
                 newLogo.css('opacity', 0);
                 
                 setTimeout(() => {
+                    if (isDestroyed || !html || lastAppliedLogo !== imageUrl) return;
                     newLogo.css('transition', 'opacity 0.5s ease');
                     newLogo.css('opacity', 1);
                 }, 20);
@@ -162,7 +187,7 @@
         tempImg.src = imageUrl;
 
         tempImg.onload = () => {
-            if (isDestroyed || !html) return;
+            if (isDestroyed || !html || lastAppliedLogo !== imageUrl) return;
             
             const logoHtml = `
                 <img class="new-interface-logo" 
@@ -178,7 +203,7 @@
         };
 
         tempImg.onerror = () => {
-            if (isDestroyed || !html) return;
+            if (isDestroyed || !html || lastAppliedLogo !== imageUrl) return;
             titleElement.text(data.title);
         };
       };
@@ -235,6 +260,10 @@
       this.destroy = function () {
         isDestroyed = true;
         clearTimeout(logo_timer);
+        if (currentLogoRequest) {
+            network.clear(currentLogoRequest);
+            currentLogoRequest = null;
+        }
         if (html) {
             html.remove();
             html = null;
@@ -244,6 +273,8 @@
             network.clear();
         }
         clearTimeout(timer);
+        pendingLogoUpdate = null;
+        lastAppliedLogo = null;
       };
     }
 
