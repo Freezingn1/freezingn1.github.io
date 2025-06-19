@@ -110,7 +110,7 @@
                 titleElement.html(imageCache[imageUrl]);
                 setTimeout(() => {
                     titleElement.find('.new-interface-logo').css('opacity', 1);
-                }, 300);
+                }, 10);
             }, 1000);
             return;
         }
