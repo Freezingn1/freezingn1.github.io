@@ -98,7 +98,7 @@
             logo_timer = setTimeout(() => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
-            }, 500);
+            }, 100);
             return;
         }
 
@@ -110,7 +110,7 @@
                 titleElement.html(imageCache[imageUrl]);
                 setTimeout(() => {
                     titleElement.find('.new-interface-logo').css('opacity', 1);
-                }, 300);
+                }, 10);
             }, 500);
             return;
         }
@@ -144,14 +144,14 @@
                     if (logoImg.length) {
                         logoImg.css('opacity', 1);
                     }
-                }, 300);
+                }, 10);
             };
 
             tempImg.onerror = () => {
                 if (isDestroyed || !html) return;
                 titleElement.text(data.title);
             };
-        }, 400);
+        }, 500);
       };
 
       this.draw = function (data) {
