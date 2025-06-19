@@ -4,6 +4,7 @@
     // Глобальный кэш для изображений
     var imageCache = {};
     var MAX_CACHE_SIZE = 100;
+    var preloadImages = {}; // Для предварительной загрузки логотипов
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -117,27 +118,20 @@
         if (titleElement.data('current-logo') === imageUrl) return;
         titleElement.data('current-logo', imageUrl);
 
-        logo_timer = setTimeout(() => {
-            if (isDestroyed || !html) return;
+        // Предварительная загрузка изображения
+        if (!preloadImages[imageUrl]) {
+            preloadImages[imageUrl] = true;
+            new Image().src = imageUrl;
+        }
 
-            const applyNewLogo = (logoHtml) => {
-                if (currentLogo.length) {
-                    currentLogo.css('transition', `opacity ${fadeOutDuration}ms ease`);
-                    currentLogo.css('opacity', 0);
+        const applyNewLogo = (logoHtml) => {
+            if (currentLogo.length) {
+                currentLogo.css('transition', `opacity ${fadeOutDuration}ms ease`);
+                currentLogo.css('opacity', 0);
+                
+                setTimeout(() => {
+                    if (isDestroyed || !html) return;
                     
-                    setTimeout(() => {
-                        if (isDestroyed || !html) return;
-                        
-                        titleElement.html(logoHtml);
-                        const newLogo = titleElement.find('.new-interface-logo');
-                        newLogo.css('opacity', 0);
-                        
-                        setTimeout(() => {
-                            newLogo.css('transition', 'opacity 0.5s ease');
-                            newLogo.css('opacity', 1);
-                        }, 20);
-                    }, fadeOutDuration);
-                } else {
                     titleElement.html(logoHtml);
                     const newLogo = titleElement.find('.new-interface-logo');
                     newLogo.css('opacity', 0);
@@ -146,38 +140,47 @@
                         newLogo.css('transition', 'opacity 0.5s ease');
                         newLogo.css('opacity', 1);
                     }, 20);
-                }
-            };
-
-            if (imageCache[imageUrl]) {
-                applyNewLogo(imageCache[imageUrl]);
-                return;
+                }, fadeOutDuration);
+            } else {
+                titleElement.html(logoHtml);
+                const newLogo = titleElement.find('.new-interface-logo');
+                newLogo.css('opacity', 0);
+                
+                setTimeout(() => {
+                    newLogo.css('transition', 'opacity 0.5s ease');
+                    newLogo.css('opacity', 1);
+                }, 20);
             }
+        };
 
-            const tempImg = new Image();
-            tempImg.src = imageUrl;
+        if (imageCache[imageUrl]) {
+            applyNewLogo(imageCache[imageUrl]);
+            return;
+        }
 
-            tempImg.onload = () => {
-                if (isDestroyed || !html) return;
-                
-                const logoHtml = `
-                    <img class="new-interface-logo" 
-                         src="${imageUrl}" 
-                         alt="${data.title}"
-                         loading="eager"
-                         style="opacity: 0;"
-                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-                `;
-                
-                addToCache(imageCache, imageUrl, logoHtml);
-                applyNewLogo(logoHtml);
-            };
+        const tempImg = new Image();
+        tempImg.src = imageUrl;
 
-            tempImg.onerror = () => {
-                if (isDestroyed || !html) return;
-                titleElement.text(data.title);
-            };
-        }, 500);
+        tempImg.onload = () => {
+            if (isDestroyed || !html) return;
+            
+            const logoHtml = `
+                <img class="new-interface-logo" 
+                     src="${imageUrl}" 
+                     alt="${data.title}"
+                     loading="eager"
+                     style="opacity: 0;"
+                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+            `;
+            
+            addToCache(imageCache, imageUrl, logoHtml);
+            applyNewLogo(logoHtml);
+        };
+
+        tempImg.onerror = () => {
+            if (isDestroyed || !html) return;
+            titleElement.text(data.title);
+        };
       };
 
       this.draw = function (data) {
