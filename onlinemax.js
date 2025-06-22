@@ -1627,7 +1627,7 @@ else if (element.url) {
         zh: '按住“确定”键调出上下文菜单'
       },
       title_online: { //
-        ru: 'Онлайн',
+        ru: 'Онлайн Max',
         uk: 'Онлайн',
         en: 'Online',
         zh: '在线的'
