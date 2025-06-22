@@ -22,7 +22,7 @@
 
       this.create = function () {
         if (isDestroyed) return;
-        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                <div class=\"new-interface-info__description\"></div>\n            </div>\n        </div>");
+        html = $("<div class=\"new-interface-info\">\n            <div class=\"new-interface-info__body\">\n                <div class=\"new-interface-info__head\"></div>\n                <div class=\"new-interface-info__title\"></div>\n                <div class=\"new-interface-info__details\"></div>\n                          </div>\n        </div>");
       };
 
       this.update = function (data) {
@@ -80,7 +80,6 @@
         }
 
         if (!isDestroyed && html) {
-            html.find('.new-interface-info__description').text(data.overview || Lampa.Lang.translate('full_notext'));
             Lampa.Background.change(Lampa.Api.img(data.backdrop_path, 'w200'));
             this.load(data);
         }
@@ -576,19 +575,6 @@
             font-size: 0.7em;
         }
         
-        .new-interface-info__description {
-            display: none;
-            font-size: 1.2em;
-            font-weight: 300;
-            line-height: 1.5;
-            overflow: hidden;
-            -o-text-overflow: ".";
-            text-overflow: ".";
-            -webkit-line-clamp: 4;
-            line-clamp: 4;
-            -webkit-box-orient: vertical;
-            width: 70%;
-        }
         
         .new-interface .card-more__box {
             padding-bottom: 95%;
