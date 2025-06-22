@@ -1553,7 +1553,7 @@ else if (element.url) {
   }
 
   function startPlugin() {
-    window.lampac_plugin = true;
+    window.lampac_plugin1 = true;
     var manifst = {
       type: 'video',
       version: '1.4.9',
@@ -1751,6 +1751,6 @@ else if (element.url) {
       Lampa.Storage.sync('online_watched_last', 'object_object');
     }
   }
-  if (!window.lampac_plugin) startPlugin();
+  if (!window.lampac_plugin1) startPlugin();
 
 })();
