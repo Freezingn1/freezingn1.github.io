@@ -303,27 +303,43 @@
       };
 
       this.background = function (elem) {
-        var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-        clearTimeout(background_timer);
-        if (new_background == background_last) return;
-        background_timer = setTimeout(function () {
-          background_img.removeClass('loaded');
+    if (!elem || !elem.backdrop_path) return;
 
-          background_img[0].onload = function () {
-            background_img.addClass('loaded');
-          };
+    var sizes = ['w1920', 'w1280'];
+    var currentSizeIndex = 0;
+    var new_background = Lampa.Api.img(elem.backdrop_path, sizes[currentSizeIndex]) + '?quality=50';
+    clearTimeout(background_timer);
 
-          background_img[0].onerror = function () {
+    if (new_background == background_last) return;
+
+    var tryNextSize = function() {
+        currentSizeIndex++;
+        if (currentSizeIndex < sizes.length) {
+            new_background = Lampa.Api.img(elem.backdrop_path, sizes[currentSizeIndex]) + '?quality=50';
+            loadBackground();
+        }
+    };
+
+    var loadBackground = function() {
+        background_timer = setTimeout(function() {
             background_img.removeClass('loaded');
-          };
 
-          background_last = new_background;
-          setTimeout(function () {
-            background_img[0].src = background_last;
-          }, 300);
+            var tempImg = new Image();
+            tempImg.onload = function() {
+                background_last = new_background;
+                background_img[0].src = background_last;
+                background_img.addClass('loaded');
+            };
+            tempImg.onerror = function() {
+                tryNextSize();
+            };
+
+            tempImg.src = new_background;
         }, 500);
-      };
+    };
 
+    loadBackground();
+};
       this.append = function (element) {
         var _this3 = this;
 
