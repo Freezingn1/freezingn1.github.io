@@ -93,64 +93,28 @@
 
     clearTimeout(logo_timer);
 
+    // Если логотипа нет, показываем текст
     if (!logo || !logo.file_path) {
-        logo_timer = setTimeout(() => {
-            if (isDestroyed || !html) return;
-            titleElement.text(data.title);
-        }, 1000);
+        titleElement.text(data.title);
         return;
     }
 
     const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
 
+    // Если логотип уже загружен, не обновляем
     if (titleElement.data('current-logo') === imageUrl) return;
     titleElement.data('current-logo', imageUrl);
 
+    // Используем таймер для плавного перехода (как у фонов)
     logo_timer = setTimeout(() => {
         if (isDestroyed || !html) return;
 
-        if (imageCache[imageUrl]) {
-            // Добавляем класс для плавного появления
-            const cachedLogo = $(imageCache[imageUrl]);
-            cachedLogo.css('opacity', 0);
-            
-            titleElement.html(cachedLogo);
-            setTimeout(() => {
-                cachedLogo.css('opacity', 1);
-            }, 10);
-            return;
-        }
+        const logoImg = $(`<img class="new-interface-logo" src="${imageUrl}" alt="${data.title}" />`);
+        logoImg.css('opacity', 0);
+        titleElement.empty().append(logoImg);
 
-        const tempImg = new Image();
-        tempImg.src = imageUrl;
-
-        tempImg.onload = () => {
-            if (isDestroyed || !html) return;
-            
-            const logoHtml = `
-                <img class="new-interface-logo" 
-                     src="${imageUrl}" 
-                     alt="${data.title}"
-                     loading="eager"
-                     style="opacity: 0;"
-                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-            `;
-            
-            addToCache(imageCache, imageUrl, logoHtml);
-            titleElement.html(logoHtml);
-
-            setTimeout(() => {
-                const logoImg = titleElement.find('.new-interface-logo');
-                if (logoImg.length) {
-                    logoImg.css('opacity', 1);
-                }
-            }, 10);
-        };
-
-        tempImg.onerror = () => {
-            if (isDestroyed || !html) return;
-            titleElement.text(data.title);
-        };
+        // Плавное появление
+        setTimeout(() => logoImg.css('opacity', 1), 10);
     }, 500);
 };
 
