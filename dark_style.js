@@ -249,6 +249,10 @@
                 transition: transform 0.3s ease;
                 overflow-y: auto;
             }
+			
+			.card-more__box {
+				background: rgba(0, 0, 0, 0.3);
+			}
 
             .settings__title, 
             .selectbox__title {
