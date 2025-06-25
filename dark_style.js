@@ -254,6 +254,11 @@
 				background: rgba(0, 0, 0, 0.3);
 			}
 
+			.items-line__more.focus {
+				background-color: var(--accent-color);
+				color: #fff;
+			}
+
             .settings__title, 
             .selectbox__title {
                 font-size: 2.5em;
