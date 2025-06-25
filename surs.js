@@ -2126,11 +2126,11 @@ function startProfileListener() {
 
     var initialSource = Lampa.Storage.get('source');
     if (initialSource === sourceName || initialSource === sourceNameKids || initialSource === sourceNameRus) {
-        setTimeout(function() {
+
 if (!Lampa.Storage.get('start_page') || Lampa.Storage.get('start_page') === 'main') {
     softRefresh(initialSource, false);
 }
-        }, 1000);
+
     }
 }
 
