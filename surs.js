@@ -2126,11 +2126,11 @@ function startProfileListener() {
 
     var initialSource = Lampa.Storage.get('source');
     if (initialSource === sourceName || initialSource === sourceNameKids || initialSource === sourceNameRus) {
-
+        setTimeout(function() {
 if (!Lampa.Storage.get('start_page') || Lampa.Storage.get('start_page') === 'main') {
     softRefresh(initialSource, false);
 }
-
+        }, 300);
     }
 }
 
@@ -2147,10 +2147,10 @@ function changeSource(newSource, isProfileChanged) {
         sourceChangedByProfile = true;
         Lampa.Storage.set('source', newSource);
 
-
+        setTimeout(function() {
             softRefresh(newSource, false);
             sourceChangedByProfile = false;
-
+        }, 10);
     }
 }
 
@@ -2163,9 +2163,9 @@ function softRefresh(source, isFromSourceChange) {
     });
 
     if (isFromSourceChange) {
-
+        setTimeout(function() {
             Lampa.Controller.toggle('settings');
-
+        }, 100);
     }
 }
 
