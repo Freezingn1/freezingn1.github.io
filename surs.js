@@ -2147,10 +2147,10 @@ function changeSource(newSource, isProfileChanged) {
         sourceChangedByProfile = true;
         Lampa.Storage.set('source', newSource);
 
-        setTimeout(function() {
+
             softRefresh(newSource, false);
             sourceChangedByProfile = false;
-        }, 10);
+
     }
 }
 
@@ -2163,9 +2163,9 @@ function softRefresh(source, isFromSourceChange) {
     });
 
     if (isFromSourceChange) {
-        setTimeout(function() {
+
             Lampa.Controller.toggle('settings');
-        }, 100);
+
     }
 }
 
