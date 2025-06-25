@@ -4,6 +4,7 @@
     // Глобальный кэш для изображений
     var imageCache = {};
     var MAX_CACHE_SIZE = 100;
+    var isFirstLoad = true; // Флаг для первого отображения
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -85,165 +86,255 @@
         }
       };
 
-      // В начале компонента добавить флаг для отслеживания первого отображения
-var isFirstLoad = true;
-
-// Модифицированный метод applyLogo
-this.applyLogo = function(data, logo) {
-    if (isDestroyed || !html) return;
-
-    const titleElement = html.find('.new-interface-info__title');
-    if (!titleElement.length) return;
-
-    clearTimeout(logo_timer);
-
-    if (!logo || !logo.file_path) {
-        logo_timer = setTimeout(() => {
-            if (isDestroyed || !html) return;
-            titleElement.text(data.title);
-        }, 1000);
-        return;
-    }
-
-    const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
-
-    if (titleElement.data('current-logo') === imageUrl) return;
-    titleElement.data('current-logo', imageUrl);
-
-    logo_timer = setTimeout(() => {
+      this.applyLogo = function(data, logo) {
         if (isDestroyed || !html) return;
 
-        if (imageCache[imageUrl]) {
-            const cachedLogo = $(imageCache[imageUrl]);
-            // Если это первая загрузка, отображаем сразу без анимации
-            if (isFirstLoad) {
-                cachedLogo.css('opacity', 1);
-                titleElement.html(cachedLogo);
-            } else {
-                cachedLogo.css('opacity', 0);
-                titleElement.html(cachedLogo);
-                setTimeout(() => {
-                    cachedLogo.css('opacity', 1);
-                }, 10);
-            }
+        const titleElement = html.find('.new-interface-info__title');
+        if (!titleElement.length) return;
+
+        clearTimeout(logo_timer);
+
+        if (!logo || !logo.file_path) {
+            logo_timer = setTimeout(() => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
+            }, 1000);
             return;
         }
 
-        const tempImg = new Image();
-        tempImg.src = imageUrl;
+        const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
 
-        tempImg.onload = () => {
+        if (titleElement.data('current-logo') === imageUrl) return;
+        titleElement.data('current-logo', imageUrl);
+
+        logo_timer = setTimeout(() => {
             if (isDestroyed || !html) return;
-            
-            const logoHtml = `
-                <img class="new-interface-logo" 
-                     src="${imageUrl}" 
-                     alt="${data.title}"
-                     loading="eager"
-                     style="opacity: ${isFirstLoad ? '1' : '0'};"
-                     onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
-            `;
-            
-            addToCache(imageCache, imageUrl, logoHtml);
-            titleElement.html(logoHtml);
 
-            if (!isFirstLoad) {
-                setTimeout(() => {
-                    const logoImg = titleElement.find('.new-interface-logo');
-                    if (logoImg.length) {
-                        logoImg.css('opacity', 1);
-                    }
-                }, 10);
+            if (imageCache[imageUrl]) {
+                const cachedLogo = $(imageCache[imageUrl]);
+                if (isFirstLoad) {
+                    cachedLogo.css('opacity', 1);
+                    titleElement.html(cachedLogo);
+                } else {
+                    cachedLogo.css('opacity', 0);
+                    titleElement.html(cachedLogo);
+                    setTimeout(() => {
+                        cachedLogo.css('opacity', 1);
+                    }, 10);
+                }
+                return;
             }
-        };
 
-        tempImg.onerror = () => {
-            if (isDestroyed || !html) return;
-            titleElement.text(data.title);
-        };
-    }, isFirstLoad ? 0 : 500); // Для первого отображения задержка 0, для последующих — 500 мс
-};
+            const tempImg = new Image();
+            tempImg.src = imageUrl;
 
-// Модифицированный метод background
-this.background = function (elem) {
-    var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
-    clearTimeout(background_timer);
-    if (new_background == background_last) return;
-    
-    if (isFirstLoad) {
-        // Для первого отображения — сразу загружаем фон без анимации
-        background_last = new_background;
-        background_img[0].src = background_last;
-        background_img.addClass('loaded');
-    } else {
-        // Для последующих — с анимацией
-        background_timer = setTimeout(function () {
-            background_img.removeClass('loaded');
+            tempImg.onload = () => {
+                if (isDestroyed || !html) return;
+                
+                const logoHtml = `
+                    <img class="new-interface-logo" 
+                         src="${imageUrl}" 
+                         alt="${data.title}"
+                         loading="eager"
+                         style="opacity: ${isFirstLoad ? '1' : '0'};"
+                         onerror="this.remove(); this.parentElement.textContent='${data.title.replace(/"/g, '&quot;')}'" />
+                `;
+                
+                addToCache(imageCache, imageUrl, logoHtml);
+                titleElement.html(logoHtml);
 
-            background_img[0].onload = function () {
-                background_img.addClass('loaded');
+                if (!isFirstLoad) {
+                    setTimeout(() => {
+                        const logoImg = titleElement.find('.new-interface-logo');
+                        if (logoImg.length) {
+                            logoImg.css('opacity', 1);
+                        }
+                    }, 10);
+                }
             };
 
-            background_img[0].onerror = function () {
-                background_img.removeClass('loaded');
+            tempImg.onerror = () => {
+                if (isDestroyed || !html) return;
+                titleElement.text(data.title);
             };
+        }, isFirstLoad ? 0 : 500);
+      };
 
-            background_last = new_background;
-            setTimeout(function () {
-                background_img[0].src = background_last;
-            }, 300);
-        }, 500);
+      this.draw = function (data) {
+        if (isDestroyed || !html) return;
+
+        var create = ((data.release_date || data.first_air_date || '0000') + '').slice(0, 4);
+        var vote = parseFloat((data.vote_average || 0) + '').toFixed(1);
+        var head = [];
+        var details = [];
+        var countries = Lampa.Api.sources.tmdb.parseCountries(data);
+        var pg = Lampa.Api.sources.tmdb.parsePG(data);
+        
+        if (create !== '0000') head.push('<span>' + create + '</span>');
+        if (countries.length > 0) head.push(countries.join(', '));
+        if (vote > 0) details.push('<div class="full-start__rate"><div>' + vote + '</div><div>TMDB</div></div>');
+        if (data.number_of_episodes && data.number_of_episodes > 0) {
+            details.push('<span class="full-start__pg">Эпизодов ' + data.number_of_episodes + '</span>');
+        }
+        
+        if (data.runtime) details.push(Lampa.Utils.secondsToTime(data.runtime * 60, true));
+        if (pg) details.push('<span class="full-start__pg" style="font-size: 0.9em;">' + pg + '</span>');
+        
+        html.find('.new-interface-info__head').empty().append(head.join(', '));
+        html.find('.new-interface-info__details').html(details.join('<span class="new-interface-info__split">&#9679;</span>'));
+      };
+
+      this.load = function (data) {
+        if (isDestroyed) return;
+        var _this = this;
+
+        clearTimeout(timer);
+        var url = Lampa.TMDB.api((data.name ? 'tv' : 'movie') + '/' + data.id + '?api_key=' + Lampa.TMDB.key() + '&append_to_response=content_ratings,release_dates&language=' + Lampa.Storage.get('language'));
+        if (loaded[url]) return this.draw(loaded[url]);
+        timer = setTimeout(function () {
+          if (isDestroyed) return;
+          network.clear();
+          network.timeout(5000);
+          network.silent(url, function (movie) {
+            if (isDestroyed) return;
+            loaded[url] = movie;
+            _this.draw(movie);
+          });
+        }, 1000);
+      };
+
+      this.render = function () {
+        return isDestroyed ? null : html;
+      };
+
+      this.empty = function () {};
+
+      this.destroy = function () {
+        isDestroyed = true;
+        clearTimeout(logo_timer);
+        if (html) {
+            html.remove();
+            html = null;
+        }
+        loaded = {};
+        if (network) {
+            network.clear();
+        }
+        clearTimeout(timer);
+      };
     }
-};
 
-// В методе, где происходит первое отображение данных (например, в build или update), установить флаг isFirstLoad в false после первого отображения
-this.build = function (data) {
-    var _this2 = this;
+    function component(object) {
+      var network = new Lampa.Reguest();
+      var scroll = new Lampa.Scroll({
+        mask: true,
+        over: true,
+        scroll_by_item: true
+      });
+      var items = [];
+      var html = $('<div class="new-interface"><img class="full-start__background"></div>');
+      var active = 0;
+      var newlampa = Lampa.Manifest.app_digital >= 166;
+      var info;
+      var lezydata;
+      var viewall = Lampa.Storage.field('card_views_type') == 'view' || Lampa.Storage.field('navigation_type') == 'mouse';
+      var background_img = html.find('.full-start__background');
+      var background_last = '';
+      var background_timer;
 
-    lezydata = data;
-    info = new create(object);
-    info.create();
-    scroll.minus(info.render());
-    data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
-    html.append(info.render());
-    html.append(scroll.render());
+      this.create = function () {};
 
-    if (newlampa) {
-        Lampa.Layer.update(html);
-        Lampa.Layer.visible(scroll.render(true));
-        scroll.onEnd = this.loadNext.bind(this);
+      this.empty = function () {
+        var button;
 
-        scroll.onWheel = function (step) {
+        if (object.source == 'tmdb') {
+          button = $('<div class="empty__footer"><div class="simple-button selector">' + Lampa.Lang.translate('change_source_on_cub') + '</div></div>');
+          button.find('.selector').on('hover:enter', function () {
+            Lampa.Storage.set('source', 'cub');
+            Lampa.Activity.replace({
+              source: 'cub'
+            });
+          });
+        }
+
+        var empty = new Lampa.Empty();
+        html.append(empty.render(button));
+        this.start = empty.start;
+        this.activity.loader(false);
+        this.activity.toggle();
+      };
+
+      this.loadNext = function () {
+        var _this = this;
+
+        if (this.next && !this.next_wait && items.length) {
+          this.next_wait = true;
+          this.next(function (new_data) {
+            _this.next_wait = false;
+            new_data.forEach(_this.append.bind(_this));
+            Lampa.Layer.visible(items[active + 1].render(true));
+          }, function () {
+            _this.next_wait = false;
+          });
+        }
+      };
+
+      this.push = function () {};
+
+      this.build = function (data) {
+        var _this2 = this;
+
+        lezydata = data;
+        info = new create(object);
+        info.create();
+        scroll.minus(info.render());
+        data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
+        html.append(info.render());
+        html.append(scroll.render());
+
+        if (newlampa) {
+          Lampa.Layer.update(html);
+          Lampa.Layer.visible(scroll.render(true));
+          scroll.onEnd = this.loadNext.bind(this);
+
+          scroll.onWheel = function (step) {
             if (!Lampa.Controller.own(_this2)) _this2.start();
             if (step > 0) _this2.down();else if (active > 0) _this2.up();
-        };
-    }
+          };
+        }
 
-    this.activity.loader(false);
-    this.activity.toggle();
-    isFirstLoad = false; // Устанавливаем флаг в false после первого отображения
-};
+        this.activity.loader(false);
+        this.activity.toggle();
+        isFirstLoad = false; // После первого отображения устанавливаем флаг в false
+      };
 
       this.background = function (elem) {
         var new_background = Lampa.Api.img(elem.backdrop_path, 'w1280');
         clearTimeout(background_timer);
         if (new_background == background_last) return;
-        background_timer = setTimeout(function () {
-          background_img.removeClass('loaded');
-
-          background_img[0].onload = function () {
-            background_img.addClass('loaded');
-          };
-
-          background_img[0].onerror = function () {
-            background_img.removeClass('loaded');
-          };
-
-          background_last = new_background;
-          setTimeout(function () {
+        
+        if (isFirstLoad) {
+            background_last = new_background;
             background_img[0].src = background_last;
-          }, 300);
-        }, 500);
+            background_img.addClass('loaded');
+        } else {
+            background_timer = setTimeout(function () {
+                background_img.removeClass('loaded');
+
+                background_img[0].onload = function () {
+                    background_img.addClass('loaded');
+                };
+
+                background_img[0].onerror = function () {
+                    background_img.removeClass('loaded');
+                };
+
+                background_last = new_background;
+                setTimeout(function () {
+                    background_img[0].src = background_last;
+                }, 300);
+            }, 500);
+        }
       };
 
       this.append = function (element) {
