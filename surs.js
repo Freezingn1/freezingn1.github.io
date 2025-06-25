@@ -2130,7 +2130,7 @@ function startProfileListener() {
 if (!Lampa.Storage.get('start_page') || Lampa.Storage.get('start_page') === 'main') {
     softRefresh(initialSource, false);
 }
-        }, 300);
+        }, 10);
     }
 }
 
