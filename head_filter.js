@@ -116,7 +116,7 @@
             'head_filter_show_fullscreen': {name: Lampa.Lang.translate('fullscreen'), element: '.full-screen', default: false}, 
             'head_filter_show_reload': {name: Lampa.Lang.translate('reload'), element: '.m-reload-screen', default: false},
             'head_filter_show_blackfriday': {name: Lampa.Lang.translate('blackfriday'), element: '.black-friday__button', default: false}, 
-            'head_filter_show_split': {name: Lampa.Lang.translate('split'), element: '.head__split', default: false}, 
+            'head_filter_show_split': {name: Lampa.Lang.translate('split'), element: '.head__markers', default: false}, 
             'head_filter_show_time': {name: Lampa.Lang.translate('time'), element: '.head__time', default: false}, 
         };
 
