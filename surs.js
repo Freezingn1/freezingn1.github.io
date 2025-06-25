@@ -554,9 +554,10 @@ json.title = Lampa.Lang.translate(sort.title) + ' ' + Lampa.Lang.translate('surs
 
             var selectedStreamingServices = getSelectedStreamingServices();
 
-            selectedStreamingServices.slice(0, 5).forEach(service => {
-    CustomData.push(getStreamingWithGenres(service.title, service.id, isRussian));
-});
+            selectedStreamingServices.forEach(function (service) {
+                var isRussian = getStreamingServicesRUS().some(rusService => rusService.id === service.id);
+                CustomData.push(getStreamingWithGenres(service.title, service.id, isRussian));
+            });
 
             selectedStreamingServices.forEach(function (service) {
                 var isRussian = getStreamingServicesRUS().some(rusService => rusService.id === service.id);
@@ -947,20 +948,8 @@ function filterCyrillic(items) {
     });
 }
 
-const cache = {};
-function getWithCache(url, callback) {
-    if (cache[url]) {
-        callback(cache[url]);
-        return;
-    }
-    owner.get(url, params, (json) => {
-        cache[url] = json;
-        callback(json);
-    });
-}
-
 function applyFilters(items) {
-    return filterCyrillic(items).slice(0, 20); // Ограничьте количество элементов
+    return filterCyrillic(items);
 }
 
 
