@@ -69,6 +69,12 @@
             uk: 'Розділювач',
             zh: '分隔符'
         },
+		split2: {
+            ru: 'Разделитель2',
+            en: 'Divider2',
+            uk: 'Розділювач2',
+            zh: '分隔符2'
+        },
         time: {
             ru: 'Время',
             en: 'Time',
@@ -116,7 +122,8 @@
             'head_filter_show_fullscreen': {name: Lampa.Lang.translate('fullscreen'), element: '.full-screen', default: false}, 
             'head_filter_show_reload': {name: Lampa.Lang.translate('reload'), element: '.m-reload-screen', default: false},
             'head_filter_show_blackfriday': {name: Lampa.Lang.translate('blackfriday'), element: '.black-friday__button', default: false}, 
-            'head_filter_show_split': {name: Lampa.Lang.translate('split'), element: '.head__markers', default: false}, 
+            'head_filter_show_split': {name: Lampa.Lang.translate('split'), element: '.head__split', default: false}, 
+			'head_filter_show_split2': {name: Lampa.Lang.translate('split2'), element: '.head__markers', default: false}, 
             'head_filter_show_time': {name: Lampa.Lang.translate('time'), element: '.head__time', default: false}, 
         };
 
