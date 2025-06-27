@@ -241,6 +241,7 @@
       var background_img = html.find('.full-start__background');
       var background_last = '';
       var background_timer;
+      var cardOrientation = Lampa.Storage.get('card_orientation') || 'wide';
 
       this.create = function () {};
 
@@ -292,6 +293,12 @@
         html.append(info.render());
         html.append(scroll.render());
 
+        if (cardOrientation === 'vertical') {
+            html.addClass('vertical-cards');
+        } else {
+            html.removeClass('vertical-cards');
+        }
+
         if (newlampa) {
           Lampa.Layer.update(html);
           Lampa.Layer.visible(scroll.render(true));
@@ -305,7 +312,7 @@
 
         this.activity.loader(false);
         this.activity.toggle();
-        isFirstLoad = false; // После первого отображения устанавливаем флаг в false
+        isFirstLoad = false;
       };
 
       this.background = function (elem) {
@@ -348,7 +355,7 @@
           cardClass: element.cardClass,
           genres: object.genres,
           object: object,
-          card_wide: false,
+          card_wide: cardOrientation === 'wide',
           nomore: element.nomore
         });
         item.create();
@@ -468,7 +475,7 @@
         if (object.title === 'Избранное') {
                 use = old_interface;
             }
-		if (object.title === 'Спорт') {
+        if (object.title === 'Спорт') {
                 use = old_interface;
             }
         return new use(object);
@@ -500,6 +507,24 @@
           field: {
               name: "Отображение логотипов",
               description: "Управление отображением логотипов в стильном интерфейсе"
+          }
+      });
+
+      // Настройки ориентации карточек
+      Lampa.SettingsApi.addParam({
+          component: "styleinter",
+          param: {
+              name: "card_orientation",
+              type: "select",
+              values: { 
+                  "wide": "Широкие карточки", 
+                  "vertical": "Вертикальные карточки", 
+              },
+              default: "wide"
+          },
+          field: {
+              name: "Ориентация карточек",
+              description: "Выберите между широкими и вертикальными карточками"
           }
       });
 
@@ -592,7 +617,6 @@
             font-size: 0.7em;
         }
         
-        
         .new-interface .card-more__box {
             padding-bottom: 95%;
         }
@@ -634,9 +658,40 @@
         body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
             animation: animation-trigger-enter 0.2s forwards
         }
+
+        /* Стили для вертикальных карточек */
+        .new-interface.vertical-cards .new-interface-info {
+            height: 23.5em;
+        }
+        
+        .new-interface.vertical-cards .card--small {
+            width: 14em; 
+            height: auto;
+        }
+        
+        .new-interface.vertical-cards .card--small .card__view {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 2/3; 
+        }
+        
+        .new-interface.vertical-cards .card--small.card--wide {
+            width: 14em; 
+        }
+        
+        .new-interface.vertical-cards .card-more__box {
+            padding-bottom: 70%; 
+        }
         </style>
       `);
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
+
+      // Обработчик изменения настроек
+      Lampa.Storage.listener.follow('change', (e) => {
+          if(e.name === 'card_orientation') {
+              Lampa.Activity.reload();
+          }
+      });
     }
 
     if (!window.plugin_interface_ready) startPlugin();
