@@ -664,11 +664,11 @@
 
         /* Стили для вертикальных карточек */
         .new-interface.vertical-cards .new-interface-info {
-            height: 23.5em;
+            height: 22em;
         }
         
         .new-interface.vertical-cards .card--small {
-            width: 14em; 
+            width: 10em; 
             height: auto;
         }
         
