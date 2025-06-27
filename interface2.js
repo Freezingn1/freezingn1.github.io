@@ -301,7 +301,7 @@
 
         if (newlampa) {
           Lampa.Layer.update(html);
-          Lampa.Layer.visible(scroll.render(false));
+          Lampa.Layer.visible(scroll.render(true));
           scroll.onEnd = this.loadNext.bind(this);
 
           scroll.onWheel = function (step) {
