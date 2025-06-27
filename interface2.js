@@ -229,7 +229,7 @@
       var scroll = new Lampa.Scroll({
         mask: true,
         over: true,
-        scroll_by_item: false
+        scroll_by_item: true
       });
       var items = [];
       var html = $('<div class="new-interface"><img class="full-start__background"></div>');
@@ -289,7 +289,7 @@
         info = new create(object);
         info.create();
         scroll.minus(info.render());
-        data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
+        data.slice(0, viewall ? data.length : 12).forEach(this.append.bind(this));
         html.append(info.render());
         html.append(scroll.render());
 
