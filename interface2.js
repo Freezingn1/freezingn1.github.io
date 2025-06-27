@@ -463,7 +463,8 @@
       };
     }
 
-    function startPlugin() {
+    function 
+	Lampa.Player.preloadLimit = 20; // Загружать 20 карточек вместо стандартного значения	{
     window.plugin_interface_ready = true;
     var old_interface = Lampa.InteractionMain;
     var new_interface = component;
