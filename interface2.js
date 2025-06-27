@@ -237,7 +237,7 @@
       var newlampa = Lampa.Manifest.app_digital >= 166;
       var info;
       var lezydata;
-      var viewall = Lampa.Storage.field('card_views_type') == 'view' || Lampa.Storage.field('navigation_type') == 'mouse';
+      var viewall = true;
       var background_img = html.find('.full-start__background');
       var background_last = '';
       var background_timer;
