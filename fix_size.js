@@ -81,7 +81,7 @@
         var layer_update = Lampa.Layer.update;
 
         Lampa.Layer.update = function (where) {
-          var font_size = parseInt(Lampa.Storage.field('interface_size_fixed')) || 16;
+          var font_size = parseInt(Lampa.Storage.field('interface_size_fixed')) || 4;
           $('body').css({
             fontSize: font_size + 'px'
           });
