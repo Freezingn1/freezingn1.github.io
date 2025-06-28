@@ -547,161 +547,171 @@
     });
 
       Lampa.Template.add('new_interface_style', `
-        <style>
-        .new-interface .card--small.card--wide {
-            width: 18.3em;
-        }
-        
-        .full-start__pg, .full-start__status {
-            font-size: 0.9em;
-        }
-        
-        .full-start-new__rate-line .full-start__pg {
-            font-size: 0.9em;
-        }
-        
-        .new-interface-info {
-            position: relative;
-            padding: 1.5em;
-            height: 26.5em;
-        }
-        
-        .new-interface-info__body {
-            width: 80%;
-            padding-top: 1.1em;
-        }
-        
-        .new-interface-info__head {
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 0em;
-            font-size: 1.3em;
-            min-height: 1em;
-        }
-        
-        .new-interface-info__head span {
-            color: #fff;
-        }
-        
-        .new-interface-info__title {
-            font-size: 4em;
-            margin-top: 0.1em;
-            font-weight: 800;
-            -o-text-overflow: ".";
-            text-overflow: ".";
-            margin-bottom: 0em;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            line-clamp: 3;
-            -webkit-box-orient: vertical;
-            margin-left: -0.03em;
-            line-height: 1;
-            text-shadow: 2px 3px 1px #00000040;
-            max-width: 9em;
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            word-spacing: 5px;
-        }
-        
-        .new-interface-logo {
-            margin-top: 0.3em;
-            margin-bottom: 0.3em;
-            max-width: 7em;
-            max-height: 3em;
-            object-fit: contain;
-            width: auto;
-            height: auto;
-            min-height: 1em;
-            filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        
-        .new-interface-logo.loaded {
-            opacity: 1;
-        }
-                
-        .new-interface-info__details {
-            margin-bottom: 1.6em;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            min-height: 1.9em;
-            font-size: 1.3em;
-        }
-        
-        .new-interface-info__split {
-            margin: 0 1em;
-            font-size: 0.7em;
-        }
-        
-        .new-interface .card-more__box {
-            padding-bottom: 95%;
-        }
-        
-        .new-interface .full-start__background {
-            height: 108%;
-            top: -6em;
-        }
-        
-        .new-interface .full-start__rate {
-            font-size: 1.3em;
-            margin-right: 0;
-        }
-        
-        .new-interface .card__promo {
-            display: none;
-        }
-        
-        .new-interface .card.card--wide+.card-more .card-more__box {
-            padding-bottom: 95%;
-        }
-        
-        .new-interface .card.card--wide .card-watched {
-            display: none !important;
-        }
-        
-        body.light--version .new-interface-info__body {
-            width: 69%;
-            padding-top: 1.5em;
-        }
-        
-        body.light--version .new-interface-info {
-            height: 25.3em;
-        }
+    <style>
+    .new-interface .card--small.card--wide {
+        width: 18.3em;
+    }
+    
+    .full-start__pg, .full-start__status {
+        font-size: 0.9em;
+    }
+    
+    .full-start-new__rate-line .full-start__pg {
+        font-size: 0.9em;
+    }
+    
+    .new-interface-info {
+        position: relative;
+        padding: 1.5em;
+        height: 26.5em;
+    }
+    
+    .new-interface-info__body {
+        width: 80%;
+        padding-top: 1.1em;
+    }
+    
+    .new-interface-info__head {
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 0em;
+        font-size: 1.3em;
+        min-height: 1em;
+    }
+    
+    .new-interface-info__head span {
+        color: #fff;
+    }
+    
+    .new-interface-info__title {
+        font-size: 4em;
+        margin-top: 0.1em;
+        font-weight: 800;
+        -o-text-overflow: ".";
+        text-overflow: ".";
+        margin-bottom: 0em;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        margin-left: -0.03em;
+        line-height: 1;
+        text-shadow: 2px 3px 1px #00000040;
+        max-width: 9em;
+        text-transform: uppercase;
+        letter-spacing: -2px;
+        word-spacing: 5px;
+    }
+    
+    .new-interface-logo {
+        margin-top: 0.3em;
+        margin-bottom: 0.3em;
+        max-width: 7em;
+        max-height: 3em;
+        object-fit: contain;
+        width: auto;
+        height: auto;
+        min-height: 1em;
+        filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+    
+    .new-interface-logo.loaded {
+        opacity: 1;
+    }
+            
+    .new-interface-info__details {
+        margin-bottom: 1.6em;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        min-height: 1.9em;
+        font-size: 1.3em;
+    }
+    
+    .new-interface-info__split {
+        margin: 0 1em;
+        font-size: 0.7em;
+    }
+    
+    .new-interface .card-more__box {
+        padding-bottom: 95%;
+    }
+    
+    .new-interface .full-start__background {
+        height: 108%;
+        top: -6em;
+    }
+    
+    .new-interface .full-start__rate {
+        font-size: 1.3em;
+        margin-right: 0;
+    }
+    
+    .new-interface .card__promo {
+        display: none;
+    }
+    
+    .new-interface .card.card--wide+.card-more .card-more__box {
+        padding-bottom: 95%;
+    }
+    
+    .new-interface .card.card--wide .card-watched {
+        display: none !important;
+    }
+    
+    /* Стили для рейтинга в широких карточках */
+    .new-interface:not(.vertical-cards) .card__vote {
+        font-size: 1.5em;
+    }
+    
+    /* Стили для рейтинга в вертикальных карточках */
+    .new-interface.vertical-cards .card__vote {
+        font-size: 1em;
+    }
+    
+    body.light--version .new-interface-info__body {
+        width: 69%;
+        padding-top: 1.5em;
+    }
+    
+    body.light--version .new-interface-info {
+        height: 25.3em;
+    }
 
-        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
-            animation: animation-card-focus 0.2s
-        }
-        body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
-            animation: animation-trigger-enter 0.2s forwards
-        }
+    body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.focus .card__view{
+        animation: animation-card-focus 0.2s
+    }
+    body.advanced--animation:not(.no--animation) .new-interface .card--small.card--wide.animate-trigger-enter .card__view{
+        animation: animation-trigger-enter 0.2s forwards
+    }
 
-        /* Стили для вертикальных карточек */
-        .new-interface.vertical-cards .new-interface-info {
-            height: 22em;
-        }
-        
-        .new-interface.vertical-cards .card--small {
-            width: 10em; 
-            height: auto;
-        }
-        
-        .new-interface.vertical-cards .card--small .card__view {
-            width: 100%;
-            height: auto;
-            aspect-ratio: 2/3; 
-        }
-        
-        .new-interface.vertical-cards .card--small.card--wide {
-            width: 14em; 
-        }
-        
-        .new-interface.vertical-cards .card-more__box {
-            padding-bottom: 70%; 
-        }
-        </style>
-      `);
+    /* Стили для вертикальных карточек */
+    .new-interface.vertical-cards .new-interface-info {
+        height: 22em;
+    }
+    
+    .new-interface.vertical-cards .card--small {
+        width: 10em; 
+        height: auto;
+    }
+    
+    .new-interface.vertical-cards .card--small .card__view {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2/3; 
+    }
+    
+    .new-interface.vertical-cards .card--small.card--wide {
+        width: 14em; 
+    }
+    
+    .new-interface.vertical-cards .card-more__box {
+        padding-bottom: 70%; 
+    }
+    </style>
+`);
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
 
     // Исправленный обработчик изменения настроек
