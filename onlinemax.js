@@ -1725,7 +1725,7 @@ else if (element.url) {
 		  clarification: all[id] ? true : false
         });
       });
-      e.render.insertBefore(e.render.find('.view--torrent'));
+      e.render.after(btn);
     }
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
