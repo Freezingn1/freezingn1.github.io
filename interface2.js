@@ -6,23 +6,30 @@
     var MAX_CACHE_SIZE = 100;
     var isFirstLoad = true; // Флаг для первого отображения
 
+    // Функция для TV режима
+    function setupTvMode() {
+        if (Lampa.Storage.get('tv_mode') !== 'off') {
+            var platform_screen = Lampa.Platform.screen;
 
-	var platform_screen = Lampa.Platform.screen;
+            Lampa.Platform.screen = function (need) {
+                if (need === 'tv') {
+                    try {
+                        var stack = new Error().stack.split('\n');
+                        var offset = stack[0] === 'Error' ? 1 : 0;
 
-        Lampa.Platform.screen = function (need) {
-          if (need === 'tv') {
-            try {
-              var stack = new Error().stack.split('\n');
-              var offset = stack[0] === 'Error' ? 1 : 0;
+                        if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
+                            return false;
+                        }
+                    } catch (e) {}
+                }
 
-              if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
-                return false;
-              }
-            } catch (e) {}
-          }
+                return platform_screen(need);
+            };
+        }
+    }
 
-          return platform_screen(need);
-        };
+    // Вызываем функцию при старте
+    setupTvMode();
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -546,6 +553,24 @@
         }
     });
 
+    // Настройка TV режима
+    Lampa.SettingsApi.addParam({
+        component: "styleinter",
+        param: {
+            name: "tv_mode",
+            type: "select",
+            values: { 
+                "on": "Включить TV режим", 
+                "off": "Выключить TV режим", 
+            },
+            default: "on"
+        },
+        field: {
+            name: "Режим ТВ",
+            description: "Управление специальным режимом для телевизоров"
+        }
+    });
+
       Lampa.Template.add('new_interface_style', `
     <style>
     .new-interface .card--small.card--wide {
@@ -718,6 +743,13 @@
     Lampa.Storage.listener.follow('change', (e) => {
         if(e.name === 'card_orientation') {
             if(Lampa.Activity.restart) Lampa.Activity.restart();
+        }
+        if(e.name === 'tv_mode') {
+            // Перезагружаем плагин при изменении TV режима
+            if(window.plugin_interface_ready) {
+                delete window.plugin_interface_ready;
+                startPlugin();
+            }
         }
     });
 }
