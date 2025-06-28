@@ -685,7 +685,6 @@
         </style>
       `);
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
-	  css.html('.card--category { width: 16em !important }');
 
     // Исправленный обработчик изменения настроек
     Lampa.Storage.listener.follow('change', (e) => {
