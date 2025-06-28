@@ -588,7 +588,7 @@
     .new-interface-info {
         position: relative;
         padding: 1.5em;
-        height: 26.5em;
+        height: 32em;
     }
     
     .new-interface-info__body {
