@@ -588,7 +588,7 @@
     .new-interface-info {
         position: relative;
         padding: 1.5em;
-        height: 32em;
+        height: 26.5em;
     }
     
     .new-interface-info__body {
@@ -714,7 +714,7 @@
 
     /* Стили для вертикальных карточек */
     .new-interface.vertical-cards .new-interface-info {
-        height: 30em;
+        height: 25em;
     }
     
     .new-interface.vertical-cards .card--small {
