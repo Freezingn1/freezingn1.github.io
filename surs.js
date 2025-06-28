@@ -102,6 +102,11 @@ function saveAllStoredSettings(settings) {
 // Функция получения конкретного сохраненного значения (по умолчанию true)
 function getStoredSetting(key, defaultValue) {
     var profileSettings = getProfileSettings();
+    // Для ключа shuffleTrending сравниваем как строку
+    if (key === 'shuffleTrending') {
+        return profileSettings.hasOwnProperty(key) ? profileSettings[key] : defaultValue;
+    }
+    // Для остальных ключей
     return profileSettings.hasOwnProperty(key) ? profileSettings[key] : defaultValue;
 }
 
@@ -256,12 +261,12 @@ function startPlugin() {
         var partsLimit = 6;
 
             function filterCyrillic(items) {
-                var storedValue = getStoredSetting('cirillic');
-                var isFilterEnabled = storedValue === '1' || storedValue === null || storedValue === undefined || storedValue === '';
+    var storedValue = getStoredSetting('cirillic');
+    var isFilterEnabled = storedValue === '1' || storedValue === null || storedValue === undefined || storedValue === '';
 
-                if (!isFilterEnabled) {
-                    return items;
-                }
+    if (!isFilterEnabled) {
+        return items;
+    }
 
                 function containsCyrillic(value) {
                     if (typeof value === 'string') {
@@ -426,22 +431,23 @@ function startPlugin() {
             baseUrl = applyAgeRestriction(baseUrl);
 
             owner.get(baseUrl, params, function (json) {
-                if (json.results) {
-                    json.results = json.results.filter(function (result) {
-                        var forbiddenCountries = ['CN'];
-                        return !result.origin_country || !result.origin_country.some(function (country) {
-                            return forbiddenCountries.includes(country);
-                        });
-                    });
-                    
-                    // Добавьте эту проверку и вызов shuffleArray
-                    if (getStoredSetting('shuffleTrending', true)) {
-                        shuffleArray(json.results);
-                    }
-                }
-                json.title = Lampa.Lang.translate('surs_title_trend_week');
-                callback(json);
-            }, callback);
+    if (json.results) {
+        json.results = json.results.filter(function (result) {
+            var forbiddenCountries = ['CN'];
+            return !result.origin_country || !result.origin_country.some(function (country) {
+                return forbiddenCountries.includes(country);
+            });
+        });
+        
+        // Измените эту проверку:
+        var shouldShuffle = getStoredSetting('shuffleTrending', true);
+        if (shouldShuffle) {
+            shuffleArray(json.results);
+        }
+    }
+    json.title = Lampa.Lang.translate('surs_title_trend_week');
+    callback(json);
+}, callback);
         }
     ];
 
@@ -2884,35 +2890,37 @@ function showTVShowsByGenreSelectionMenu(previousController) {
     });
 	
 	 function showShuffleTrendingMenu(previousController) {
-        var key = 'shuffleTrending';
-        var currentValue = getStoredSetting(key, '1');
+    var key = 'shuffleTrending';
+    // Используйте строгое сравнение с '1' и '0'
+    var currentValue = getStoredSetting(key, '1') === '1' ? '1' : '0';
 
-        var options = [
-            { title: Lampa.Lang.translate('surs_shuffle_enabled'), value: '1' },
-            { title: Lampa.Lang.translate('surs_shuffle_disabled'), value: '0' }
-        ];
+    var options = [
+        { title: Lampa.Lang.translate('surs_shuffle_enabled'), value: '1' },
+        { title: Lampa.Lang.translate('surs_shuffle_disabled'), value: '0' }
+    ];
 
-        var items = options.map(function(option) {
-            return {
-                title: option.title,
-                value: option.value,
-                checkbox: true,
-                checked: currentValue === option.value
-            };
-        });
+    var items = options.map(function(option) {
+        return {
+            title: option.title,
+            value: option.value,
+            checkbox: true,
+            checked: currentValue === option.value
+        };
+    });
 
-        Lampa.Select.show({
-            title: Lampa.Lang.translate('surs_shuffle_trending'),
-            items: items,
-            onBack: function() {
-                Lampa.Controller.toggle(previousController || 'settings');
-            },
-            onCheck: function(selected) {
-                setStoredSetting(key, selected.value);
-                showShuffleTrendingMenu(previousController);
-            }
-        });
-    }
+    Lampa.Select.show({
+        title: Lampa.Lang.translate('surs_shuffle_trending'),
+        items: items,
+        onBack: function() {
+            Lampa.Controller.toggle(previousController || 'settings');
+        },
+        onCheck: function(selected) {
+            // Сохраняем как строку '1' или '0'
+            setStoredSetting(key, selected.value);
+            showShuffleTrendingMenu(previousController);
+        }
+    });
+}
 
     function showMinVotesMenu(previousController) {
         var key = 'minVotes';
