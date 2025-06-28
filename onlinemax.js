@@ -1725,7 +1725,7 @@ else if (element.url) {
 		  clarification: all[id] ? true : false
         });
       });
-      e.render.closest('.button-container').prepend(btn);
+      e.render.after(btn);
     }
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
