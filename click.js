@@ -1,74 +1,87 @@
 (function() {
-    console.log("⌛ Автокликер CUB запущен");
+    console.log("⌛ TV Autoclicker for CUB started");
 
-    // Основная функция для активации вкладки CUB
-    function activateCubTab() {
-        // 1. Находим все вкладки
-        const tabs = document.querySelectorAll('.search-source.selector');
-        if (!tabs || tabs.length === 0) {
-            console.log("❌ Вкладки не найдены");
-            return false;
-        }
-
-        // 2. Ищем вкладку CUB (без класса 'active')
-        let cubTab = null;
-        for (const tab of tabs) {
-            const titleElement = tab.querySelector('.search-source__tab');
-            if (titleElement && titleElement.textContent.trim() === "CUB") {
-                if (!tab.classList.contains('active')) {
-                    cubTab = tab;
-                    break;
-                } else {
-                    console.log("ℹ️ Вкладка CUB уже активна");
-                    return true;
-                }
-            }
-        }
-
-        if (!cubTab) {
-            console.log("❌ Неактивная вкладка CUB не найдена");
-            return false;
-        }
-
-        // 3. Кликаем по вкладке
+    // 1. Функция для эмуляции нажатия центральной кнопки пульта
+    function simulateTVClick(element) {
+        if (!element) return false;
+        
         try {
-            console.log("🟡 Пытаемся активировать CUB...");
-            cubTab.click();
-            console.log("✅ Вкладка CUB успешно активирована");
+            // Сначала фокусируем элемент (как при навигации пультом)
+            element.focus();
+            
+            // Создаём событие для KEYCODE_DPAD_CENTER
+            const enterEvent = new KeyboardEvent('keydown', {
+                key: 'Enter',
+                keyCode: 23, // KEYCODE_DPAD_CENTER
+                code: 'Enter',
+                which: 23,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            element.dispatchEvent(enterEvent);
+            console.log("✅ TV click (DPAD_CENTER) simulated on:", element);
             return true;
         } catch (e) {
-            console.log("❌ Ошибка при клике:", e);
+            console.log("❌ TV click error:", e);
             return false;
         }
     }
 
-    // Пытаемся активировать несколько раз с задержками
-    function tryActivateWithRetry() {
-        if (activateCubTab()) return;
+    // 2. Поиск и активация вкладки CUB
+    function activateCubTab() {
+        const tabs = document.querySelectorAll('.search-source.selector');
+        if (!tabs.length) {
+            console.log("No tabs found");
+            return false;
+        }
 
-        // Если не получилось, пробуем ещё раз через 1 и 3 секунды
-        setTimeout(() => {
-            if (!activateCubTab()) {
-                setTimeout(activateCubTab, 3000);
+        for (const tab of tabs) {
+            const title = tab.querySelector('.search-source__tab');
+            if (title && title.textContent.trim() === "CUB") {
+                if (tab.classList.contains('active')) {
+                    console.log("CUB is already active");
+                    return true;
+                }
+                
+                // Используем TV-совместимый клик
+                return simulateTVClick(tab);
             }
-        }, 1000);
+        }
+        
+        console.log("CUB tab not found");
+        return false;
     }
 
-    // Запускаем после загрузки страницы
+    // 3. Стратегия запуска
+    function startWithRetries() {
+        let attempts = 0;
+        const maxAttempts = 5;
+        const interval = 2000; // 2 сек между попытками
+
+        const tryActivate = () => {
+            attempts++;
+            if (activateCubTab() || attempts >= maxAttempts) {
+                clearInterval(retryInterval);
+            }
+        };
+
+        // Первая попытка
+        setTimeout(tryActivate, 1000);
+        
+        // Последующие попытки
+        const retryInterval = setInterval(tryActivate, interval);
+    }
+
+    // Запуск
     if (document.readyState === 'complete') {
-        setTimeout(tryActivateWithRetry, 500);
+        startWithRetries();
     } else {
-        window.addEventListener('load', () => {
-            setTimeout(tryActivateWithRetry, 1000);
-        });
+        window.addEventListener('load', startWithRetries);
     }
 
-    // Следим за изменениями в DOM (на случай динамической загрузки)
-    const observer = new MutationObserver(() => {
-        activateCubTab();
-    });
-
-    observer.observe(document.body, {
+    // Наблюдатель для динамического контента
+    new MutationObserver(activateCubTab).observe(document.body, {
         childList: true,
         subtree: true
     });
