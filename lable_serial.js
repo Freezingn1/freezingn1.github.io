@@ -1,7 +1,10 @@
 // Функция для замены текста и добавления стилей
 function modifyCardType() {
   const isVerticalCards = document.querySelector('.new-interface')?.classList.contains('vertical-cards');
-  const fontSize = isVerticalCards ? '0.7em' : '0.9em';
+  const isExcludedTab = document.querySelector('.head__title')?.textContent.match(/(История|Избранное)/i);
+  
+  // Для исключенных вкладок всегда используем 0.9em, для остальных - зависит от режима
+  const fontSize = isExcludedTab ? '0.9em' : (isVerticalCards ? '0.7em' : '0.9em');
 
   document.querySelectorAll('.card__type').forEach(el => {
     if (el.textContent.trim() === 'TV') el.textContent = 'Сериал';
@@ -23,4 +26,9 @@ Lampa.Storage.listener.follow('change', (e) => {
   if (e.name === 'card_orientation') {
     modifyCardType();
   }
+});
+
+// Отслеживаем переключение вкладок
+Lampa.Listener.follow('app_activity', () => {
+  setTimeout(modifyCardType, 100); // Небольшая задержка для применения после переключения
 });
