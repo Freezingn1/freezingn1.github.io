@@ -40,7 +40,7 @@
           if (need === 'tv') {
             try {
               var stack = new Error().stack.split('\n');
-              var offset = stack[0] === 'Error' ? 1 : 0;
+              var offset = stack[0] === 'Error' ? 7 : 6;
 
               if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
                 return false;
