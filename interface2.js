@@ -689,11 +689,11 @@
 
     /* Стили для вертикальных карточек */
     .new-interface.vertical-cards .new-interface-info {
-        height: 22em;
+        height: 25em;
     }
     
     .new-interface.vertical-cards .card--small {
-        width: 10em; 
+        width: 8em; 
         height: auto;
     }
     
