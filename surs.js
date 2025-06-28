@@ -261,8 +261,9 @@ function startPlugin() {
         var partsLimit = 6;
 
             function filterCyrillic(items) {
-    var storedValue = getStoredSetting('cirillic');
-    var isFilterEnabled = storedValue === '1' || storedValue === null || storedValue === undefined || storedValue === '';
+    var storedValue = getStoredSetting('shuffleTrending');
+    // Изменено на строгое сравнение с '1'
+    var isFilterEnabled = storedValue === '1';
 
     if (!isFilterEnabled) {
         return items;
@@ -439,8 +440,8 @@ function startPlugin() {
             });
         });
         
-        // Измените эту проверку:
-        var shouldShuffle = getStoredSetting('shuffleTrending', true);
+        // Изменено на строгое сравнение с '1'
+        var shouldShuffle = getStoredSetting('shuffleTrending', '1') === '1';
         if (shouldShuffle) {
             shuffleArray(json.results);
         }
@@ -2891,7 +2892,7 @@ function showTVShowsByGenreSelectionMenu(previousController) {
 	
 	 function showShuffleTrendingMenu(previousController) {
     var key = 'shuffleTrending';
-    // Используйте строгое сравнение с '1' и '0'
+    // Используем строгое сравнение с '1'
     var currentValue = getStoredSetting(key, '1') === '1' ? '1' : '0';
 
     var options = [
