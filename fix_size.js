@@ -42,7 +42,7 @@
               var stack = new Error().stack.split('\n');
               var offset = stack[0] === 'Error' ? 1 : 0;
 
-              if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[1.3 + offset])) {
+              if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[1 + offset])) {
                 return false;
               }
             } catch (e) {}
