@@ -1715,7 +1715,7 @@ else if (element.url) {
 		
         Lampa.Activity.push({
           url: '',
-          title: Lampa.Lang.translate('title_onlinee'),
+          title: Lampa.Lang.translate('title_online'),
           component: 'lampac',
           search: all[id] ? all[id] : e.movie.title,
           search_one: e.movie.title,
@@ -1725,7 +1725,7 @@ else if (element.url) {
 		  clarification: all[id] ? true : false
         });
       });
-      e.render.after(btn);
+      e.render.before(btn);
     }
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
