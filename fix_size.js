@@ -53,13 +53,7 @@
 
         var layer_update = Lampa.Layer.update;
 
-        Lampa.Layer.update = function (where) {
-          var font_size = parseInt(Lampa.Storage.field('interface_size_fixed')) || 16;
-          $('body').css({
-            fontSize: font_size + 'px'
-          });
-          layer_update(where);
-        };
+
 
         var timer;
         $(window).on('resize', function () {
