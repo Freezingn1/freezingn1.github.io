@@ -104,7 +104,7 @@ function getStoredSetting(key, defaultValue) {
     var profileSettings = getProfileSettings();
     // Для ключа shuffleTrending сравниваем как строку
     if (key === 'shuffleTrending') {
-        return profileSettings.hasOwnProperty(key) ? profileSettings[key] : defaultValue;
+        return profileSettings.hasOwnProperty(key) ? profileSettings[key] : '0'; // Изменено с '1' на '0'
     }
     // Для остальных ключей
     return profileSettings.hasOwnProperty(key) ? profileSettings[key] : defaultValue;
@@ -2892,8 +2892,8 @@ function showTVShowsByGenreSelectionMenu(previousController) {
 	
 	 function showShuffleTrendingMenu(previousController) {
     var key = 'shuffleTrending';
-    // Используем строгое сравнение с '1'
-    var currentValue = getStoredSetting(key, '1') === '1' ? '1' : '0';
+    // Используем строгое сравнение с '0' как значение по умолчанию
+    var currentValue = getStoredSetting(key, '0') === '1' ? '1' : '0';
 
     var options = [
         { title: Lampa.Lang.translate('surs_shuffle_enabled'), value: '1' },
