@@ -6,30 +6,44 @@
     var MAX_CACHE_SIZE = 100;
     var isFirstLoad = true; // Флаг для первого отображения
 
-    // Функция для TV режима
-    function setupTvMode() {
-        if (Lampa.Storage.get('tv_mode') !== 'off') {
-            var platform_screen = Lampa.Platform.screen;
+    var platformScreenOverride = null;
+    var currentCardOrientation = null;
+    var originalPlatformScreen = Lampa.Platform.screen;
 
-            Lampa.Platform.screen = function (need) {
-                if (need === 'tv') {
-                    try {
-                        var stack = new Error().stack.split('\n');
-                        var offset = stack[0] === 'Error' ? 1 : 0;
+    function applyPlatformScreenOverride(orientation) {
+        // Если ориентация не изменилась, ничего не делаем
+        if (currentCardOrientation === orientation) return;
+        
+        currentCardOrientation = orientation;
+        
+        if (orientation === 'vertical') {
+            // Включаем переопределение для вертикальных карточек
+            if (!platformScreenOverride) {
+                platformScreenOverride = function (need) {
+                    if (need === 'tv') {
+                        try {
+                            var stack = new Error().stack.split('\n');
+                            var offset = stack[0] === 'Error' ? 1 : 0;
 
-                        if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
-                            return false;
-                        }
-                    } catch (e) {}
-                }
+                            if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
+                                return false;
+                            }
+                        } catch (e) {}
+                    }
 
-                return platform_screen(need);
-            };
+                    return originalPlatformScreen(need);
+                };
+
+                Lampa.Platform.screen = platformScreenOverride;
+            }
+        } else {
+            // Выключаем переопределение для широких карточек
+            if (platformScreenOverride) {
+                Lampa.Platform.screen = originalPlatformScreen; // Восстанавливаем оригинальную функцию
+                platformScreenOverride = null;
+            }
         }
     }
-
-    // Вызываем функцию при старте
-    setupTvMode();
 
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
@@ -318,6 +332,10 @@
         html.append(info.render());
         html.append(scroll.render());
 
+        // Применяем переопределение в зависимости от ориентации карточек
+        var cardOrientation = Lampa.Storage.get('card_orientation') || 'wide';
+        applyPlatformScreenOverride(cardOrientation);
+
         if (cardOrientation === 'vertical') {
             html.addClass('vertical-cards');
         } else {
@@ -553,24 +571,6 @@
         }
     });
 
-    // Настройка TV режима
-    Lampa.SettingsApi.addParam({
-        component: "styleinter",
-        param: {
-            name: "tv_mode",
-            type: "select",
-            values: { 
-                "on": "Включить TV режим", 
-                "off": "Выключить TV режим", 
-            },
-            default: "on"
-        },
-        field: {
-            name: "Режим ТВ",
-            description: "Управление специальным режимом для телевизоров"
-        }
-    });
-
       Lampa.Template.add('new_interface_style', `
     <style>
     .new-interface .card--small.card--wide {
@@ -742,14 +742,10 @@
     // Исправленный обработчик изменения настроек
     Lampa.Storage.listener.follow('change', (e) => {
         if(e.name === 'card_orientation') {
+            var orientation = Lampa.Storage.get('card_orientation') || 'wide';
+            applyPlatformScreenOverride(orientation);
+            
             if(Lampa.Activity.restart) Lampa.Activity.restart();
-        }
-        if(e.name === 'tv_mode') {
-            // Перезагружаем плагин при изменении TV режима
-            if(window.plugin_interface_ready) {
-                delete window.plugin_interface_ready;
-                startPlugin();
-            }
         }
     });
 }
