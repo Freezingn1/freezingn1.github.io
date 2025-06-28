@@ -714,7 +714,7 @@
 
     /* Стили для вертикальных карточек */
     .new-interface.vertical-cards .new-interface-info {
-        height: 25em;
+        height: 30em;
     }
     
     .new-interface.vertical-cards .card--small {
