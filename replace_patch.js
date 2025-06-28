@@ -4,7 +4,7 @@
     }
 
     // Добавляем или изменяем правило замены
-    window.lampa_settings.appReplace["\\? 7 : 6 : 12"] = "? 7 : 12 : 12";
+    window.lampa_settings.appReplace["\\? 7 : 6 : 12"] = "? 20 : 20 : 20";
 
     console.log("Lampa appReplace patch applied:", window.lampa_settings.appReplace);
 })();
