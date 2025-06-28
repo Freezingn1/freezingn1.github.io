@@ -6,6 +6,24 @@
     var MAX_CACHE_SIZE = 100;
     var isFirstLoad = true; // Флаг для первого отображения
 
+
+	var platform_screen = Lampa.Platform.screen;
+
+        Lampa.Platform.screen = function (need) {
+          if (need === 'tv') {
+            try {
+              var stack = new Error().stack.split('\n');
+              var offset = stack[0] === 'Error' ? 1 : 0;
+
+              if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
+                return false;
+              }
+            } catch (e) {}
+          }
+
+          return platform_screen(need);
+        };
+
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
             delete cache[Object.keys(cache)[0]];
