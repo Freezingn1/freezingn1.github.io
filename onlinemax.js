@@ -1627,7 +1627,7 @@ else if (element.url) {
         zh: '按住“确定”键调出上下文菜单'
       },
       title_onlinee: { //
-        ru: 'Онлайн Max',
+        ru: 'Онлайн Maxvol',
         uk: 'Онлайн',
         en: 'Online',
         zh: '在线的'
@@ -1725,7 +1725,7 @@ else if (element.url) {
 		  clarification: all[id] ? true : false
         });
       });
-      e.render.after(btn);
+      e.render.prepend(btn);
     }
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
