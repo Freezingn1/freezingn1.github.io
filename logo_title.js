@@ -163,11 +163,16 @@
                 $.get(tmdbUrl, function(data) {
                     const logos = data.logos || [];
                     const logo = getBestLogo(logos, logoSetting);
+                    
+                    // Проверяем, используется ли cardify.js
+                    const isCardifyUsed = document.querySelector('.cardify') !== null;
+                    const logoHeight = isCardifyUsed ? '4em' : '1em';
+                    const logoStyle = `margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: ${logoHeight}; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));`;
 
                     if (logo?.file_path) {
                         // Показываем логотип
                         const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
-                        titleElement.html(`<img style="margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: 4em; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));" src="${imageUrl}" />`);
+                        titleElement.html(`<img style="${logoStyle}" src="${imageUrl}" />`);
                         
                         // Показываем русское название в зависимости от настроек
                         if (russianTitleSetting === "show_always" || 
