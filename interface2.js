@@ -674,7 +674,12 @@
         margin-right: 0;
     }
     
-
+	.card__promo-text {
+		font-size: 0.7em;
+	}
+	.card__promo-title {
+		font-size: 1em;
+	}
     
     .new-interface .card.card--wide+.card-more .card-more__box {
         padding-bottom: 95%;
