@@ -272,6 +272,9 @@
       });
       var items = [];
       var html = $('<div class="new-interface"><img class="full-start__background"></div>');
+		if (object.title === 'Спорт') {
+		html.attr('data-sport', 'true');
+	}
       var active = 0;
       var newlampa = Lampa.Manifest.app_digital >= 166;
       var info;
@@ -674,10 +677,10 @@
         margin-right: 0;
     }
     
-	.card__promo-text {
-		font-size: 0.7em;
+	.new-interface:not([data-sport="true"]) .card__promo-text {
+		font-size: 0.8em;
 	}
-	.card__promo-title {
+	.new-interface:not([data-sport="true"]) .card__promo-title {
 		font-size: 1em;
 	}
     
