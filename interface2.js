@@ -674,9 +674,7 @@
         margin-right: 0;
     }
     
-    .new-interface .card__promo {
-        display: none;
-    }
+
     
     .new-interface .card.card--wide+.card-more .card-more__box {
         padding-bottom: 95%;
