@@ -59,12 +59,21 @@
          * Выбирает лучший логотип в зависимости от настроек
          * @param {Array} logos - Массив логотипов
          * @param {string} setting - Настройка отображения логотипов
+         * @param {boolean} isCardifyUsed - Флаг использования cardify
          * @returns {Object|null} Лучший логотип или null
          */
-        function getBestLogo(logos, setting) {
+        function getBestLogo(logos, setting, isCardifyUsed) {
             if (!logos || !logos.length) return null;
 
             let filteredLogos = [...logos];
+            
+            // Если cardify не используется, фильтруем только широкие логотипы (отношение ширины к высоте > 2)
+            if (!isCardifyUsed) {
+                filteredLogos = filteredLogos.filter(logo => {
+                    if (!logo.width || !logo.height) return true; // Если размеры неизвестны, оставляем
+                    return logo.width / logo.height > 2; // Оставляем только широкие логотипы
+                });
+            }
             
             // Фильтрация по русским логотипам, если выбрана соответствующая настройка
             if (setting === "ru_only") {
@@ -161,11 +170,12 @@
                 const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
 
                 $.get(tmdbUrl, function(data) {
-                    const logos = data.logos || [];
-                    const logo = getBestLogo(logos, logoSetting);
-                    
                     // Проверяем, используется ли cardify.js
                     const isCardifyUsed = document.querySelector('.cardify') !== null;
+                    
+                    const logos = data.logos || [];
+                    const logo = getBestLogo(logos, logoSetting, isCardifyUsed);
+                    
                     const logoHeight = isCardifyUsed ? '4em' : '1em';
                     const logoStyle = `margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: ${logoHeight}; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));`;
 
