@@ -145,6 +145,14 @@
                 const originalTitle = movie.title || movie.name;
                 if (!originalTitle) return;
                 
+                // Проверяем, используется ли cardify.js
+                const isCardifyUsed = document.querySelector('.cardify') !== null;
+                
+                // Если cardify используется, скрываем tagline
+                if (isCardifyUsed) {
+                    render.find('.full-start-new__tagline').hide();
+                }
+                
                 // Проверяем, является ли контент аниме
                 const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                                 || /аниме|anime/i.test(originalTitle);
@@ -158,7 +166,7 @@
                 if (logoSetting === "hide") {
                     showTextTitle();
                     if (russianTitleSetting === "show_always") {
-                        showRussianTitle();
+                        showRussianTitle(isCardifyUsed);
                     }
                     return;
                 }
@@ -170,13 +178,10 @@
                 const tmdbUrl = Lampa.TMDB.api(movie.name ? "tv" : "movie") + `/${movie.id}/images?api_key=${Lampa.TMDB.key()}`;
 
                 $.get(tmdbUrl, function(data) {
-                    // Проверяем, используется ли cardify.js
-                    const isCardifyUsed = document.querySelector('.cardify') !== null;
-                    
                     const logos = data.logos || [];
                     const logo = getBestLogo(logos, logoSetting, isCardifyUsed);
                     
-                    const logoHeight = isCardifyUsed ? '4em' : '1.5em';
+                    const logoHeight = isCardifyUsed ? '4em' : '1em';
                     const logoStyle = `margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: ${logoHeight}; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));`;
 
                     if (logo?.file_path) {
@@ -237,7 +242,7 @@
             }
         });
 
-        // Добавляем CSS стили для плавного появления русских названий
+        // Добавляем CSS стили
         const style = document.createElement('style');
         style.textContent = `
             .ru-title-full {
@@ -245,6 +250,9 @@
             }
             .ru-title-full:hover {
                 opacity: 1 !important;
+            }
+            .cardify .full-start-new__tagline {
+                display: none !important;
             }
         `;
         document.head.appendChild(style);
