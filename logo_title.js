@@ -201,8 +201,9 @@
                             const rateLine = render.find(".full-start-new__rate-line").first();
                             if (rateLine && rateLine.length) {
                                 const textAlign = isCardifyUsed ? 'right' : 'left';
+                                const maxWidth = isCardifyUsed ? '15em' : '30em';
                                 rateLine.before(`
-                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: ${textAlign}; margin-bottom: 0.4em; opacity: 0.80; max-width: 15em; text-shadow: 1px 1px 0px #00000059;">
+                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: ${textAlign}; margin-bottom: 0.4em; opacity: 0.80; max-width: ${maxWidth}; text-shadow: 1px 1px 0px #00000059;">
                                         RU: ${title}
                                     </div>
                                 `);
