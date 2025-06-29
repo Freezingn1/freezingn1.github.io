@@ -145,19 +145,23 @@
                 const originalTitle = movie.title || movie.name;
                 if (!originalTitle) return;
                 
-                // Проверяем, используется ли cardify.js
-                const isCardifyUsed = document.querySelector('.cardify') !== null;
-                
-                // Если cardify используется, скрываем tagline
-                if (isCardifyUsed) {
-                    render.find('.full-start-new__tagline').hide();
-                }
-                
                 // Проверяем, является ли контент аниме
                 const isAnime = movie.genres?.some(g => g.name.toLowerCase().includes("аниме")) 
                                 || /аниме|anime/i.test(originalTitle);
                 const logoSetting = Lampa.Storage.get("logo_glav") || "show_all";
                 const russianTitleSetting = Lampa.Storage.get("russian_titles_settings") || "show_when_no_ru_logo";
+
+                // Проверяем, используется ли cardify.js
+                const isCardifyUsed = document.querySelector('.cardify') !== null;
+                
+                // Применяем стили в зависимости от использования cardify
+                if (!isCardifyUsed) {
+                    // Скрываем tagline
+                    render.find('.full-start-new__tagline').hide();
+                    
+                    // Применяем стиль для rate-line
+                    render.find('.full-start-new__rate-line').css('margin-bottom', '1.2em');
+                }
 
                 // Удаляем предыдущие русские названия
                 render.find('.ru-title-full').remove();
@@ -217,8 +221,9 @@
                             if (rateLine && rateLine.length) {
                                 const textAlign = isCardifyUsed ? 'right' : 'left';
                                 const maxWidth = isCardifyUsed ? '15em' : '30em';
+                                const marginBottom = isCardifyUsed ? '0.4em' : '1em';
                                 rateLine.before(`
-                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: ${textAlign}; margin-bottom: 0.4em; opacity: 0.80; max-width: ${maxWidth}; text-shadow: 1px 1px 0px #00000059;">
+                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: ${textAlign}; margin-bottom: ${marginBottom}; opacity: 0.80; max-width: ${maxWidth}; text-shadow: 1px 1px 0px #00000059;">
                                         RU: ${title}
                                     </div>
                                 `);
@@ -242,7 +247,7 @@
             }
         });
 
-        // Добавляем CSS стили
+        // Добавляем CSS стили для плавного появления русских названий
         const style = document.createElement('style');
         style.textContent = `
             .ru-title-full {
@@ -250,9 +255,6 @@
             }
             .ru-title-full:hover {
                 opacity: 1 !important;
-            }
-            .cardify .full-start-new__tagline {
-                display: none !important;
             }
         `;
         document.head.appendChild(style);
