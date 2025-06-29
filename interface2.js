@@ -679,6 +679,7 @@
     
 	.new-interface:not([data-sport="true"]) .card__promo-text {
 		font-size: 0.8em;
+		margin-top: 0.5em;
 	}
 	.new-interface:not([data-sport="true"]) .card__promo-title {
 		font-size: 1em;
