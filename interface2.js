@@ -17,29 +17,26 @@
         currentCardOrientation = orientation;
         
         if (orientation === 'vertical') {
-    // Включаем переопределение для вертикальных карточек
-    if (!platformScreenOverride) {
-        // Добавляем небольшую задержку для гарантированной активации
-        setTimeout(() => {
-            platformScreenOverride = function (need) {
-                if (need === 'tv') {
-                    try {
-                        var stack = new Error().stack.split('\n');
-                        var offset = stack[0] === 'Error' ? 1 : 0;
+            // Включаем переопределение для вертикальных карточек
+            if (!platformScreenOverride) {
+                platformScreenOverride = function (need) {
+                    if (need === 'tv') {
+                        try {
+                            var stack = new Error().stack.split('\n');
+                            var offset = stack[0] === 'Error' ? 1 : 0;
 
-                        if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
-                            return false;
-                        }
-                    } catch (e) {}
-                }
+                            if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
+                                return false;
+                            }
+                        } catch (e) {}
+                    }
 
-                return originalPlatformScreen(need);
-            };
+                    return originalPlatformScreen(need);
+                };
 
-            Lampa.Platform.screen = platformScreenOverride;
-        }, 100); // Задержка 100мс
-    }
-} else {
+                Lampa.Platform.screen = platformScreenOverride;
+            }
+        } else {
             // Выключаем переопределение для широких карточек
             if (platformScreenOverride) {
                 Lampa.Platform.screen = originalPlatformScreen; // Восстанавливаем оригинальную функцию
@@ -328,29 +325,25 @@
       this.push = function () {};
 
       this.build = function (data) {
-    var _this2 = this;
+        var _this2 = this;
 
-    lezydata = data;
-    info = new create(object);
-    info.create();
-    scroll.minus(info.render());
-    data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
-    html.append(info.render());
-    html.append(scroll.render());
+        lezydata = data;
+        info = new create(object);
+        info.create();
+        scroll.minus(info.render());
+        data.slice(0, viewall ? data.length : 2).forEach(this.append.bind(this));
+        html.append(info.render());
+        html.append(scroll.render());
 
-    // Применяем переопределение в зависимости от ориентации карточек
-    var cardOrientation = Lampa.Storage.get('card_orientation') || 'wide';
-    
-    // Добавляем задержку для гарантированного применения
-    setTimeout(() => {
+        // Применяем переопределение в зависимости от ориентации карточек
+        var cardOrientation = Lampa.Storage.get('card_orientation') || 'wide';
         applyPlatformScreenOverride(cardOrientation);
-        
+
         if (cardOrientation === 'vertical') {
             html.addClass('vertical-cards');
         } else {
             html.removeClass('vertical-cards');
         }
-    }, 100);
 
         if (newlampa) {
           Lampa.Layer.update(html);
