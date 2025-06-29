@@ -258,7 +258,7 @@ function startPlugin() {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 6;
+        var partsLimit = 3;
 
             function filterCyrillic(items) {
     var storedValue = getStoredSetting('shuffleTrending');
