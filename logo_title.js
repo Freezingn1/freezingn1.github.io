@@ -161,6 +161,9 @@
                     
                     // Применяем стиль для rate-line
                     render.find('.full-start-new__rate-line').css('margin-bottom', '1.2em');
+                    
+                    // Применяем стиль для title
+                    titleElement.css('margin-top', '0.2em');
                 }
 
                 // Удаляем предыдущие русские названия
