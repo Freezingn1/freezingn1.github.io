@@ -177,13 +177,13 @@
                         // Показываем русское название в зависимости от настроек
                         if (russianTitleSetting === "show_always" || 
                             (russianTitleSetting === "show_when_no_ru_logo" && logo.iso_639_1 !== "ru")) {
-                            showRussianTitle();
+                            showRussianTitle(isCardifyUsed);
                         }
                     } else {
                         // Если логотипов нет вообще
                         showTextTitle();
                         if (russianTitleSetting === "show_always") {
-                            showRussianTitle();
+                            showRussianTitle(isCardifyUsed);
                         }
                     }
                 }).fail(() => {
@@ -193,14 +193,16 @@
 
                 /**
                  * Показывает русское название под заголовком
+                 * @param {boolean} isCardifyUsed - Флаг использования cardify
                  */
-                function showRussianTitle() {
+                function showRussianTitle(isCardifyUsed) {
                     fetchRussianTitle(movie).then(title => {
                         if (title && render && render.find) {
                             const rateLine = render.find(".full-start-new__rate-line").first();
                             if (rateLine && rateLine.length) {
+                                const textAlign = isCardifyUsed ? 'right' : 'left';
                                 rateLine.before(`
-                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: right; margin-bottom: 0.4em; opacity: 0.80; max-width: 15em;text-shadow: 1px 1px 0px #00000059;">
+                                    <div class="ru-title-full" style="color: #ffffff; font-weight: 500; text-align: ${textAlign}; margin-bottom: 0.4em; opacity: 0.80; max-width: 15em; text-shadow: 1px 1px 0px #00000059;">
                                         RU: ${title}
                                     </div>
                                 `);
