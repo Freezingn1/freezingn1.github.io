@@ -480,6 +480,12 @@
                     margin: 0.5em auto !important;
                 }
             }
+			
+			@media screen and (max-width: 480px) {
+				.selectbox.animate .selectbox__content, .settings.animate .settings__content {
+					background: #1a1a1a;
+				}
+			}
             
             @media screen and (max-width: 480px) {
                 .full-start-new__reactions {
