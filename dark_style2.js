@@ -269,6 +269,11 @@
                 -webkit-mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
                 mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
             }
+			
+			.full-start__button.focus {
+				color: white !important;
+				background: var(--accent-color) !important;
+			}
             
             .menu__item {
                 border-radius: 0em 15em 14em 0em;
