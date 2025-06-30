@@ -130,7 +130,7 @@
             return;
         }
 
-        const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
+        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
 
         if (titleElement.data('current-logo') === imageUrl) return;
         titleElement.data('current-logo', imageUrl);
@@ -629,7 +629,6 @@
         width: auto;
         height: auto;
         min-height: 1em;
-        filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
         opacity: 0;
         transition: opacity 0.5s ease;
     }

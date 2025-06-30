@@ -185,7 +185,7 @@
 
                     if (logo?.file_path) {
                         // Показываем логотип
-                        const imageUrl = Lampa.TMDB.image("/t/p/w400" + logo.file_path);
+                        const imageUrl = Lampa.TMDB.image("/t/p/w500" + logo.file_path);
                         titleElement.html(`<img style="${logoStyle}" src="${imageUrl}" />`);
                         
                         // Показываем русское название в зависимости от настроек
