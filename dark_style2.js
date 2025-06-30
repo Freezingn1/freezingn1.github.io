@@ -47,7 +47,6 @@
         const elementsToStyle = {
             '.selector__body, .modal-layer': { 'background-color': '#141414' },
             '.bookmarks-folder__layer': { 'background': 'rgba(0, 0, 0, 0.3)' },
-            '.head__actions, .head__action, .head__title': { 'opacity': '0.80' },
             '.explorer__left': { 'display': 'none' },
             '.explorer__files': { 'width': '100%' },
             '.console': { 'background': '#141414' },
@@ -105,6 +104,19 @@
                 color: #fff;
                 background: var(--accent-color);
             }
+			
+			.head__action {
+				opacity: 0.80;
+			}
+			
+			/* Градиентный текст для рейтинга */
+            .full-start__rate > div:first-child {
+                background: -webkit-linear-gradient(#1ed5a9);
+                -webkit-background-clip: text;
+                color: transparent;
+                font-weight: bold;
+            }
+			
             
             .torrent-serial.focus,
             .torrent-file.focus {
