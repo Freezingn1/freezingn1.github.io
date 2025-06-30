@@ -2890,10 +2890,10 @@ function showTVShowsByGenreSelectionMenu(previousController) {
         }
     });
 	
-	 function showShuffleTrendingMenu(previousController) {
+function showShuffleTrendingMenu(previousController) {
     var key = 'shuffleTrending';
-    // Используем строгое сравнение с '0' как значение по умолчанию
-    var currentValue = getStoredSetting(key, '0') === '1' ? '1' : '0';
+    // Изменено на сравнение с '1' как значение по умолчанию (теперь по умолчанию перемешивание включено)
+    var currentValue = getStoredSetting(key, '1') === '0' ? '0' : '1';
 
     var options = [
         { title: Lampa.Lang.translate('surs_shuffle_enabled'), value: '1' },
@@ -2916,7 +2916,6 @@ function showTVShowsByGenreSelectionMenu(previousController) {
             Lampa.Controller.toggle(previousController || 'settings');
         },
         onCheck: function(selected) {
-            // Сохраняем как строку '1' или '0'
             setStoredSetting(key, selected.value);
             showShuffleTrendingMenu(previousController);
         }
