@@ -432,8 +432,8 @@
 			@media screen and (max-width: 480px) {
 				.full-start-new__title img {
 					object-fit: contain;
-					max-width: 12em;
-					max-height: 6em;
+					max-width: 12em !important;
+					max-height: 5em !important;
 				}
 				}
 				
