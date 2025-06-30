@@ -385,6 +385,13 @@
                 border-radius: var(--menu-radius);
                 background: var(--accent-color);
             }
+			
+			body.glass--style.platform--browser .card .card__icons-inner, body.glass--style.platform--browser .card .card__marker, body.glass--style.platform--browser .card .card__vote, body.glass--style.platform--browser .card .card-watched, body.glass--style.platform--nw .card .card__icons-inner, body.glass--style.platform--nw .card .card__marker, body.glass--style.platform--nw .card .card__vote, body.glass--style.platform--nw .card .card-watched, body.glass--style.platform--apple .card .card__icons-inner, body.glass--style.platform--apple .card .card__marker, body.glass--style.platform--apple .card .card__vote, body.glass--style.platform--apple .card .card-watched {
+				background-color: rgba(0, 0, 0, 0.3);
+				-webkit-backdrop-filter: blur(1em);
+				backdrop-filter: none;
+				background: var(--accent-color);
+			}
 
             /* Мобильные стили */
             @media screen and (max-width: 480px) {
