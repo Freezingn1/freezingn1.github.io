@@ -1,5 +1,5 @@
 (function() {
-    console.log("[Lampa Safe Styles] Полная оптимизированная версия");
+    console.log("[Lampa Safe Styles] Оптимизированная версия (без градиентов)");
 
     // Кеш элементов
     const elementsCache = new Map();
@@ -43,21 +43,12 @@
             document.body.dataset.lampaStyled = 'true';
         }
 
-        // Основные элементы интерфейса
-        const elementsToStyle = {
-            '.selector__body, .modal-layer': { 'background-color': '#141414' },
-            '.bookmarks-folder__layer': { 'background': 'rgba(0, 0, 0, 0.3)' },
-            '.head__actions, .head__title': { 'opacity': '0.80' },
-            '.explorer__left': { 'display': 'none' },
-            '.explorer__files': { 'width': '100%' },
-            '.console': { 'background': '#141414' },
-            '.navigation-bar__body': { 'background': '#1c1c1c' }
-        };
+
 
         Object.entries(elementsToStyle).forEach(([selector, styles]) => {
             safeAddStyleToElements(selector, styles);
         });		
-		
+        
         stylesApplied = true;
     }
 
@@ -74,9 +65,6 @@
                 --darker-bg: #1a1a1a;
                 --menu-bg: #181818;
                 --accent-color: #c22222;
-                --accent-light: #e52d27;
-                --accent-dark: #b31217;
-                --accent-gradient: linear-gradient(to right, var(--accent-dark), var(--accent-light));
                 --card-radius: 1.4em;
                 --menu-radius: 1.2em;
             }
@@ -101,17 +89,30 @@
             .settings-param.focus {
                 color: #fff;
                 border-radius: var(--menu-radius);
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
             
             .simple-button.focus {
                 color: #fff;
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
+			
+			.head__action {
+				opacity: 0.80;
+			}
+			
+			/* Градиентный текст для рейтинга */
+            .full-start__rate > div:first-child {
+                background: -webkit-linear-gradient(#1ed5a9);
+                -webkit-background-clip: text;
+                color: transparent;
+                font-weight: bold;
+            }
+			
             
             .torrent-serial.focus,
             .torrent-file.focus {
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
             
             .torrent-item.focus::after {
@@ -124,21 +125,34 @@
                 border: 0.3em solid var(--accent-color);
                 border-radius: 0.7em;
                 z-index: -1;
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
             
             .tag-count.focus,
             .full-person.focus,
             .full-review.focus {
                 color: #fff;
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
+			
+			.navigation-bar__body { 
+				background': #1c1c1c; 
+			}
+			.console {
+				background: #141414;
+			}
+			.bookmarks-folder__layer {
+				background: rgba(0, 0, 0, 0.3);
+			}
+			.selector__body, .modal-layer {
+				background-color: #141414;
+			}
 
             .menu__item.focus, 
             .menu__item.traverse, 
             .menu__item.hover {
                 color: #fff;
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
             
             .card__marker > span {
@@ -159,7 +173,7 @@
             
             .online.focus {
                 box-shadow: 0 0 0 0.2em var(--accent-color);
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
             
             .menu__item.focus .menu__ico [stroke],
@@ -173,7 +187,7 @@
             }
             
             .head__action.focus {
-                background: var(--accent-gradient);
+                background: var(--accent-color);
                 color: #fff;
             }
             
@@ -192,7 +206,7 @@
             }
             
             .wrap__left {
-                box-shadow: 15px 0px 20px 0px var(--dark-bg) !important;
+                box-shadow: 8px 0px 12px 0px var(--dark-bg) !important;
             }
             
             .card-more.focus .card-more__box::after {
@@ -200,7 +214,7 @@
             }
             
             .card__type {
-                background: var(--accent-gradient) !important;
+                background: var(--accent-color) !important;
             }
             
             .new-interface .card.card--wide+.card-more .card-more__box {
@@ -208,7 +222,7 @@
             }
             
             .helper {
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
             
             .extensions__item,
@@ -232,6 +246,7 @@
                 background-color: var(--darker-bg) !important;
                 max-height: 90vh;
                 overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
             }
             
             .settings__content, 
@@ -248,6 +263,7 @@
                 transform: translateX(100%);
                 transition: transform 0.3s ease;
                 overflow-y: auto;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
             }
 			
 			.card-more__box {
@@ -270,6 +286,11 @@
                 -webkit-mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
                 mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 8%, rgb(255, 255, 255) 92%, rgba(255, 255, 255, 0) 100%);
             }
+			
+			.full-start__button.focus {
+				color: white !important;
+				background: var(--accent-color) !important;
+			}
             
             .menu__item {
                 border-radius: 0em 15em 14em 0em;
@@ -302,22 +323,24 @@
                 border: 0.3em solid var(--accent-color);
             }
             
-            .modal__title {
-                background: linear-gradient(rgb(221 204 204), var(--accent-color)) text !important;
-            }
+			.explorer__left {
+				display: none;
+			}
+			.explorer__files {
+				width: 100%;
+			}
 			
-            
             .notification-item {
                 border: 2px solid var(--accent-color) !important;
             }
             
             .notification-date {
-                background: var(--accent-gradient) !important;
+                background: var(--accent-color) !important;
             }
 			
 			.card__quality {
 				color: #fff;
-				background: var(--accent-gradient) !important;
+				background: var(--accent-color) !important;
 			}
             
             .modal {
@@ -330,21 +353,13 @@
             }
             
             .noty__body {
-                box-shadow: 0 -4px 10px rgb(22 22 22 / 50%);
-                background: var(--accent-gradient);
+                box-shadow: 0 -2px 6px rgb(22 22 22 / 50%);
+                background: var(--accent-color);
             }
 			
 			body {
 				margin: 1 !important;
 			}
-            
-            /* Градиентный текст для рейтинга */
-            .full-start__rate > div:first-child {
-                background: linear-gradient(66.47deg, rgb(192, 254, 207) -15.94%, rgb(30, 213, 169) 62.41%);
-                -webkit-background-clip: text;
-                color: transparent;
-                font-weight: bold;
-            }
             
             /* Стили для рейтинга на карточке */
             .card__vote {
@@ -363,47 +378,28 @@
                 bottom: auto;
             }
             
-            /* Анимация для кнопки в фокусе */
-            @keyframes gradientAnimation {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
-            
-            .full-start__button.focus {
-                color: white;
-                background-size: 200% 200%;
-                animation: gradientAnimation 5s ease infinite;
-                background: var(--accent-gradient);
-            }
-            
             /* Стиль для элемента selectbox в фокусе */
             .selectbox-item.focus {
                 color: #fff;
                 border-radius: var(--menu-radius);
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
             
             /* Стиль для папки настроек в фокусе */
             .settings-folder.focus {
                 color: #fff;
                 border-radius: var(--menu-radius);
-                background: var(--accent-gradient);
+                background: var(--accent-color);
             }
 
             /* Мобильные стили */
             @media screen and (max-width: 480px) {
                 .settings__content,
                 .selectbox__content {
-                left: 0 !important;
-                top: unset !important;
-				-webkit-border-top-left-radius: 2em;
-				-moz-border-radius-topleft: 2em;
-				border-top-left-radius: 2em !important;
-				-webkit-border-top-right-radius: 2em;
-				-moz-border-radius-topright: 2em;
-				border-top-right-radius: 2em !important;
-				border-radius: inherit;
+                    left: 0 !important;
+                    top: unset !important;
+                    border-top-left-radius: 2em !important;
+                    border-top-right-radius: 2em !important;
                 }
                 
                 .ru-title-full,
@@ -418,9 +414,9 @@
                 
                 .full-start-new__rate-line {
                     padding-top: 0.5em !important;
-					display: flex;
-					justify-content: center;
-					margin-bottom: 0em;
+                    display: flex;
+                    justify-content: center;
+                    margin-bottom: 0em;
                 }
                 
                 .full-start-new__tagline {
@@ -435,52 +431,40 @@
 					max-width: 12em !important;
 					max-height: 5em !important;
 				}
-				}
-				
-				
-@media screen and (max-width: 580px) {
-    .full-descr__text {
-        text-align: justify;
-    }
-}
-
-@media screen and (max-width: 580px) {
-.items-line__head {
-    justify-content: center !important;
-}
-}
-
-@media screen and (max-width: 580px) {
-.full-descr__details {
-    justify-content: center !important;
-}
-}
-
-@media screen and (max-width: 480px) {
-    .full-descr__tags {
-        justify-content: center !important;
-    }
-}
-
-@media screen and (max-width: 480px) {
-.items-line__more {
-    display: none;
-}
-}	
-
-@media screen and (max-width: 480px) {
-.full-descr__info-body {
-    justify-content: center !important;
-    display: flex;
-}
-}		
-
-@media screen and (max-width: 480px) {
-.full-descr__details > * {
-    text-align: center;
-}
-}	
+			}
 			
+            @media screen and (max-width: 580px) {
+                .full-descr__text {
+                    text-align: justify;
+                }
+                
+                .items-line__head {
+                    justify-content: center !important;
+                }
+                
+                .full-descr__details {
+                    justify-content: center !important;
+                }
+            }
+
+            @media screen and (max-width: 480px) {
+                .full-descr__tags {
+                    justify-content: center !important;
+                }
+                
+                .items-line__more {
+                    display: none;
+                }
+                
+                .full-descr__info-body {
+                    justify-content: center !important;
+                    display: flex;
+                }
+                
+                .full-descr__details > * {
+                    text-align: center;
+                }
+            }
             
             @media screen and (max-width: 580px) {
                 .full-start-new__buttons {
@@ -503,15 +487,6 @@
                 }
             }
             
-			@media screen and (min-width: 481px) {
-				.settings__content,
-				.selectbox__content,
-				.modal__content
-				{
-					box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
-				}
-			}
-			
             @media screen and (max-width: 480px) {
                 .full-start-new__reactions {
                     display: flex !important;
@@ -529,19 +504,10 @@
         document.head.appendChild(style);
     }
 
-    // Умный наблюдатель за DOM
-    const observer = new MutationObserver((mutations) => {
-        const domChanged = mutations.some(mutation => 
-            mutation.addedNodes.length > 0 || 
-            (mutation.type === 'attributes' && mutation.attributeName === 'class')
-        );
-        
-        if (domChanged) {
-            requestAnimationFrame(() => {
-                elementsCache.clear();
-                stylesApplied = false;
-                applyStyles();
-            });
+    // Оптимизированный наблюдатель за DOM
+    const observer = new MutationObserver(() => {
+        if (!stylesApplied) {
+            requestAnimationFrame(applyStyles);
         }
     });
 
@@ -557,23 +523,19 @@
             attributeFilter: ['class']
         });
         
-        // Резервная проверка каждые 15 секунд
+        // Резервная проверка каждые 30 секунд (реже для оптимизации)
         const backupInterval = setInterval(() => {
-            if (!stylesApplied) {
-                applyStyles();
-            }
-        }, 15000);
+            if (!stylesApplied) applyStyles();
+        }, 30000);
         
         // Функция остановки
         window.stopLampaSafeStyles = () => {
             clearInterval(backupInterval);
             observer.disconnect();
             
-            // Удаление стилей
             const style = document.getElementById('lampa-safe-css');
             if (style) style.remove();
             
-            // Сброс атрибутов
             document.querySelectorAll('[data-lampa-styled]').forEach(el => {
                 el.removeAttribute('data-lampa-styled');
             });
