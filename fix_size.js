@@ -18,7 +18,34 @@
             zh: '固定大小'
           }
         });
-
+        Lampa.SettingsApi.addParam({
+          component: 'interface',
+          param: {
+            name: 'interface_size_fixed',
+            type: 'select',
+            values: {
+              '10': '10',
+              '12': '12',
+              '14': '14',
+              '16': '16',
+              '18': '18',
+              '20': '20',
+              '22': '22',
+              '24': '24',
+              '28': '28',
+              '32': '32'
+            },
+            "default": '16'
+          },
+          field: {
+            name: Lampa.Lang.translate('settings_interface_size_fixed')
+          },
+          onChange: function onChange() {
+            var name = Lampa.Controller.enabled().name;
+            Lampa.Layer.update();
+            Lampa.Controller.toggle(name);
+          }
+        });
         Lampa.Settings.listener.follow('open', function (e) {
           if (e.name == 'interface') {
             var item = e.body.find('[data-name="interface_size_fixed"]');
@@ -33,18 +60,26 @@
           css.appendTo('head');
         }
 
+        css.html('.card--category { width: 16em !important }');
+        var platform_screen = Lampa.Platform.screen;
 
+        Lampa.Platform.screen = function (need) {
+          if (need === 'tv') {
+            try {
+              var stack = new Error().stack.split('\n');
+              var offset = stack[0] === 'Error' ? 1 : 0;
 
+              if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
+                return false;
+              }
+            } catch (e) {}
+          }
+
+          return platform_screen(need);
+        };
 
         var layer_update = Lampa.Layer.update;
 
-        Lampa.Layer.update = function (where) {
-          var font_size = parseInt(Lampa.Storage.field('interface_size_fixed')) || 16;
-          $('body').css({
-            fontSize: font_size + 'px'
-          });
-          layer_update(where);
-        };
 
         var timer;
         $(window).on('resize', function () {
