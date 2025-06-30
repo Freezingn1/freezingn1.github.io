@@ -631,6 +631,7 @@
         min-height: 1em;
         opacity: 0;
         transition: opacity 0.5s ease;
+		filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
     }
 	
 	.new-interface:not([data-sport="true"]) .card__promo {

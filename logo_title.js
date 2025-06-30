@@ -181,7 +181,7 @@
                     const logo = getBestLogo(logos, logoSetting, isCardifyUsed);
                     
                     const logoHeight = isCardifyUsed ? '4em' : '1.5em';
-                    const logoStyle = `margin-top: 0.2em; margin-bottom: 0.1em; max-width: 9em; max-height: ${logoHeight};`;
+                    const logoStyle = `margin-top: 0.2em; margin-bottom: 0.1em; filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4)); max-width: 9em; max-height: ${logoHeight};`;
 
                     if (logo?.file_path) {
                         // Показываем логотип
