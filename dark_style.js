@@ -130,7 +130,7 @@
             }
 			
 			.navigation-bar__body { 
-				background': #1c1c1c; 
+				background: #1c1c1c; 
 			}
 			.console {
 				background: #141414;
