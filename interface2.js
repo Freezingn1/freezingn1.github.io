@@ -644,6 +644,10 @@
         opacity: 0;
         transition: opacity 0.5s ease;
     }
+	
+	.card__promo {
+		display: none;
+	}
     
     .new-interface-logo.loaded {
         opacity: 1;
