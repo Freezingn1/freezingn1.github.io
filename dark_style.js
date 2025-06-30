@@ -41,13 +41,7 @@
         if (!document.body.dataset.lampaStyled) {
             document.body.style.setProperty('background', '#141414', 'important');
             document.body.dataset.lampaStyled = 'true';
-        }
-
-
-
-        Object.entries(elementsToStyle).forEach(([selector, styles]) => {
-            safeAddStyleToElements(selector, styles);
-        });		
+        }	
         
         stylesApplied = true;
     }
