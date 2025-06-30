@@ -645,7 +645,7 @@
         transition: opacity 0.5s ease;
     }
 	
-	.card__promo {
+	.new-interface:not([data-sport="true"]) .card__promo {
 		display: none;
 	}
     
