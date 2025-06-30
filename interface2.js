@@ -10,6 +10,30 @@
     var currentCardOrientation = null;
     var originalPlatformScreen = Lampa.Platform.screen;
 
+    function applyPlatformScreenOverride(orientation) {
+        // Если ориентация не изменилась, ничего не делаем
+        if (currentCardOrientation === orientation) return;
+        
+        currentCardOrientation = orientation;
+        
+        if (orientation === 'vertical') {
+            // Включаем переопределение для вертикальных карточек
+            if (!platformScreenOverride) {
+                platformScreenOverride = function (need) {
+                    return originalPlatformScreen(need);
+                };
+
+                Lampa.Platform.screen = platformScreenOverride;
+            }
+        } else {
+            // Выключаем переопределение для широких карточек
+            if (platformScreenOverride) {
+                Lampa.Platform.screen = originalPlatformScreen; // Восстанавливаем оригинальную функцию
+                platformScreenOverride = null;
+            }
+        }
+    }
+
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
             delete cache[Object.keys(cache)[0]];
