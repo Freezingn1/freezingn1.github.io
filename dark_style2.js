@@ -246,7 +246,7 @@
                 transform: translateX(100%);
                 transition: transform 0.3s ease;
                 overflow-y: auto;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
             }
 			
 			.card-more__box {
