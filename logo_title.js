@@ -67,8 +67,8 @@
 
             let filteredLogos = [...logos];
             
-            // Если cardify не используется, фильтруем только широкие логотипы (отношение ширины к высоте > 2)
-            if (!isCardifyUsed) {
+            // Если cardify не используется И это не мобильное устройство, фильтруем только широкие логотипы
+            if (!isCardifyUsed && window.innerWidth > 480) {
                 filteredLogos = filteredLogos.filter(logo => {
                     if (!logo.width || !logo.height) return true; // Если размеры неизвестны, оставляем
                     return logo.width / logo.height > 2; // Оставляем только широкие логотипы
@@ -261,5 +261,15 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Обработчик изменения размера окна
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // Принудительно обновляем отображение карточек при изменении размера
+                Lampa.Listener.send('full', {type: 'update'});
+            }, 200);
+        });
     }
 }();
