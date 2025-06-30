@@ -47,7 +47,7 @@
         const elementsToStyle = {
             '.selector__body, .modal-layer': { 'background-color': '#141414' },
             '.bookmarks-folder__layer': { 'background': 'rgba(0, 0, 0, 0.3)' },
-            '.head__actions, .head__title': { 'opacity': '0.80' },
+            '.head__actions, .head__action, .head__title': { 'opacity': '0.80' },
             '.explorer__left': { 'display': 'none' },
             '.explorer__files': { 'width': '100%' },
             '.console': { 'background': '#141414' },
