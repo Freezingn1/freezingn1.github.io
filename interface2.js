@@ -6,34 +6,6 @@
     var MAX_CACHE_SIZE = 100;
     var isFirstLoad = true; // Флаг для первого отображения
 
-    var platformScreenOverride = null;
-    var currentCardOrientation = null;
-    var originalPlatformScreen = Lampa.Platform.screen;
-
-    function applyPlatformScreenOverride(orientation) {
-        // Если ориентация не изменилась, ничего не делаем
-        if (currentCardOrientation === orientation) return;
-        
-        currentCardOrientation = orientation;
-        
-        if (orientation === 'vertical') {
-            // Включаем переопределение для вертикальных карточек
-            if (!platformScreenOverride) {
-                platformScreenOverride = function (need) {
-                    return originalPlatformScreen(need);
-                };
-
-                Lampa.Platform.screen = platformScreenOverride;
-            }
-        } else {
-            // Выключаем переопределение для широких карточек
-            if (platformScreenOverride) {
-                Lampa.Platform.screen = originalPlatformScreen; // Восстанавливаем оригинальную функцию
-                platformScreenOverride = null;
-            }
-        }
-    }
-
     function addToCache(cache, key, value) {
         if (Object.keys(cache).length >= MAX_CACHE_SIZE) {
             delete cache[Object.keys(cache)[0]];
@@ -325,14 +297,12 @@
         html.append(scroll.render());
 
         // Применяем переопределение в зависимости от ориентации карточек
-        var cardOrientation = Lampa.Storage.get('card_orientation') || 'wide';
-        applyPlatformScreenOverride(cardOrientation);
-
-        if (cardOrientation === 'vertical') {
-            html.addClass('vertical-cards');
-        } else {
-            html.removeClass('vertical-cards');
-        }
+         var cardOrientation = Lampa.Storage.get('card_orientation') || 'wide';
+            if (cardOrientation === 'vertical') {
+                html.addClass('vertical-cards');
+            } else {
+                html.removeClass('vertical-cards');
+            }
 
         if (newlampa) {
           Lampa.Layer.update(html);
@@ -732,15 +702,14 @@
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
 
     // Исправленный обработчик изменения настроек
-    Lampa.Storage.listener.follow('change', (e) => {
-        if(e.name === 'card_orientation') {
-            var orientation = Lampa.Storage.get('card_orientation') || 'wide';
-            applyPlatformScreenOverride(orientation);
-            
-            if(Lampa.Activity.restart) Lampa.Activity.restart();
-        }
-    });
-}
+	Lampa.Storage.listener.follow('change', (e) => {
+            if(e.name === 'card_orientation') {
+                var orientation = Lampa.Storage.get('card_orientation') || 'wide';
+                // Просто обновляем класс, без вызова applyPlatformScreenOverride
+                if(Lampa.Activity.restart) Lampa.Activity.restart();
+            }
+        });
+    }
 
     if (!window.plugin_interface_ready) startPlugin();
 })();
