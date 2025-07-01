@@ -17,7 +17,7 @@
           css.appendTo('head');
         }
 
-        css.html('.card--category { width: 16em !important }');
+        
         var platform_screen = Lampa.Platform.screen;
 
         Lampa.Platform.screen = function (need) {
