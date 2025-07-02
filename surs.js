@@ -492,7 +492,9 @@ function startPlugin() {
                     var sort = sortOptions[Math.floor(Math.random() * sortOptions.length)];
                     var genre = genres[Math.floor(Math.random() * genres.length)];
 
-                    var apiUrl = 'discover/tv?with_networks=' + serviceId + '&with_genres=' + genre.id + '&sort_by=' + sort.id + '&page=1&per_page=10';
+                    var apiUrl = 'discover/tv?with_networks=' + serviceId +
+                                 '&with_genres=' + genre.id +
+                                 '&sort_by=' + sort.id;
 
                     if (isRussian) {
                         apiUrl = applyAgeRestriction(apiUrl);
@@ -575,7 +577,7 @@ function getMovies(genre, options) {
     return function (callback) {
         var sortOptions = getSortOptions();
         var sort = adjustSortForMovies(sortOptions[Math.floor(Math.random() * sortOptions.length)]);
-        var apiUrl = 'discover/movie?with_genres=' + serviceId + '&with_genres=' + genre.id + '&sort_by=' + sort.id + '&page=1&per_page=10';
+        var apiUrl = 'discover/movie?with_genres=' + genre.id + '&sort_by=' + sort.id;
 
         if (options.russian) {
             apiUrl += '&with_origin_country=RU';
