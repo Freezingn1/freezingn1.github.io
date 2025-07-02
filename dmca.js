@@ -1,42 +1,52 @@
 (function() {
     'use strict';
 
-    // 1. Инициализация TV-режима (если нужно)
-    Lampa.Platform.tv();
-
-    // 2. Отключаем DMCA-блокировку
-    function disableDCMA() {
-        if (window.lampa_settings) {
-            // Если есть настройки, принудительно отключаем DMCA
-            window.lampa_settings.dcma = false;
-            window.lampa_settings.fixdcma = true;
-        } else {
-            // Если настроек нет, создаем их
-            window.lampa_settings = {
-                dcma: false,
-                fixdcma: true
-            };
-        }
+    // 1. Создаем или модифицируем lampa_settings
+    if (!window.lampa_settings) window.lampa_settings = {};
+    if (!window.lampa_settings.disable_features) {
+        window.lampa_settings.disable_features = {};
     }
 
-    // 3. Основная логика (запуск после готовности приложения)
-    function initLampa() {
-        disableDCMA(); // Применяем настройки DMCA
+    // 2. Принудительно отключаем все возможные блокировки
+    Object.assign(window.lampa_settings.disable_features, {
+        dmca: true,           // Основной DMCA-флаг
+        copyright: false,     // Доп. защита
+        geo_block: false,     // Геоблокировка
+        adult_block: false    // Блокировка 18+
+    });
 
-        // Дополнительные действия (если нужны)
-        Lampa.Listener.follow('request_success', function(data) {
-            if (data.params.success) {
-                console.log("DMCA обойден, плеер работает!");
+    // 3. Патчим системные проверки
+    const originalCheck = Lampa.API?.checkRestrictions;
+    if (originalCheck) {
+        Lampa.API.checkRestrictions = function() {
+            return { 
+                blocked: false,
+                reason: null
+            };
+        };
+    }
+
+    // 4. Мониторинг в реальном времени
+    const observer = new MutationObserver(() => {
+        // Удаляем DMCA-затемнения
+        document.querySelectorAll('.blocked-overlay, [dmca-block]').forEach(el => {
+            el.remove();
+        });
+        
+        // Разблокируем скрытые карточки
+        document.querySelectorAll('[style*="display: none" i]').forEach(el => {
+            if (el.getAttribute('dmca-hidden')) {
+                el.style.display = '';
+                el.removeAttribute('dmca-hidden');
             }
         });
-    }
+    });
 
-    // Запуск
-    if (window.appready) {
-        initLampa();
-    } else {
-        Lampa.Listener.follow('app', function(event) {
-            if (event.type === 'ready') initLampa();
-        });
-    }
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+    });
+
+    console.log('[DMCA Bypass] Все ограничения отключены');
 })();
