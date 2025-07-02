@@ -457,7 +457,7 @@ function startPlugin() {
             var upcomingEpisodesRequest = function (callback) {
                 callback({
                     source: 'tmdb',
-                    results: Lampa.TimeTable.lately().slice(0, 20),
+                    results: json.results.slice(0, 10),
                     title: Lampa.Lang.translate('surs_title_upcoming_episodes'),
                     nomore: true,
                     cardClass: function (_elem, _params) {
@@ -1071,7 +1071,7 @@ var partsData = [
         var upcomingEpisodesRequest = function (callback) {
             callback({
                 source: 'tmdb',
-                results: Lampa.TimeTable.lately().slice(0, 20),
+                results: json.results.slice(0, 10),
                 title: Lampa.Lang.translate('title_upcoming_episodes'),
                 nomore: true,
                 cardClass: function (_elem, _params) {
@@ -1829,7 +1829,7 @@ var partsData = [
         var upcomingEpisodesRequest = function (callback) {
             callback({
                 source: 'tmdb',
-                results: Lampa.TimeTable.lately().slice(0, 20),
+                results: json.results.slice(0, 10),
                 title: Lampa.Lang.translate('title_upcoming_episodes'),
                 nomore: true,
                 cardClass: function (_elem, _params) {
