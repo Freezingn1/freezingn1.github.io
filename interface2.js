@@ -695,7 +695,7 @@
     }
     
     .new-interface.vertical-cards .card-more__box {
-        padding-bottom: 111%; 
+        padding-bottom: 110%; 
     }
     </style>
 `);
