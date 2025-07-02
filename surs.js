@@ -258,7 +258,7 @@ function startPlugin() {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 12;
+        var partsLimit = 5;
 
             function filterCyrillic(items) {
     var storedValue = getStoredSetting('shuffleTrending');
@@ -428,7 +428,7 @@ function startPlugin() {
 
             var partsData = [
         function (callback) {
-            var baseUrl = 'trending/all/week?page=1&per_page=10';
+            var baseUrl = 'trending/all/week';
             baseUrl = applyAgeRestriction(baseUrl);
 
             owner.get(baseUrl, params, function (json) {
@@ -867,7 +867,7 @@ var SourceTMDBkids = function (parent) {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 7;
+        var partsLimit = 5;
 
         // Опции сортировки
         var sortOptions = [
@@ -1652,7 +1652,7 @@ var SourceTMDBrus = function (parent) {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 12;
+        var partsLimit = 5;
 
         // Опции сортировки
         var sortOptions = [
