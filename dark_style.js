@@ -97,11 +97,9 @@
 			
 			/* Градиентный текст для рейтинга */
             .full-start__rate > div:first-child {
-                background: linear-gradient(to right, #1ed5a9, #1ed5a9);
-                -webkit-background-clip: text;
-                color: transparent;
-                font-weight: bold;
-				background-clip: text;
+                color: #1ed5a9;
+				font-weight: bold;
+				background: none;
             }
 			
             
