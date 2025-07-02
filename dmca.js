@@ -1,38 +1,42 @@
-(function () {
+(function() {
     'use strict';
 
-    // Инициализация Lampa для TV
+    // 1. Инициализация TV-режима (если нужно)
     Lampa.Platform.tv();
 
-    // Основная функция
-    function initializeApp() {
-        // Обработка успешного запроса
-        Lampa.Listener.follow('request_secuses', function(data) {
-            if (data.params.success) {
-                var activity = Lampa.Activity.active();
-                activity.name = 'tmdb';
-                Lampa.Storage.set('name', 'tmdb', true);
-                Lampa.Activity.update(activity);
-                Lampa.Storage.set('source', 'cub', true);
-            }
-        });
-
-        // Проверка настроек (без DMCA-защиты)
-        var interval = setInterval(function() {
-            if (typeof window.lampa_settings !== 'undefined') {
-                clearInterval(interval);
-            }
-        }, 100);
+    // 2. Отключаем DMCA-блокировку
+    function disableDCMA() {
+        if (window.lampa_settings) {
+            // Если есть настройки, принудительно отключаем DMCA
+            window.lampa_settings.dcma = false;
+            window.lampa_settings.fixdcma = true;
+        } else {
+            // Если настроек нет, создаем их
+            window.lampa_settings = {
+                dcma: false,
+                fixdcma: true
+            };
+        }
     }
 
-    // Запуск приложения
+    // 3. Основная логика (запуск после готовности приложения)
+    function initLampa() {
+        disableDCMA(); // Применяем настройки DMCA
+
+        // Дополнительные действия (если нужны)
+        Lampa.Listener.follow('request_success', function(data) {
+            if (data.params.success) {
+                console.log("DMCA обойден, плеер работает!");
+            }
+        });
+    }
+
+    // Запуск
     if (window.appready) {
-        initializeApp();
+        initLampa();
     } else {
         Lampa.Listener.follow('app', function(event) {
-            if (event.type === 'ready') {
-                initializeApp();
-            }
+            if (event.type === 'ready') initLampa();
         });
     }
 })();
