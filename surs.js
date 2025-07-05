@@ -434,7 +434,7 @@ function startPlugin() {
             owner.get(baseUrl, params, function (json) {
     if (json.results) {
         json.results = json.results.filter(function (result) {
-            var forbiddenCountries = ['KR', 'CN', 'JP'];
+            var forbiddenCountries = ['CN'];
             return !result.origin_country || !result.origin_country.some(function (country) {
                 return forbiddenCountries.includes(country);
             });
