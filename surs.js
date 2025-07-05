@@ -4442,7 +4442,6 @@ if (window.appready) {
     add();
     startProfileListener();
     addMainButton();
-    setupCardHandlers();
     loadSidePlugins();
 
         if (!Lampa.Storage.get('surs_disableMenu')) {
@@ -4454,7 +4453,6 @@ if (window.appready) {
             add();
             startProfileListener();
             addMainButton();
-            setupCardHandlers();
             loadSidePlugins();
 
             if (!Lampa.Storage.get('surs_disableMenu')) {
