@@ -3833,25 +3833,51 @@ function addSettingMenu() {
     },
     onChange: function() {
         var currentController = Lampa.Controller.enabled().name;
-        Lampa.Select.show({
-            title: Lampa.Lang.translate('surs_show_popular_persons'),
-            items: [{
-                title: Lampa.Lang.translate('surs_enabled'),
-                id: 'enable',
-                checkbox: true,
-                checked: getStoredSetting('show_popular_persons', false)
-            }],
-            onBack: function() {
-                Lampa.Controller.toggle(currentController);
-            },
-            onCheck: function(selected) {
-                setStoredSetting('show_popular_persons', !getStoredSetting('show_popular_persons', false));
-                Lampa.Noty.show(Lampa.Lang.translate('surs_settings_saved'));
-                Lampa.Controller.toggle(currentController);
-            }
-        });
+        showPopularPersonsMenu(currentController);
     }
 });
+
+function showPopularPersonsMenu(previousController) {
+    var key = 'show_popular_persons';
+    var currentValue = getStoredSetting(key, true); // По умолчанию включено
+
+    var items = [
+        {
+            title: Lampa.Lang.translate('surs_enabled'),
+            value: true,
+            checkbox: true,
+            checked: currentValue === true
+        },
+        {
+            title: Lampa.Lang.translate('surs_disabled'),
+            value: false,
+            checkbox: true,
+            checked: currentValue === false
+        }
+    ];
+
+    Lampa.Select.show({
+        title: Lampa.Lang.translate('surs_show_popular_persons'),
+        items: items,
+        onBack: function() {
+            Lampa.Controller.toggle(previousController);
+        },
+        onCheck: function(selected) {
+            setStoredSetting(key, selected.value);
+            Lampa.Noty.show(Lampa.Lang.translate('surs_settings_saved'));
+            
+            // Обновляем главную страницу
+            var currentSource = Lampa.Storage.get('source');
+            Lampa.Activity.push({
+                source: currentSource,
+                title: Lampa.Lang.translate('title_main') + ' - ' + currentSource,
+                component: 'main',
+                page: 1,
+                replace: true
+            });
+        }
+    });
+}
 
         function showKeywordFilterMenu(previousController) {
             try {
@@ -4620,6 +4646,11 @@ surs_show_popular_persons: {
         ru: "Включено",
         en: "Enabled",
         uk: "Увімкнено"
+    },
+	surs_disabled: {
+        ru: "Выключено",
+        en: "Disabled",
+        uk: "Вимкнено"
     },
     surs_settings_saved: {
         ru: "Настройки сохранены",
