@@ -273,6 +273,193 @@ var allStreamingServicesRUS = [
     { id: 3882, title: 'More.TV' }
 ];
 
+    // Переменная с SVG-постерами для кастомных кнопок
+var buttonPosters = {
+    surs_main: 'https://aviamovie.github.io/img/main.png',
+    surs_bookmarks: 'https://aviamovie.github.io/img/bookmarks.png', 
+    surs_history: 'https://aviamovie.github.io/img/history.png', 
+    surs_select: 'https://aviamovie.github.io/img/select_new.png',
+    surs_new: 'https://aviamovie.github.io/img/new.png',
+    surs_best: 'https://aviamovie.github.io/img/best.png',
+    surs_rus: 'https://aviamovie.github.io/img/rus.png',
+    surs_kids: 'https://aviamovie.github.io/img/kids.png'
+};
+
+
+function getAllButtons() {
+    return [
+        { id: 'surs_main', title: 'surs_main', overview: ' ', defaultEnabled: false },
+        { id: 'surs_bookmarks', title: 'surs_bookmarks', overview: ' ', defaultEnabled: false },
+        { id: 'surs_history', title: 'surs_history', overview: ' ', defaultEnabled: false },
+        { id: 'surs_select', title: 'surs_select', overview: ' ', defaultEnabled: false },
+        { id: 'surs_new', title: 'surs_new', overview: ' ', defaultEnabled: false },
+        { id: 'surs_rus', title: 'surs_rus', poster_path: null, overview: ' ', defaultEnabled: false },
+        { id: 'surs_kids', title: 'surs_kids', overview: ' ', defaultEnabled: false }
+    ];
+}
+
+
+// Функция для получения кастомных кнопок с учётом настроек
+function customButtons() {
+    var allButtons = getAllButtons();
+    return allButtons.filter(function(button) {
+        return getStoredSetting('custom_button_' + button.id, button.defaultEnabled || false);
+    }).map(function(button) {
+        return {
+            id: button.id,
+            name: Lampa.Lang.translate(button.title), 
+            overview: button.overview,
+        };
+    });
+}
+
+
+    function setupCardHandlers() {
+
+        function initCardListener() {
+            if (window.lampa_listener_extensions) {
+                return;
+            }
+
+            window.lampa_listener_extensions = true;
+
+            Object.defineProperty(window.Lampa.Card.prototype, 'build', {
+                get: function () {
+                    return this._build;
+                },
+                set: function (value) {
+                    this._build = function () {
+                        value.apply(this);
+                        Lampa.Listener.send('card', {
+                            type: 'build',
+                            object: this
+                        });
+                    }.bind(this);
+                }
+            });
+        }
+
+
+
+    var buttonActions = {
+        surs_main: function() {
+            var sourceName = Lampa.Storage.get('surs_name') || 'SURS';
+            Lampa.Activity.push({
+                source: Lampa.Storage.get('source'),
+                title: Lampa.Lang.translate('title_main') + ' - ' + Lampa.Storage.get('source'),
+                component: 'main',
+                page: 1
+            });
+        },
+        surs_bookmarks: function() {
+            Lampa.Activity.push({
+                url: '',
+                title: Lampa.Lang.translate('surs_bookmarks') ,
+                component: 'bookmarks',
+                page: 1,
+            });
+        },
+        surs_history: function() {
+            Lampa.Activity.push({
+                url: '',
+                title: Lampa.Lang.translate('surs_history') ,
+                component: 'favorite',
+                type: 'history',
+                page: 1,
+            });
+        },
+        
+        surs_select: function() {
+if (window.SursSelect && typeof window.SursSelect.showSursSelectMenu === 'function') {
+    window.SursSelect.showSursSelectMenu();
+}
+        },
+        surs_new: function() {
+            var sourceName = Lampa.Storage.get('surs_name') || 'SURS';
+            Lampa.Activity.push({
+                source: sourceName + ' NEW',
+                title: Lampa.Lang.translate('title_main') + ' - ' + sourceName + ' NEW',
+                component: 'main',
+                page: 1
+            });
+        },
+        surs_best: function() {
+            Lampa.Noty.show('раздел "лучшее" в разработке');
+        },
+        surs_rus: function() {
+            var sourceName = Lampa.Storage.get('surs_name') || 'SURS';
+            Lampa.Activity.push({
+                source: sourceName + ' RUS',
+                title: Lampa.Lang.translate('title_main') + ' - ' + sourceName + ' RUS',
+                component: 'main',
+                page: 1
+            });
+        },
+        surs_kids: function() {
+            var sourceName = Lampa.Storage.get('surs_name') || 'SURS';
+            Lampa.Activity.push({
+                source: sourceName + ' KIDS',
+                title: Lampa.Lang.translate('title_main') + ' - ' + sourceName + ' KIDS',
+                component: 'main',
+                page: 1
+            });
+        }
+    };
+
+
+
+
+
+function addCardListener() {
+    initCardListener();
+    Lampa.Listener.follow('card', function (event) {
+        if (event.type === 'build') {
+            var cardId = event.object.data.id;
+            var customButtonIds = customButtons().map(function(button) { return button.id; }); 
+            if (customButtonIds.indexOf(cardId) !== -1) {
+                event.object.data.img = buttonPosters[cardId];
+                event.object.card.addClass('custom-button-card');
+
+                event.object.card.on('hover:enter', function(e) {
+                    if (buttonActions[cardId]) {
+                        buttonActions[cardId]();
+                    } else {
+                        console.warn('Действие для кнопки ' + cardId + ' не определено');
+                    }
+                    e.stopImmediatePropagation();
+                });
+            }
+        }
+    });
+}
+
+addCardListener();
+    }
+    
+    Lampa.Template.add('custom_button_style', `
+    <style>
+       .custom-button-card {
+  -webkit-flex-shrink: 0;
+      -ms-flex-negative: 0;
+          flex-shrink: 0;
+  width: 12.75em;
+  position: relative;
+  will-change: transform;
+    }
+
+        @media screen and (max-width: 700px) {
+            .items-cards .custom-button-card {
+                width: 9em !important;
+                
+            }
+        }
+
+    </style>
+`);
+
+$('body').append(Lampa.Template.get('custom_button_style', {}, true));
+    
+
 
 
 // Функция получения всех настроек
@@ -2870,6 +3057,25 @@ function addSettingMenu() {
             }
         });
 
+        Lampa.SettingsApi.addParam({
+            component: 'surs',
+            param: {
+                name: 'surs_custom_buttons',
+                type: 'button'
+            },
+            field: {
+                name: Lampa.Lang.translate('surs_custom_buttons'),
+                description: Lampa.Lang.translate('surs_custom_buttons_description')
+            },
+            onChange: function() {
+                try {
+                    var currentController = Lampa.Controller.enabled().name;
+                    showSelectionMenu('surs_custom_buttons', getAllButtons(), 'custom_button_', 'id', currentController);
+                } catch (e) {
+                    console.error('Error in custom_buttons onChange:', e);
+                }
+            }
+        });
 
         Lampa.SettingsApi.addParam({
             component: 'surs',
@@ -4372,6 +4578,51 @@ surs_ukrainian: {
     en: "Ukrainian",
     uk: "українські"
 },
+surs_custom_buttons: {
+    ru: "Горизонтальное меню",
+    en: "Horizontal Menu",
+    uk: "Горизонтальне меню"
+},
+surs_custom_buttons_description: {
+    ru: "Выберите, какие кнопки отображать в интерфейсе",
+    en: "Choose which buttons to display in the interface",
+    uk: "Виберіть, які кнопки відображати в інтерфейсі"
+},
+surs_main: {
+    ru: "Главная",
+    en: "Main",
+    uk: "Головна"
+},
+surs_bookmarks: {
+    ru: "Избранное",
+    en: "Bookmarks",
+    uk: "Обране"
+},
+surs_select: {
+    ru: "Разделы",
+    en: "Sections",
+    uk: "Розділи"
+},
+surs_new: {
+    ru: "Новинки",
+    en: "New",
+    uk: "Новинки"
+},
+surs_rus: {
+    ru: "Русское",
+    en: "Russian",
+    uk: "Російське"
+},
+surs_kids: {
+    ru: "Детское",
+    en: "Kids",
+    uk: "Дитяче"
+},
+surs_history: {
+    ru: "История",
+    en: "History",
+    uk: "Історія"
+},
 surs_show_popular_persons: {
         ru: "Популярные персоны",
         en: "Popular persons",
@@ -4442,6 +4693,7 @@ if (window.appready) {
     add();
     startProfileListener();
     addMainButton();
+    setupCardHandlers();
     loadSidePlugins();
 
         if (!Lampa.Storage.get('surs_disableMenu')) {
@@ -4453,6 +4705,7 @@ if (window.appready) {
             add();
             startProfileListener();
             addMainButton();
+            setupCardHandlers();
             loadSidePlugins();
 
             if (!Lampa.Storage.get('surs_disableMenu')) {
