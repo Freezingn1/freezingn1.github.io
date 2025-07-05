@@ -566,13 +566,13 @@ function getStreamingServicesRUS() {
 
 //устанавливаем интерфейс на маленький
 
-if (!getStoredSetting('interface_size_initialized', false)) {
+/* if (!getStoredSetting('interface_size_initialized', false)) {
 
     Lampa.Storage.set("interface_size", "small");
     
     setStoredSetting('interface_size_initialized', true);
     
-}
+} */
 
 // Глобальные функции фильтрации
 
