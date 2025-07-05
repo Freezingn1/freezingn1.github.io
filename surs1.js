@@ -612,9 +612,29 @@ function filterCyrillic(items) {
     return filteredItems;
 }
 
+function shuffleTrendingIfEnabled(items) {
+    if (getStoredSetting('surs_shuffle_trending', '0') === '1' && Array.isArray(items)) {
+        // Копируем массив, чтобы не изменять оригинал
+        var shuffledItems = items.slice();
+        
+        // Алгоритм Фишера-Йетса для перемешивания
+        for (var i = shuffledItems.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = shuffledItems[i];
+            shuffledItems[i] = shuffledItems[j];
+            shuffledItems[j] = temp;
+        }
+        
+        return shuffledItems;
+    }
+    return items;
+}
+
+
 // Применение всех фильтров к элементам
 function applyFilters(items) {
     items = filterCyrillic(items);
+    items = shuffleTrendingIfEnabled(items);
     return items;
 }
 
@@ -3782,6 +3802,22 @@ function addSettingMenu() {
 		Lampa.SettingsApi.addParam({
     component: 'surs',
     param: {
+        name: 'surs_shuffle_trending',
+        type: 'button'
+    },
+    field: {
+        name: Lampa.Lang.translate('surs_shuffle_trending'),
+        description: Lampa.Lang.translate('surs_shuffle_trending_description')
+    },
+    onChange: function() {
+        var previousController = Lampa.Controller.enabled().name;
+        showShuffleTrendingMenu(previousController);
+    }
+});
+		
+		Lampa.SettingsApi.addParam({
+    component: 'surs',
+    param: {
         name: 'surs_show_popular_persons',
         type: 'button'
     },
@@ -3856,6 +3892,38 @@ function addSettingMenu() {
                 console.error('Error in showKeywordFilterMenu:', e);
             }
         }
+		
+		function showShuffleTrendingMenu(previousController) {
+    var key = 'surs_shuffle_trending';
+    var currentValue = getStoredSetting(key, '0');
+
+    var items = [
+        {
+            title: Lampa.Lang.translate('surs_shuffle_enabled'),
+            value: '1',
+            checkbox: true,
+            checked: currentValue === '1'
+        },
+        {
+            title: Lampa.Lang.translate('surs_shuffle_disabled'),
+            value: '0',
+            checkbox: true,
+            checked: currentValue === '0'
+        }
+    ];
+
+    Lampa.Select.show({
+        title: Lampa.Lang.translate('surs_shuffle_trending'),
+        items: items,
+        onBack: function() {
+            Lampa.Controller.toggle(previousController || 'settings');
+        },
+        onCheck: function(selected) {
+            setStoredSetting(key, selected.value);
+            showShuffleTrendingMenu(previousController);
+        }
+    });
+}
 
         if (!Lampa.Storage.get('surs_disableCustomName')) {
             Lampa.SettingsApi.addParam({
@@ -4541,7 +4609,27 @@ surs_show_popular_persons: {
         ru: "Настройки сохранены",
         en: "Settings saved",
         uk: "Налаштування збережено"
-    }
+    },
+	surs_shuffle_trending: {
+    ru: "Перемешивание трендов",
+    en: "Shuffle trending",
+    uk: "Перемішування трендів"
+},
+surs_shuffle_trending_description: {
+    ru: "Включите, чтобы перемешивать список трендов недели",
+    en: "Enable to shuffle the weekly trending list",
+    uk: "Увімкніть, щоб перемішувати список трендів тижня"
+},
+surs_shuffle_enabled: {
+    ru: "Включено",
+    en: "Enabled",
+    uk: "Увімкнено"
+},
+surs_shuffle_disabled: {
+    ru: "Выключено",
+    en: "Disabled",
+    uk: "Вимкнено"
+}
 });
 
 function loadSidePlugins() {
