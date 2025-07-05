@@ -3926,11 +3926,17 @@ function showShuffleTrendingMenu(previousController) {
         },
         onCheck: function(selected) {
             setStoredSetting(key, selected.value);
-            // Обновляем страницу для применения изменений
             Lampa.Noty.show(Lampa.Lang.translate('surs_settings_saved'));
-            setTimeout(function() {
-                Lampa.Activity.reload();
-            }, 500);
+            
+            // Вместо Activity.reload() используем этот код для обновления главной страницы:
+            var currentSource = Lampa.Storage.get('source');
+            Lampa.Activity.push({
+                source: currentSource,
+                title: Lampa.Lang.translate('title_main') + ' - ' + currentSource,
+                component: 'main',
+                page: 1,
+                replace: true
+            });
         }
     });
 }
