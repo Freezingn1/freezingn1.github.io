@@ -613,7 +613,11 @@ function filterCyrillic(items) {
 }
 
 function shuffleTrendingIfEnabled(items) {
-    if (getStoredSetting('surs_shuffle_trending', '0') === '1' && Array.isArray(items)) {
+    // Добавим проверку на массив
+    if (!Array.isArray(items)) return items;
+    
+    // Получаем настройку как строку и сравниваем с '1'
+    if (getStoredSetting('surs_shuffle_trending', '0') === '1') {
         // Копируем массив, чтобы не изменять оригинал
         var shuffledItems = items.slice();
         
@@ -634,6 +638,7 @@ function shuffleTrendingIfEnabled(items) {
 // Применение всех фильтров к элементам
 function applyFilters(items) {
     items = filterCyrillic(items);
+    // Перемещаем вызов shuffleTrendingIfEnabled в начало, чтобы он применялся ко всем элементам
     items = shuffleTrendingIfEnabled(items);
     return items;
 }
@@ -901,35 +906,36 @@ var SourceTMDB = function (parent) {
         var partsLimit = 12;
 
         var partsData = [
-            function (callback) {
-                var json = {
-                    title: Lampa.Lang.translate(''),
-                    results: customButtons(),
-                    small: true,
-                    //customButton: true,
-                    collection: true,
-                    line_type: 'player-cards'
-                };                      
-                callback(json);
-            },
-            function (callback) {
-                var baseUrl = 'trending/all/week';
-                baseUrl = applyAgeRestriction(baseUrl);
+    function (callback) {
+        var json = {
+            title: Lampa.Lang.translate(''),
+            results: customButtons(),
+            small: true,
+            collection: true,
+            line_type: 'player-cards'
+        };                      
+        callback(json);
+    },
+    function (callback) {
+        var baseUrl = 'trending/all/week';
+        baseUrl = applyAgeRestriction(baseUrl);
 
-                owner.get(baseUrl, params, function (json) {
-                    if (json.results) {
-                        json.results = json.results.filter(function (result) {
-                            var forbiddenCountries = ['KR', 'CN', 'JP'];
-                            return !result.origin_country || !result.origin_country.some(function (country) {
-                                return forbiddenCountries.includes(country);
-                            });
-                        });
-                    }
-                    json.title = Lampa.Lang.translate('surs_title_trend_week');
-                    callback(json);
-                }, callback);
+        owner.get(baseUrl, params, function (json) {
+            if (json.results) {
+                json.results = json.results.filter(function (result) {
+                    var forbiddenCountries = ['KR', 'CN', 'JP'];
+                    return !result.origin_country || !result.origin_country.some(function (country) {
+                        return forbiddenCountries.includes(country);
+                    });
+                });
+                // Применяем shuffleTrendingIfEnabled непосредственно к результатам трендов
+                json.results = shuffleTrendingIfEnabled(json.results);
             }
-        ];
+            json.title = Lampa.Lang.translate('surs_title_trend_week');
+            callback(json);
+        }, callback);
+    }
+];
 
         var CustomData = [];
 
@@ -3893,7 +3899,7 @@ function addSettingMenu() {
             }
         }
 		
-		function showShuffleTrendingMenu(previousController) {
+function showShuffleTrendingMenu(previousController) {
     var key = 'surs_shuffle_trending';
     var currentValue = getStoredSetting(key, '0');
 
@@ -3920,7 +3926,11 @@ function addSettingMenu() {
         },
         onCheck: function(selected) {
             setStoredSetting(key, selected.value);
-            showShuffleTrendingMenu(previousController);
+            // Обновляем страницу для применения изменений
+            Lampa.Noty.show(Lampa.Lang.translate('surs_settings_saved'));
+            setTimeout(function() {
+                Lampa.Activity.reload();
+            }, 500);
         }
     });
 }
