@@ -564,6 +564,12 @@ function getStreamingServicesRUS() {
 }
 
 
+// Принудительно возвращаем нормальный размер интерфейса
+Lampa.Storage.set("interface_size", "normal");
+console.log("Интерфейс сброшен на normal");
+
+
+
 //устанавливаем интерфейс на маленький
 
 /* if (!getStoredSetting('interface_size_initialized', false)) {
