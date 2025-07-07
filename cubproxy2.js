@@ -7,7 +7,7 @@
       return e.params.url.indexOf(mirror) > -1;
     });
 
-    if (need_proxy && e.params.url.indexOf('/cub/') == -1) {
+    if (need_proxy && e.params.url.indexOf('/api/') == -1) {
       e.params.url = proxy_url + e.params.url.replace(/^https?:\/\//, '');
     }
   });
