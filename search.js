@@ -1,53 +1,56 @@
 (function () {
   'use strict';
 
-  if (!window.Lampa) {
-    console.error('Lampa не найдена!');
+  // Проверяем, что это Lampac, иначе выходим
+  if (!window.Lampa || !window.lampac_plugin) {
+    console.log('Расширение работает только в Lampac!');
     return;
   }
 
   // Функция для добавления кнопки
   function addSearchButton() {
-    // Находим контейнер меню
-    const selectBox = document.querySelector('.selectbox__content.layer--height');
-    if (!selectBox) return false; // Если меню ещё нет, выходим
+    // Ищем контейнер .scroll__body (вместо selectbox__content)
+    const scrollBody = document.querySelector('.scroll__body');
+    if (!scrollBody) return false;
 
     // Проверяем, не добавлена ли кнопка уже
-    if (selectBox.querySelector('.custom-search-button')) return true;
+    if (scrollBody.querySelector('.custom-search-button')) return true;
 
     // Создаём кнопку "Поиск серии"
     const searchButton = document.createElement('div');
-    searchButton.className = 'selectbox-item selector custom-search-button'; // Те же классы, что у других пунктов
-    searchButton.innerHTML = '<div class="selectbox-item__name">Поиск серии</div>';
+    searchButton.className = 'custom-search-button'; // Убираем лишние классы
+    searchButton.innerHTML = `
+      <div class="selectbox-item selector">
+        <div class="selectbox-item__name">Поиск серии</div>
+      </div>
+    `;
 
-    // Добавляем обработчик клика
-    searchButton.addEventListener('click', function () {
-      alert('Поиск серии запущен!'); // Пока заглушка, потом заменим на реальный поиск
+    // Обработчик клика
+    searchButton.addEventListener('click', function (e) {
+      e.stopPropagation(); // Предотвращаем всплытие
+      alert('Поиск серии!'); // Заглушка
     });
 
-    // Вставляем кнопку в меню (например, после первого элемента)
-    const firstItem = selectBox.querySelector('.selectbox-item.selector');
-    if (firstItem) {
-      firstItem.after(searchButton); // Добавляем после первой кнопки
-    } else {
-      selectBox.prepend(searchButton); // Если не нашли, вставляем в начало
-    }
-
+    // Вставляем кнопку в .scroll__body
+    scrollBody.prepend(searchButton); // Добавляем в начало
     return true;
   }
 
-  // Мониторим появление меню (на случай, если оно открывается динамически)
+  // Наблюдатель за изменениями DOM
   const observer = new MutationObserver(function () {
     addSearchButton();
   });
 
-  // Начинаем наблюдать за изменениями в DOM
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+  // Начинаем наблюдать за .player (или другим родительским контейнером)
+  const playerContainer = document.querySelector('.player');
+  if (playerContainer) {
+    observer.observe(playerContainer, {
+      childList: true,
+      subtree: true
+    });
+  }
 
-  // Пробуем добавить кнопку сразу (если меню уже есть)
+  // Первая попытка добавить кнопку
   Lampa.Listener.follow('app', function () {
     addSearchButton();
   });
