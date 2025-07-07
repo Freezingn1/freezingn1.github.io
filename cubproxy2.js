@@ -2,7 +2,7 @@
   'use strict';
 
   Lampa.Listener.follow('request_before', function(e) {
-    var proxy_url = 'http://durex.monster/cub/';
+    var proxy_url = 'http://durex.monster/api/';
     var need_proxy = Lampa.Manifest.cub_mirrors.find(function(mirror) {
       return e.params.url.indexOf(mirror) > -1;
     });
