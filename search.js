@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // Проверяем, что это Lampac, иначе выходим
+  // Проверяем, что это Lampac
   if (!window.Lampa || !window.lampac_plugin) {
     console.log('Расширение работает только в Lampac!');
     return;
@@ -9,42 +9,40 @@
 
   // Функция для добавления кнопки
   function addSearchButton() {
-    // Ищем контейнер .scroll__body (вместо selectbox__content)
+    // Ищем контейнер .scroll__body (где находятся кнопки)
     const scrollBody = document.querySelector('.scroll__body');
-    if (!scrollBody) return false;
+    if (!scrollBody) return false; // Если контейнера нет, выходим
 
     // Проверяем, не добавлена ли кнопка уже
     if (scrollBody.querySelector('.custom-search-button')) return true;
 
-    // Создаём кнопку "Поиск серии"
+    // Создаём кнопку "Поиск серии" по аналогии с другими
     const searchButton = document.createElement('div');
-    searchButton.className = 'custom-search-button'; // Убираем лишние классы
+    searchButton.className = 'selectbox-item selector custom-search-button';
     searchButton.innerHTML = `
-      <div class="selectbox-item selector">
-        <div class="selectbox-item__name">Поиск серии</div>
-      </div>
+      <div class="selectbox-item__title">Поиск серии</div>
     `;
 
     // Обработчик клика
     searchButton.addEventListener('click', function (e) {
-      e.stopPropagation(); // Предотвращаем всплытие
-      alert('Поиск серии!'); // Заглушка
+      e.stopPropagation();
+      alert('Поиск серии!'); // Позже заменим на реальный функционал
     });
 
-    // Вставляем кнопку в .scroll__body
-    scrollBody.prepend(searchButton); // Добавляем в начало
+    // Вставляем кнопку в конец списка (.scroll__body)
+    scrollBody.appendChild(searchButton);
     return true;
   }
 
-  // Наблюдатель за изменениями DOM
+  // Наблюдаем за изменениями в DOM (на случай динамической загрузки)
   const observer = new MutationObserver(function () {
     addSearchButton();
   });
 
-  // Начинаем наблюдать за .player (или другим родительским контейнером)
-  const playerContainer = document.querySelector('.player');
-  if (playerContainer) {
-    observer.observe(playerContainer, {
+  // Начинаем наблюдать за изменениями в .scroll (родительский контейнер)
+  const scrollContainer = document.querySelector('.scroll');
+  if (scrollContainer) {
+    observer.observe(scrollContainer, {
       childList: true,
       subtree: true
     });
