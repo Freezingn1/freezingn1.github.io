@@ -1,4 +1,6 @@
-(function() {
+(function () {
+    'use strict';
+
     // Функция для скрытия элементов
     function hideElements() {
         const elements = document.querySelectorAll(`
