@@ -653,7 +653,7 @@
     
     /* Стили для рейтинга в широких карточках */
     .new-interface:not(.vertical-cards) .card__vote {
-        font-size: 1.5em;
+        font-size: 1.4em;
     }
     
     /* Стили для рейтинга в вертикальных карточках */
