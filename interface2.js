@@ -550,9 +550,16 @@
     .new-interface-info {
         position: relative;
         padding: 1.5em;
-        height: 28em;
+        height: 27.5em;
     }
     .card--small.card--wide .card__view {
+		padding-bottom: 65%;
+	}
+	
+	.card-episode {
+		width: 14.3em;
+	}
+	.full-episode__img {
 		padding-bottom: 65%;
 	}
 	
