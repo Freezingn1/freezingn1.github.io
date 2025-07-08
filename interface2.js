@@ -233,9 +233,9 @@
       });
       var items = [];
       var html = $('<div class="new-interface"><img class="full-start__background"></div>');
-		if (object.title === 'Спорт') {
-		html.attr('data-sport', 'true');
-	}
+        if (object.title === 'Спорт') {
+        html.attr('data-sport', 'true');
+    }
       var active = 0;
       var newlampa = Lampa.Manifest.app_digital >= 166;
       var info;
@@ -387,6 +387,15 @@
         item.onFocusMore = info.empty.bind(info);
         scroll.append(item.render());
         items.push(item);
+
+        // Добавляем название фильма на карточку
+        if (object.title !== 'Спорт') {
+            var cardView = item.render().find('.card__view');
+            if (cardView.length) {
+                var titleElement = $('<div class="card__title full-start-new__title">' + (element.title || element.name) + '</div>');
+                cardView.append(titleElement);
+            }
+        }
       };
 
       this.back = function () {
@@ -553,20 +562,46 @@
         height: 29.5em;
     }
     .card--small.card--wide .card__view {
-		padding-bottom: 47%;
-	}
-	
-	.card-episode {
-		width: 15.65em;
-	}
-	.full-episode__img {
-		padding-bottom: 47%;
-	}
-	
-	.full-episode__num {
-		margin-bottom: 0.4em;
-	}
-	
+        padding-bottom: 47%;
+        position: relative;
+    }
+    
+    .card-episode {
+        width: 15.65em;
+    }
+    .full-episode__img {
+        padding-bottom: 47%;
+    }
+    
+    .full-episode__num {
+        margin-bottom: 0.4em;
+    }
+    
+    /* Стили для названия фильма на карточке */
+    .card--small.card--wide .card__title {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+        color: white;
+        padding: 1em 0.5em 0.5em;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        z-index: 2;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    }
+    
+    /* Стили для вертикальных карточек */
+    .new-interface.vertical-cards .card--small .card__title {
+        font-size: 1em;
+        padding: 0.5em;
+    }
+
     .new-interface-info__body {
         width: 80%;
         padding-top: 1.1em;
@@ -615,12 +650,12 @@
         min-height: 1em;
         opacity: 0;
         transition: opacity 0.5s ease;
-		filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+        filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
     }
-	
-	.new-interface:not([data-sport="true"]) .card__promo {
-		display: none;
-	}
+    
+    .new-interface:not([data-sport="true"]) .card__promo {
+        display: none;
+    }
     
     .new-interface-logo.loaded {
         opacity: 1;
@@ -716,7 +751,7 @@
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
 
     // Исправленный обработчик изменения настроек
-	Lampa.Storage.listener.follow('change', (e) => {
+    Lampa.Storage.listener.follow('change', (e) => {
             if(e.name === 'card_orientation') {
                 var orientation = Lampa.Storage.get('card_orientation') || 'wide';
                 // Просто обновляем класс, без вызова applyPlatformScreenOverride
