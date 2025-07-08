@@ -233,9 +233,9 @@
       });
       var items = [];
       var html = $('<div class="new-interface"><img class="full-start__background"></div>');
-		if (object.title === 'Спорт') {
-		html.attr('data-sport', 'true');
-	}
+        if (object.title === 'Спорт') {
+        html.attr('data-sport', 'true');
+    }
       var active = 0;
       var newlampa = Lampa.Manifest.app_digital >= 166;
       var info;
@@ -553,20 +553,39 @@
         height: 29.5em;
     }
     .card--small.card--wide .card__view {
-		padding-bottom: 47%;
-	}
-	
-	.card-episode {
-		width: 15.65em;
-	}
-	.full-episode__img {
-		padding-bottom: 47%;
-	}
-	
-	.full-episode__num {
-		margin-bottom: 0.4em;
-	}
-	
+        padding-bottom: 47%;
+        position: relative;
+    }
+    
+    .card-episode {
+        width: 15.65em;
+    }
+    .full-episode__img {
+        padding-bottom: 47%;
+    }
+    
+    .full-episode__num {
+        margin-bottom: 0.4em;
+    }
+    
+    /* Новые стили для названий карточек */
+    .card--small .card__title {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        color: white;
+        padding: 1em 0.5em 0.5em;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        z-index: 2;
+    }
+    
     .new-interface-info__body {
         width: 80%;
         padding-top: 1.1em;
@@ -615,12 +634,12 @@
         min-height: 1em;
         opacity: 0;
         transition: opacity 0.5s ease;
-		filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+        filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
     }
-	
-	.new-interface:not([data-sport="true"]) .card__promo {
-		display: none;
-	}
+    
+    .new-interface:not([data-sport="true"]) .card__promo {
+        display: none;
+    }
     
     .new-interface-logo.loaded {
         opacity: 1;
@@ -711,18 +730,53 @@
     .new-interface.vertical-cards .card-more__box {
         padding-bottom: 110%; 
     }
+    
+    /* Адаптивные стили для названий в вертикальных карточках */
+    .new-interface.vertical-cards .card--small .card__title {
+        font-size: 0.9em;
+        padding: 0.5em 0.3em 0.3em;
+    }
     </style>
 `);
-      $('body').append(Lampa.Template.get('new_interface_style', {}, true));
+
+    // Добавляем обработчик для вставки названий в карточки
+    function addTitlesToCards() {
+        setTimeout(() => {
+            document.querySelectorAll('.card--small.card--wide .card__view').forEach(cardView => {
+                if (!cardView.querySelector('.card__title')) {
+                    const card = cardView.closest('.card');
+                    const title = card.dataset.title || card.querySelector('.card__img')?.alt || '';
+                    
+                    if (title) {
+                        const titleElement = document.createElement('div');
+                        titleElement.className = 'card__title';
+                        titleElement.textContent = title;
+                        cardView.appendChild(titleElement);
+                    }
+                }
+            });
+        }, 1000);
+    }
+
+    // Следим за изменениями в DOM и добавляем названия
+    Lampa.Listener.follow('app', (e) => {
+        if (e.type === 'resize' || e.type === 'dom') {
+            addTitlesToCards();
+        }
+    });
+
+    $('body').append(Lampa.Template.get('new_interface_style', {}, true));
 
     // Исправленный обработчик изменения настроек
-	Lampa.Storage.listener.follow('change', (e) => {
-            if(e.name === 'card_orientation') {
-                var orientation = Lampa.Storage.get('card_orientation') || 'wide';
-                // Просто обновляем класс, без вызова applyPlatformScreenOverride
-                if(Lampa.Activity.restart) Lampa.Activity.restart();
-            }
-        });
+    Lampa.Storage.listener.follow('change', (e) => {
+        if(e.name === 'card_orientation') {
+            var orientation = Lampa.Storage.get('card_orientation') || 'wide';
+            if(Lampa.Activity.restart) Lampa.Activity.restart();
+        }
+    });
+
+    // Первоначальный вызов
+    addTitlesToCards();
     }
 
     if (!window.plugin_interface_ready) startPlugin();
