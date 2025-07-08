@@ -536,7 +536,7 @@
       Lampa.Template.add('new_interface_style', `
     <style>
     .new-interface .card--small.card--wide {
-        width: 16.3em;
+        width: 15.65em;
     }
     
     .full-start__pg, .full-start__status {
@@ -550,14 +550,14 @@
     .new-interface-info {
         position: relative;
         padding: 1.5em;
-        height: 29em;
+        height: 29.5em;
     }
     .card--small.card--wide .card__view {
 		padding-bottom: 47%;
 	}
 	
 	.card-episode {
-		width: 16.8em;
+		width: 15.65em;
 	}
 	.full-episode__img {
 		padding-bottom: 47%;
