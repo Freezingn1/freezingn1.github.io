@@ -1,4 +1,6 @@
-(function() {
+(function () {
+    'use strict';
+
     console.log("[Lampa Safe Styles] Оптимизированная версия (без градиентов)");
 
     // Кеш элементов
