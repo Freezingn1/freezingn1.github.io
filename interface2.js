@@ -550,17 +550,21 @@
     .new-interface-info {
         position: relative;
         padding: 1.5em;
-        height: 26em;
+        height: 29em;
     }
     .card--small.card--wide .card__view {
-		padding-bottom: 65%;
+		padding-bottom: 47%;
 	}
 	
 	.card-episode {
 		width: 16.8em;
 	}
 	.full-episode__img {
-		padding-bottom: 65%;
+		padding-bottom: 47%;
+	}
+	
+	.full-episode__num {
+		margin-bottom: 0.4em;
 	}
 	
     .new-interface-info__body {
