@@ -655,7 +655,7 @@
     }
     
     .new-interface .card.card--wide+.card-more .card-more__box {
-        padding-bottom: 95%;
+        padding-bottom: 66%;
     }
     
     .new-interface .card.card--wide .card-watched {
