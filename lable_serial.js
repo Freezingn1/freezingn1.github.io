@@ -6,8 +6,8 @@
         const isVerticalCards = document.querySelector('.new-interface')?.classList.contains('vertical-cards');
         const isExcludedTab = document.querySelector('.head__title')?.textContent.match(/(История|Избранное)/i);
         
-        // Для исключенных вкладок всегда используем 0.9em, для широких карточек - 0.8em, для вертикальных - 0.7em
-        const fontSize = isExcludedTab ? '0.9em' : (isVerticalCards ? '0.7em' : '0.8em');
+        // Для исключенных вкладок всегда используем 0.9em, для остальных - зависит от режима
+        const fontSize = isExcludedTab ? '0.9em' : (isVerticalCards ? '0.7em' : '0.9em');
 
         document.querySelectorAll('.card__type').forEach(el => {
             if (el.textContent.trim() === 'TV') el.textContent = 'Сериал';
