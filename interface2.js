@@ -349,54 +349,63 @@
         }
       };
 
-      this.append = function (element) {
-        var _this3 = this;
+      // В методе append компонента component замените блок добавления названия на этот:
+this.append = function (element) {
+    var _this3 = this;
 
-        if (element.ready) return;
-        element.ready = true;
-        var item = new Lampa.InteractionLine(element, {
-          url: element.url,
-          card_small: true,
-          cardClass: element.cardClass,
-          genres: object.genres,
-          object: object,
-          card_wide: cardOrientation === 'wide',
-          nomore: element.nomore
-        });
-        item.create();
-        item.onDown = this.down.bind(this);
-        item.onUp = this.up.bind(this);
-        item.onBack = this.back.bind(this);
+    if (element.ready) return;
+    element.ready = true;
+    var item = new Lampa.InteractionLine(element, {
+      url: element.url,
+      card_small: true,
+      cardClass: element.cardClass,
+      genres: object.genres,
+      object: object,
+      card_wide: cardOrientation === 'wide',
+      nomore: element.nomore
+    });
+    item.create();
+    item.onDown = this.down.bind(this);
+    item.onUp = this.up.bind(this);
+    item.onBack = this.back.bind(this);
 
-        item.onToggle = function () {
-          active = items.indexOf(item);
-        };
+    item.onToggle = function () {
+      active = items.indexOf(item);
+    };
 
-        if (this.onMore) item.onMore = this.onMore.bind(this);
+    if (this.onMore) item.onMore = this.onMore.bind(this);
 
-        item.onFocus = function (elem) {
-          info.update(elem);
-          _this3.background(elem);
-        };
+    item.onFocus = function (elem) {
+      info.update(elem);
+      _this3.background(elem);
+    };
 
-        item.onHover = function (elem) {
-          info.update(elem);
-          _this3.background(elem);
-        };
+    item.onHover = function (elem) {
+      info.update(elem);
+      _this3.background(elem);
+    };
 
-        item.onFocusMore = info.empty.bind(info);
-        scroll.append(item.render());
-        items.push(item);
+    item.onFocusMore = info.empty.bind(info);
+    scroll.append(item.render());
+    items.push(item);
 
-        // Добавляем название фильма на карточку
-        if (object.title !== 'Спорт') {
-            var cardView = item.render().find('.card__view');
-            if (cardView.length) {
-                var titleElement = $('<div class="card__title full-start-new__title">' + (element.title || element.name) + '</div>');
+    // Добавляем название фильма/сериала на карточку (используем данные из элемента)
+    if (object.title !== 'Спорт') {
+        var cardView = item.render().find('.card__view');
+        if (cardView.length) {
+            // Используем title или name из данных элемента
+            var mediaTitle = element.title || element.name;
+            // Для сериалов может быть name вместо title
+            if (!mediaTitle && element.original_title) mediaTitle = element.original_title;
+            if (!mediaTitle && element.original_name) mediaTitle = element.original_name;
+            
+            if (mediaTitle) {
+                var titleElement = $('<div class="card__title full-start-new__title">' + mediaTitle + '</div>');
                 cardView.append(titleElement);
             }
         }
-      };
+    }
+};
 
       this.back = function () {
         Lampa.Activity.backward();
@@ -580,26 +589,32 @@
     /* Стили для названия фильма на карточке */
     .card--small.card--wide .card__title {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-        color: white;
-        padding: 1em 0.5em 0.5em;
-        text-align: center;
-        font-size: 1.2em;
-        font-weight: bold;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        z-index: 2;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+    color: white;
+    padding: 1em 0.5em 0.5em;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 2;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    box-sizing: border-box;
     }
     
     /* Стили для вертикальных карточек */
     .new-interface.vertical-cards .card--small .card__title {
         font-size: 1em;
-        padding: 0.5em;
+    padding: 0.5em;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.2;
     }
 
     .new-interface-info__body {
