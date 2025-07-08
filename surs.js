@@ -104,7 +104,7 @@ function getStoredSetting(key, defaultValue) {
     var profileSettings = getProfileSettings();
     // Для ключа shuffleTrending сравниваем как строку
     if (key === 'shuffleTrending') {
-        return profileSettings.hasOwnProperty(key) ? profileSettings[key] : '1'; // Изменено с '1' на '0'
+        return profileSettings.hasOwnProperty(key) ? profileSettings[key] : '0'; // Изменено с '1' на '0'
     }
     // Для остальных ключей
     return profileSettings.hasOwnProperty(key) ? profileSettings[key] : defaultValue;
@@ -434,7 +434,7 @@ function startPlugin() {
             owner.get(baseUrl, params, function (json) {
     if (json.results) {
         json.results = json.results.filter(function (result) {
-            var forbiddenCountries = ['CN','JP'];
+            var forbiddenCountries = ['CN'];
             return !result.origin_country || !result.origin_country.some(function (country) {
                 return forbiddenCountries.includes(country);
             });
