@@ -567,6 +567,13 @@
 		margin-bottom: 0.4em;
 	}
 	
+	.full-episode__date {
+		margin-top: 0.4em;
+	}
+	.full-episode__name {
+		font-size: 1.1em;
+	}
+	
     .new-interface-info__body {
         width: 80%;
         padding-top: 1.1em;
