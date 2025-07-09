@@ -1556,7 +1556,6 @@ else if (element.url) {
     window.lampac_plugin = true;
     var manifst = {
       type: 'video',
-      version: '1.4.9',
       name: 'Lampac',
       description: 'Плагин для просмотра онлайн сериалов и фильмов',
       component: 'lampac',
