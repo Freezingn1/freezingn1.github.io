@@ -149,10 +149,10 @@
                     </div>
 
                     <div class="full-start-new__buttons">
-                        <div class="full-start__button selector view--online lampac--button">
+                        <div class="full-start__button selector button--play">
                             <svg viewBox="4.636 0 251.364 255.006" width="50px" height="50px" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><g transform="scale(5.12,5.12)"><path d="M 7.338 0.903 C 5.314 0.903 3.953 2.364 3.953 4.538 L 3.953 45.266 C 3.953 47.441 5.314 48.903 7.338 48.903 C 8.446 48.903 9.191 48.604 9.965 48.157 L 44.723 28.264 C 45.274 27.946 46.953 26.981 46.953 24.903 C 46.953 22.823 45.275 21.858 44.723 21.54 L 9.969 1.649 C 9.191 1.201 8.446 0.903 7.338 0.903 Z" fill="currentColor"></path></g></g>
 							</svg>
-                            <span>#{title_online}</span>
+                            <span>#{title_watch}</span>
                         </div>
 
                         <div class="full-start__button selector button--book">
