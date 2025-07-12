@@ -4,49 +4,40 @@
     // Функция для удаления " - SURS" из текста
     function cleanTitleText(element) {
         if (!element) return;
-        element.textContent = element.textContent
-            .replace(/\s*[—–−-]\s*SURS/gi, '')  // Удаляет "- SURS", "—SURS", " - SURS" и т. д.
-            .trim();  // Обрезает лишние пробелы
+        element.textContent = element.textContent.replace(/\s*-\s*SURS/gi, '').trim();
     }
 
     // Обрабатываем все существующие элементы
-    function processExistingTitles() {
-        const titles = document.querySelectorAll('.head__title');
-        titles.forEach(cleanTitleText);
-        return titles.length > 0; // Возвращает true, если элементы найдены
+    function processTitles() {
+        document.querySelectorAll('.head__title').forEach(cleanTitleText);
     }
 
-    // Если DOM ещё не загружен, ждём его загрузки
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!processExistingTitles()) {
-                startObserver(); // Если элементов нет, запускаем наблюдение
-            }
-        });
-    } else {
-        if (!processExistingTitles()) {
-            startObserver(); // Если элементы не найдены, включаем Observer
-        }
-    }
-
-    // Наблюдатель для динамически добавленных элементов
-    function startObserver() {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1 && node.matches('.head__title')) {
+    // Наблюдатель за изменениями DOM
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1 && node.classList && node.classList.contains('head__title')) {
                         cleanTitleText(node);
                     }
-                    if (node.nodeType === 1 && node.querySelector('.head__title')) {
+                    if (node.nodeType === 1 && node.querySelectorAll) {
                         node.querySelectorAll('.head__title').forEach(cleanTitleText);
                     }
                 });
-            });
+            }
         });
+    });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+    // Начинаем наблюдение за изменениями в body
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // Обработаем заголовки, которые уже есть на странице
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', processTitles);
+    } else {
+        processTitles();
     }
 })();
