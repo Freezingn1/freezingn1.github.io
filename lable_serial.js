@@ -7,7 +7,7 @@
         const isExcludedTab = document.querySelector('.head__title')?.textContent.match(/(История|Избранное)/i);
         
         // Для исключенных вкладок всегда используем 0.9em, для остальных - зависит от режима
-        const fontSize = isExcludedTab ? '0.9em' : (isVerticalCards ? '0.7em' : '0.9em');
+        const fontSize = isExcludedTab ? '0.9em' : (isVerticalCards ? '0.8em' : '0.9em');
 
         document.querySelectorAll('.card__type').forEach(el => {
             if (el.textContent.trim() === 'TV') el.textContent = 'Сериал';
