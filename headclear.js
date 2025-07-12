@@ -1,21 +1,52 @@
 (function () {
     'use strict';
 
-    function removeSursText() {
-        const titleElements = document.querySelectorAll('.head__title');
-        
-        titleElements.forEach(element => {
-            // Удаляем " - SURS" и возможные вариации с разными пробелами
-            element.textContent = element.textContent
-                .replace(/\s*-\s*SURS/g, '')  // Регулярное выражение на случай разных пробелов
-                .trim();  // Удаляем лишние пробелы в начале/конце
-        });
+    // Функция для удаления " - SURS" из текста
+    function cleanTitleText(element) {
+        if (!element) return;
+        element.textContent = element.textContent
+            .replace(/\s*[—–−-]\s*SURS/gi, '')  // Удаляет "- SURS", "—SURS", " - SURS" и т. д.
+            .trim();  // Обрезает лишние пробелы
     }
 
-    // Запускаем при полной загрузке DOM
+    // Обрабатываем все существующие элементы
+    function processExistingTitles() {
+        const titles = document.querySelectorAll('.head__title');
+        titles.forEach(cleanTitleText);
+        return titles.length > 0; // Возвращает true, если элементы найдены
+    }
+
+    // Если DOM ещё не загружен, ждём его загрузки
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeSursText);
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!processExistingTitles()) {
+                startObserver(); // Если элементов нет, запускаем наблюдение
+            }
+        });
     } else {
-        removeSursText(); // Если DOM уже загружен, выполняем сразу
+        if (!processExistingTitles()) {
+            startObserver(); // Если элементы не найдены, включаем Observer
+        }
+    }
+
+    // Наблюдатель для динамически добавленных элементов
+    function startObserver() {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.matches('.head__title')) {
+                        cleanTitleText(node);
+                    }
+                    if (node.nodeType === 1 && node.querySelector('.head__title')) {
+                        node.querySelectorAll('.head__title').forEach(cleanTitleText);
+                    }
+                });
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     }
 })();
