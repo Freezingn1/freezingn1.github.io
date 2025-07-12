@@ -1,14 +1,14 @@
-// Находим все элементы с классом head__title
-const headTitles = document.querySelectorAll('div.head__title');
+function removeSursText() {
+    const headTitle = document.querySelector('div.head__title');
+    if (headTitle && headTitle.textContent.includes(' - SURS')) {
+        headTitle.textContent = headTitle.textContent.replace(' - SURS', '');
+        console.log('[Lampa Extension] Removed "- SURS"');
+    }
+}
 
-// Перебираем найденные элементы
-headTitles.forEach(element => {
-  // Проверяем, содержит ли элемент текст "Главная - SURS"
-  if (element.textContent.includes('Главная - SURS')) {
-    // Заменяем текст, удаляя "- SURS"
-    element.textContent = element.textContent.replace(' - SURS', '');
-    
-    // Альтернативный вариант, если нужно точно "Главная - SURS"
-    // element.textContent = 'Главная';
-  }
-});
+// Запуск после загрузки DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', removeSursText);
+} else {
+    removeSursText(); // DOM уже загружен
+}
