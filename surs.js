@@ -439,6 +439,13 @@ function startPlugin() {
                 return forbiddenCountries.includes(country);
             });
         });
+		
+		 // Ограничиваем количество результатов (например, 20)
+			json.results = json.results.slice(0, 20);
+    
+		// Запрещаем подгрузку дополнительных результатов
+			json.nomore = true;
+    
         
         // Изменено на строгое сравнение с '1'
         var shouldShuffle = getStoredSetting('shuffleTrending', '1') === '1';
