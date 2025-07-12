@@ -2170,7 +2170,7 @@ function changeSource(newSource, isProfileChanged) {
 
 function softRefresh(source, isFromSourceChange) {
     Lampa.Activity.push({
-        title: Lampa.Lang.translate('title_main') + ' - ' + source.toUpperCase(),
+        title: Lampa.Lang.translate('title_main'),
         component: 'main',
         source: source
         
