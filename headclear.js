@@ -1,19 +1,17 @@
-// Ждём, пока surs.js загрузит текст
+// Функция для удаления "- SURS"
 function removeSursText() {
     const headTitle = document.querySelector('div.head__title');
     if (headTitle && headTitle.textContent.includes(' - SURS')) {
         headTitle.textContent = headTitle.textContent.replace(' - SURS', '');
         console.log('[SURS Remover] Текст изменён:', headTitle.textContent);
-        return true; // Успешно
+        return true;
     }
     return false;
 }
 
-// Вариант 1: MutationObserver (для динамического контента)
-const observer = new MutationObserver(() => {
-    if (removeSursText()) {
-        observer.disconnect(); // Останавливаем, если нашли
-    }
+// 1. MutationObserver — следит за изменениями в DOM
+const observer = new MutationObserver((mutations) => {
+    removeSursText();
 });
 
 observer.observe(document.body, {
@@ -21,13 +19,12 @@ observer.observe(document.body, {
     subtree: true,
 });
 
-// Вариант 2: Интервал (на случай, если MutationObserver не сработает)
-const interval = setInterval(() => {
-    if (removeSursText()) {
-        clearInterval(interval);
-    }
-}, 500);
+// 2. Проверяем каждые 500 мс (на случай, если Observer не сработает)
+const interval = setInterval(removeSursText, 500);
 
-// Если DOM уже готов, пробуем сразу
-document.addEventListener('DOMContentLoaded', removeSursText);
-removeSursText(); // Проверяем при загрузке скрипта
+// 3. Запускаем сразу при загрузке
+removeSursText();
+
+// 4. Следим за событиями SPA (например, переходы в Vue/React)
+window.addEventListener('popstate', removeSursText); // Назад/Вперёд
+window.addEventListener('pushState', removeSursText); // Если сайт использует History API
