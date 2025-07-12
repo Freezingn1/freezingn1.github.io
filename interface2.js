@@ -676,7 +676,7 @@
     
     /* Стили для рейтинга в вертикальных карточках */
     .new-interface.vertical-cards .card__vote {
-        font-size: 1em;
+        font-size: 1.2em;
     }
     
     body.light--version .new-interface-info__body {
