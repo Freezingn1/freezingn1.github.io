@@ -564,7 +564,7 @@
 	}
 	
 	.full-episode__num {
-		margin-bottom: 0.4em;
+		margin-bottom: 0.2em;
 	}
 	
 	.full-episode__date {
