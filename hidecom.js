@@ -6,7 +6,8 @@
         if (section.textContent.trim() === 'Комментарии') {
             const itemsLine = section.closest('.items-line');
             if (itemsLine) {
-                itemsLine.remove(); // Полное удаление из DOM
+                itemsLine.style.display = 'none';
+                itemsLine.setAttribute('tabindex', '-1'); // Блокировка фокуса
             }
         }
     });
