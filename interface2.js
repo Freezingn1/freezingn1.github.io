@@ -550,7 +550,7 @@
     .new-interface-info {
         position: relative;
         padding: 1.5em;
-        height: 68%;
+        height: 29.5em;
     }
     .card--small.card--wide .card__view {
 		padding-bottom: 47%;
