@@ -357,7 +357,7 @@
           }
         };
         var fin = function fin(call) {
-          network.timeout(10000);
+          network.timeout(3000);
           network.silent(account(url), function(json) {
             life_wait_times++;
             filter_sources = [];
@@ -382,7 +382,7 @@
             filter.chosen('sort', [sources[balanser] ? sources[balanser].name : balanser]);
             gou(json);
             var lastb = _this3.getLastChoiceBalanser();
-            if (life_wait_times > 30 || json.ready) {
+            if (life_wait_times > 15 || json.ready) {
               filter.render().find('.lampac-balanser-loader').remove();
               gou(json, true);
             } else if (!red && sources[lastb] && sources[lastb].show) {
@@ -393,7 +393,7 @@
             }
           }, function() {
             life_wait_times++;
-            if (life_wait_times > 30) {
+            if (life_wait_times > 15) {
               reject();
             } else {
               life_wait_timer = setTimeout(fin, 1000);
