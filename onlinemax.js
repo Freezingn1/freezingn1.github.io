@@ -1355,7 +1355,7 @@ else if (element.url) {
       });
       if(er && er.accsdb) html.find('.online-empty__title').html(er.msg);
 	  
-      var tic = er && er.accsdb ? 10 : 5;
+      var tic = er && er.accsdb ? 30 : 30;
       html.find('.cancel').on('hover:enter', function() {
         clearInterval(balanser_timer);
       });
