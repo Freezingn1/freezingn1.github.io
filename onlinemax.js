@@ -43,7 +43,7 @@
       hub_timer = setTimeout(function() {
         hubConnection.stop();
 		hubConnection = null;
-      }, 1000 * json.keepalive);
+      }, 10000 * json.keepalive);
     }
   }
 
@@ -1355,7 +1355,7 @@ else if (element.url) {
       });
       if(er && er.accsdb) html.find('.online-empty__title').html(er.msg);
 	  
-      var tic = er && er.accsdb ? 30 : 30;
+      var tic = er && er.accsdb ? 10 : 5;
       html.find('.cancel').on('hover:enter', function() {
         clearInterval(balanser_timer);
       });
