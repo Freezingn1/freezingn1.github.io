@@ -233,9 +233,9 @@
       });
       var items = [];
       var html = $('<div class="new-interface"><img class="full-start__background"></div>');
-		if (object.title === 'Спорт') {
-		html.attr('data-sport', 'true');
-	}
+        if (object.title === 'Спорт') {
+        html.attr('data-sport', 'true');
+    }
       var active = 0;
       var newlampa = Lampa.Manifest.app_digital >= 166;
       var info;
@@ -533,7 +533,49 @@
         }
     });
 
-      Lampa.Template.add('new_interface_style', `
+    // Функция для обработки вертикальных карточек
+    function handleVerticalCards() {
+        var isVerticalCards = Lampa.Storage.get('card_orientation') === 'vertical';
+        
+        if (!isVerticalCards) return;
+
+        var css = $('style#fix_size_css');
+
+        if (!css.length) {
+            css = $('<style type="text/css" id="fix_size_css"></style>');
+            css.appendTo('head');
+        }
+
+        var platform_screen = Lampa.Platform.screen;
+
+        Lampa.Platform.screen = function (need) {
+            if (need === 'tv') {
+                try {
+                    var stack = new Error().stack.split('\n');
+                    var offset = stack[0] === 'Error' ? 1 : 0;
+
+                    if (/^( *at +new +)?create\$i/.test(stack[1 + offset]) && /^( *at +)?component(\/this)?\.append/.test(stack[2 + offset])) {
+                        return false;
+                    }
+                } catch (e) {}
+            }
+
+            return platform_screen(need);
+        };
+
+        var layer_update = Lampa.Layer.update;
+
+        var timer;
+        $(window).on('resize', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                Lampa.Layer.update();
+            }, 150);
+        });
+        Lampa.Layer.update();
+    }
+
+    Lampa.Template.add('new_interface_style', `
     <style>
     .new-interface .card--small.card--wide {
         width: 15.65em;
@@ -553,27 +595,27 @@
         height: calc(89vh - 12.7em);
     }
     .card--small.card--wide .card__view {
-		padding-bottom: 47%;
-	}
-	
-	.card-episode {
-		width: 15.65em;
-	}
-	.full-episode__img {
-		padding-bottom: 47%;
-	}
-	
-	.full-episode__num {
-		margin-bottom: 0.2em;
-	}
-	
-	.full-episode__date {
-		margin-top: 0.4em;
-	}
-	.full-episode__name {
-		font-size: 1.1em;
-	}
-	
+        padding-bottom: 47%;
+    }
+    
+    .card-episode {
+        width: 15.65em;
+    }
+    .full-episode__img {
+        padding-bottom: 47%;
+    }
+    
+    .full-episode__num {
+        margin-bottom: 0.2em;
+    }
+    
+    .full-episode__date {
+        margin-top: 0.4em;
+    }
+    .full-episode__name {
+        font-size: 1.1em;
+    }
+    
     .new-interface-info__body {
         width: 80%;
         padding-top: 1.1em;
@@ -622,12 +664,12 @@
         min-height: 1em;
         opacity: 0;
         transition: opacity 0.5s ease;
-		filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
+                filter: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.4));
     }
-	
-	.new-interface:not([data-sport="true"]) .card__promo {
-		display: none;
-	}
+    
+    .new-interface:not([data-sport="true"]) .card__promo {
+        display: none;
+    }
     
     .new-interface-logo.loaded {
         opacity: 1;
@@ -698,7 +740,7 @@
     /* Стили для вертикальных карточек */
     .new-interface.vertical-cards .new-interface-info {
         height: calc(80.5vh - 13.3em);
-		padding: 1.5em;
+                padding: 1.5em;
     }
     
     .new-interface.vertical-cards .card--small {
@@ -736,14 +778,23 @@
 `);
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
 
-    // Исправленный обработчик изменения настроек
-	Lampa.Storage.listener.follow('change', (e) => {
-            if(e.name === 'card_orientation') {
-                var orientation = Lampa.Storage.get('card_orientation') || 'wide';
-                // Просто обновляем класс, без вызова applyPlatformScreenOverride
-                if(Lampa.Activity.restart) Lampa.Activity.restart();
+    // Обработчик изменения настроек
+    Lampa.Storage.listener.follow('change', (e) => {
+        if(e.name === 'card_orientation') {
+            var orientation = Lampa.Storage.get('card_orientation') || 'wide';
+            if(orientation === 'vertical') {
+                handleVerticalCards();
+            } else {
+                $('style#fix_size_css').remove();
             }
-        });
+            if(Lampa.Activity.restart) Lampa.Activity.restart();
+        }
+    });
+
+    // Инициализация обработки вертикальных карточек при старте
+    if(Lampa.Storage.get('card_orientation') === 'vertical') {
+        handleVerticalCards();
+    }
     }
 
     if (!window.plugin_interface_ready) startPlugin();
