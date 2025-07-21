@@ -697,7 +697,7 @@
 
     /* Стили для вертикальных карточек */
     .new-interface.vertical-cards .new-interface-info {
-        height: calc(80.5vh - 13.2em);
+        height: calc(80.5vh - 13.3em);
 		padding: 1.5em;
     }
     
