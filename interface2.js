@@ -550,7 +550,7 @@
     .new-interface-info {
         position: relative;
         padding: 1.5em;
-        height: 29.5em;
+        height: calc(89vh - 12.7em);
     }
     .card--small.card--wide .card__view {
 		padding-bottom: 47%;
@@ -697,7 +697,8 @@
 
     /* Стили для вертикальных карточек */
     .new-interface.vertical-cards .new-interface-info {
-        height: 25em;
+        height: calc(80.5vh - 13.2em);
+		padding: 1.5em;
     }
     
     .new-interface.vertical-cards .card--small {
@@ -717,6 +718,19 @@
     
     .new-interface.vertical-cards .card-more__box {
         padding-bottom: 110%; 
+    }
+    
+    /* Дополнительные стили для вертикальных карточек */
+    .new-interface.vertical-cards .card-episode__footer .card__imgbox {
+        max-width: 2.7em;
+    }
+    
+    .new-interface.vertical-cards .card__title {
+        font-size: 1em;
+    }
+    
+    .new-interface.vertical-cards .card__age {
+        font-size: 0.7em;
     }
     </style>
 `);
