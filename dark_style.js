@@ -352,9 +352,12 @@
 			
 			.card__title {
 				text-align: center;
+				font-size: 1.1em;
+				line-height: 1.1;
 			}
 			.card__age {
 				text-align: center;
+				color: #ffffff7a;
 			}
 			
 			
