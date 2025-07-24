@@ -363,7 +363,6 @@
 			
 			body {
 				margin: 1 !important;
-				background: #141414 !important;
 			}
             
             /* Стили для рейтинга на карточке */
