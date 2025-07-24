@@ -1,3 +1,9 @@
+function applyStyles() {
+    safeAddStyle(document.body, {
+        'background': '#141414'
+    });
+}
+
 (function() {
     console.log("[Lampa Safe Styles] Оптимизированная версия (без градиентов)");
 
@@ -15,13 +21,6 @@
                 styled: false
             });
         }
-		
-		function applyStyles() {
-        // Устанавливаем тёмный фон для body
-        safeAddStyle(document.body, {
-            'background': '#141414'
-        });
-		
 
         const cacheEntry = elementsCache.get(selector);
         if (cacheEntry.styled) return;
