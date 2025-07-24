@@ -35,16 +35,12 @@
      * Применение базовых стилей
      */
     function applyStyles() {
-        if (stylesApplied) return;
-        
-        // Стили для body
-        if (!document.body.dataset.lampaStyled) {
-            document.body.style.setProperty('background', '#141414', 'important');
-            document.body.dataset.lampaStyled = 'true';
-        }	
-        
-        stylesApplied = true;
-    }
+    // Применяем стиль к body всегда, без проверки stylesApplied
+    document.body.style.setProperty('background', '#141414', 'important');
+    document.body.dataset.lampaStyled = 'true';
+    
+    stylesApplied = true; // Оставляем для других проверок, если они нужны
+}
 
     /**
      * Добавление всех CSS стилей
@@ -360,9 +356,14 @@
 				color: #ffffff7a;
 			}
 			
+			.modal-layer, .modal__content, .selector__body {
+				background-color: #141414 !important;
+			}
+			
 			
 			body {
 				margin: 1 !important;
+				background: #141414 !important;
 			}
             
             /* Стили для рейтинга на карточке */
