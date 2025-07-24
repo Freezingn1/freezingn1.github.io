@@ -199,7 +199,7 @@
             }
             
             .wrap__left {
-                box-shadow: 8px 0px 12px 0px var(--dark-bg) !important;
+                box-shadow: 15px 0px 20px 0px var(--dark-bg) !important;
             }
             
             .card-more.focus .card-more__box::after {
