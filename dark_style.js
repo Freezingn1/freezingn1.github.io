@@ -47,6 +47,50 @@
     }
 
     /**
+     * Отслеживание изменения классов у фоновых элементов
+     */
+    function observeBackgroundElements() {
+        const backgroundSelectors = ['.background__one', '.background__two'];
+        const wrapLeftElement = document.querySelector('.wrap__left');
+        
+        if (!wrapLeftElement) return;
+        
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const hasVisible = backgroundSelectors.some(selector => {
+                        const el = document.querySelector(selector);
+                        return el && el.classList.contains('visible');
+                    });
+                    
+                    if (hasVisible) {
+                        wrapLeftElement.style.setProperty('box-shadow', '15px 0px 20px 0px #14141400 !important');
+                    } else {
+                        wrapLeftElement.style.setProperty('box-shadow', '15px 0px 20px 0px var(--dark-bg) !important');
+                    }
+                }
+            });
+        });
+        
+        backgroundSelectors.forEach(selector => {
+            const element = document.querySelector(selector);
+            if (element) {
+                observer.observe(element, { attributes: true });
+            }
+        });
+        
+        // Проверка начального состояния
+        const initialVisible = backgroundSelectors.some(selector => {
+            const el = document.querySelector(selector);
+            return el && el.classList.contains('visible');
+        });
+        
+        if (initialVisible) {
+            wrapLeftElement.style.setProperty('box-shadow', '15px 0px 20px 0px #14141400 !important');
+        }
+    }
+
+    /**
      * Добавление всех CSS стилей
      */
     function addCardStyles() {
@@ -315,7 +359,7 @@
             .full-review-add.focus::after {
                 border: 0.3em solid var(--accent-color);
             }
-            
+			
 			.explorer__left {
 				display: none;
 			}
@@ -356,9 +400,6 @@
 				line-height: 1.1;
 			}
 			
-			.background__one.visible, .background__two.visible {
-				opacity: 0;
-			}
 			
 			.card__age {
 				text-align: center;
@@ -538,6 +579,7 @@
     function init() {
         applyStyles();
         addCardStyles();
+        observeBackgroundElements();
         
         observer.observe(document.body, {
             childList: true,
