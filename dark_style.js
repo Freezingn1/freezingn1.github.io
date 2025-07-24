@@ -35,12 +35,16 @@
      * Применение базовых стилей
      */
     function applyStyles() {
-    // Применяем стиль к body всегда, без проверки stylesApplied
-    document.body.style.setProperty('background', '#141414', 'important');
-    document.body.dataset.lampaStyled = 'true';
-    
-    stylesApplied = true; // Оставляем для других проверок, если они нужны
-}
+        if (stylesApplied) return;
+        
+        // Стили для body
+        if (!document.body.dataset.lampaStyled) {
+            document.body.style.setProperty('background', '#141414', 'important');
+            document.body.dataset.lampaStyled = 'true';
+        }	
+        
+        stylesApplied = true;
+    }
 
     /**
      * Добавление всех CSS стилей
@@ -351,19 +355,19 @@
 				font-size: 1.1em;
 				line-height: 1.1;
 			}
+			
+			.background__one.visible, .background__two.visible {
+				opacity: 0;
+			}
+			
 			.card__age {
 				text-align: center;
 				color: #ffffff7a;
 			}
 			
-			.modal-layer, .modal__content, .selector__body {
-				background-color: #141414 !important;
-			}
-			
 			
 			body {
 				margin: 1 !important;
-				background: #141414 !important;
 			}
             
             /* Стили для рейтинга на карточке */
