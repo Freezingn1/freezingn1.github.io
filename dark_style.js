@@ -46,7 +46,7 @@
             return window.Lampa.Storage.get('settings_interface_background_use');
         }
         
-        // По умолчанию считаем, что фон включен
+        // По умолчанию считаем, что фон выключен
         return false;
     }
 
@@ -74,8 +74,8 @@
 
         const backgroundEnabled = isBackgroundEnabled();
         const wrapLeftShadow = backgroundEnabled 
-            ? '8px 0px 12px 0px #14141400 !important'  // если фон ВКЛЮЧЕН - прозрачная тень
-			: '8px 0px 12px 0px var(--dark-bg) !important';  // если фон ВЫКЛЮЧЕН - обычная тень
+            ? '8px 0px 12px 0px var(--dark-bg) !important' 
+            : '8px 0px 12px 0px #14141400 !important';
 
         const fullCSS = `
             :root {
