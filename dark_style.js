@@ -350,6 +350,14 @@
                 background: var(--accent-color);
             }
 			
+			.card__title {
+				text-align: center;
+			}
+			.card__age {
+				text-align: center;
+			}
+			
+			
 			body {
 				margin: 1 !important;
 			}
@@ -432,16 +440,7 @@
 					max-height: 5em !important;
 				}
 			}
-			
-			
-			@media screen and (max-width: 480px) {
-				.card__title {
-					text-align: center;
-				}
-				.card__age {
-					text-align: center;
-				}
-			}
+								
 			
             @media screen and (max-width: 580px) {
                 .full-descr__text {
