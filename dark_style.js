@@ -1,6 +1,4 @@
-(function () {
-    'use strict';
-
+(function() {
     console.log("[Lampa Safe Styles] Оптимизированная версия (без градиентов)");
 
     // Кеш элементов
@@ -432,6 +430,16 @@
 					object-fit: contain;
 					max-width: 10em !important;
 					max-height: 5em !important;
+				}
+			}
+			
+			
+			@media screen and (max-width: 480px) {
+				.card__title {
+					text-align: center;
+				}
+				.card__age {
+					text-align: center;
 				}
 			}
 			
