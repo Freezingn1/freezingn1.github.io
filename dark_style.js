@@ -32,6 +32,25 @@
     }
 
     /**
+     * Проверка настройки фона интерфейса
+     */
+    function isBackgroundEnabled() {
+        // Проверяем разные возможные места хранения настроек
+        if (typeof window.settings_interface_background_use !== 'undefined') {
+            return window.settings_interface_background_use;
+        }
+        
+        if (typeof window.Lampa !== 'undefined' && 
+            window.Lampa.Storage && 
+            window.Lampa.Storage.get('settings_interface_background_use')) {
+            return window.Lampa.Storage.get('settings_interface_background_use');
+        }
+        
+        // По умолчанию считаем, что фон включен
+        return true;
+    }
+
+    /**
      * Применение базовых стилей
      */
     function applyStyles() {
@@ -52,6 +71,11 @@
     function addCardStyles() {
         const styleId = 'lampa-safe-css';
         if (document.getElementById(styleId)) return;
+
+        const backgroundEnabled = isBackgroundEnabled();
+        const wrapLeftShadow = backgroundEnabled 
+            ? '8px 0px 12px 0px var(--dark-bg) !important' 
+            : '8px 0px 12px 0px #14141400 !important';
 
         const fullCSS = `
             :root {
@@ -199,7 +223,7 @@
             }
             
             .wrap__left {
-                box-shadow: 8px 0px 12px 0px var(--dark-bg) !important;
+                box-shadow: ${wrapLeftShadow};
             }
             
             .card-more.focus .card-more__box::after {
@@ -315,7 +339,7 @@
             .full-review-add.focus::after {
                 border: 0.3em solid var(--accent-color);
             }
-            
+			
 			.explorer__left {
 				display: none;
 			}
