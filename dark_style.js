@@ -1,9 +1,3 @@
-function applyStyles() {
-    safeAddStyle(document.body, {
-        'background': '#141414'
-    });
-}
-
 (function() {
     console.log("[Lampa Safe Styles] Оптимизированная версия (без градиентов)");
 
@@ -369,6 +363,7 @@ function applyStyles() {
 			
 			body {
 				margin: 1 !important;
+				background: #141414;
 			}
             
             /* Стили для рейтинга на карточке */
