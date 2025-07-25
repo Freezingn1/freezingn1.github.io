@@ -496,7 +496,8 @@ addCardListener();
     </style>
 `);
 
-$('body').append(Lampa.Template.get('custom_button_style', {}, true));
+$('body').append(Lampa.Template.get('custom_button_style', {}, true)); 
+}
     
 
 
@@ -4737,7 +4738,6 @@ if (window.appready) {
         }
     });
    }
-}
 }
 
 if (!window.plugin_surs_ready) startPlugin();
