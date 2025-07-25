@@ -4738,6 +4738,7 @@ if (window.appready) {
     });
    }
 }
+}
 
 if (!window.plugin_surs_ready) startPlugin();
 
