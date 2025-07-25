@@ -291,17 +291,14 @@ var buttonPosters = {
 
 function getAllButtons() {
     return [
-        { id: 'surs_main', title: 'surs_main', overview: ' '},
-        { id: 'surs_bookmarks', title: 'surs_bookmarks', overview: ' '},
-        { id: 'surs_history', title: 'surs_history', overview: ' '},
-        { id: 'surs_select', title: 'surs_select', overview: ' ' },
-        { id: 'surs_new', title: 'surs_new', overview: ' ' },
-        { id: 'surs_rus', title: 'surs_rus', poster_path: null, overview: ' ' },
-        { id: 'surs_kids', title: 'surs_kids', overview: ' ' }
-    ].map(function(button) {
-        // Устанавливаем все кнопки выключенными по умолчанию
-        return Object.assign({}, button, { defaultEnabled: false });
-    });
+        { id: 'surs_main', title: 'surs_main', overview: ' ', defaultEnabled: false },
+        { id: 'surs_bookmarks', title: 'surs_bookmarks', overview: ' ', defaultEnabled: false },
+        { id: 'surs_history', title: 'surs_history', overview: ' ', defaultEnabled: false },
+        { id: 'surs_select', title: 'surs_select', overview: ' ', defaultEnabled: false },
+        { id: 'surs_new', title: 'surs_new', overview: ' ', defaultEnabled: false },
+        { id: 'surs_rus', title: 'surs_rus', poster_path: null, overview: ' ', defaultEnabled: false },
+        { id: 'surs_kids', title: 'surs_kids', overview: ' ', defaultEnabled: false }
+    ];
 }
 
 
@@ -309,15 +306,37 @@ function getAllButtons() {
 function customButtons() {
     var allButtons = getAllButtons();
     return allButtons.filter(function(button) {
-        return getStoredSetting('custom_button_' + button.id, true);
+        // Используем defaultEnabled как значение по умолчанию, если настройка не сохранена
+        return getStoredSetting('custom_button_' + button.id, button.defaultEnabled !== undefined ? button.defaultEnabled : false);
     }).map(function(button) {
         return {
             id: button.id,
             name: Lampa.Lang.translate(button.title), 
             overview: button.overview,
-
         };
     });
+}
+
+
+function initializeButtonSettings() {
+    var allButtons = getAllButtons();
+    var profileSettings = getProfileSettings();
+    
+    allButtons.forEach(function(button) {
+        var settingKey = 'custom_button_' + button.id;
+        if (!profileSettings.hasOwnProperty(settingKey)) {
+            // Устанавливаем значение по умолчанию из defaultEnabled (false)
+            profileSettings[settingKey] = button.defaultEnabled !== undefined ? button.defaultEnabled : false;
+        }
+    });
+    
+    saveAllStoredSettings(getAllStoredSettings());
+}
+
+// Вызываем инициализацию при старте плагина
+if (!window.plugin_surs_ready) {
+    initializeButtonSettings();
+    startPlugin();
 }
 
 
