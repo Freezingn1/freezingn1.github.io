@@ -1,6 +1,3 @@
-
-
-
 (function (  ) {
     'use strict';
     
@@ -232,6 +229,12 @@ var allGenres = [
     { id: 10766, title: 'surs_genre_soap' },
     { id: 10767, title: 'surs_genre_talk_show' }
 ];
+
+var shuffleTrendingSetting = {
+    id: 'shuffle_trending',
+    title: 'surs_shuffle_trending',
+    default: false
+};
 
 // Стриминговые сервисы
 var allStreamingServices = [
@@ -598,8 +601,14 @@ function filterCyrillic(items) {
 }
 
 // Применение всех фильтров к элементам
-function applyFilters(items) {
+function applyFilters(items, isTrending) {
     items = filterCyrillic(items);
+    
+    // Добавьте этот блок:
+    if (isTrending && getStoredSetting('shuffle_trending', false)) {
+        shuffleArray(items);
+    }
+    
     return items;
 }
 
@@ -744,6 +753,13 @@ function buildApiUrl(baseUrl) {
         
 
 function startPlugin() {
+	
+	if (!Lampa.Storage.get('shuffle_trending_initialized')) {
+        setStoredSetting('shuffle_trending', false);
+        Lampa.Storage.set('shuffle_trending_initialized', true);
+        console.log('Shuffle trending initialized to false');
+    }
+	
     window.plugin_surs_ready = true;
     
 
@@ -865,36 +881,37 @@ var SourceTMDB = function (parent) {
         var onError = arguments.length > 2 ? arguments[2] : undefined;
         var partsLimit = 5;
 
-        var partsData = [
-            function (callback) {
-                var json = {
-                    title: Lampa.Lang.translate(''),
-                    results: customButtons(),
-                    small: true,
-                    //customButton: true,
-                    collection: true,
-                    line_type: 'player-cards'
-                };                      
-                callback(json);
-            },
-            function (callback) {
-                var baseUrl = 'trending/all/week';
-                baseUrl = applyAgeRestriction(baseUrl);
+var partsData = [
+    function (callback) {
+        var json = {
+            title: Lampa.Lang.translate(''),
+            results: customButtons(),
+            small: true,
+            collection: true,
+            line_type: 'player-cards'
+        };                      
+        callback(json);
+    },
+    function (callback) {
+        var baseUrl = 'trending/all/week';
+        baseUrl = applyAgeRestriction(baseUrl);
 
-                owner.get(baseUrl, params, function (json) {
-                    if (json.results) {
-                        json.results = json.results.filter(function (result) {
-                            var forbiddenCountries = ['KR', 'CN', 'JP'];
-                            return !result.origin_country || !result.origin_country.some(function (country) {
-                                return forbiddenCountries.includes(country);
-                            });
-                        });
-                    }
-                    json.title = Lampa.Lang.translate('surs_title_trend_week');
-                    callback(json);
-                }, callback);
+        owner.get(baseUrl, params, function (json) {
+            if (json.results) {
+                json.results = json.results.filter(function (result) {
+                    var forbiddenCountries = ['KR', 'CN', 'JP'];
+                    return !result.origin_country || !result.origin_country.some(function (country) {
+                        return forbiddenCountries.includes(country);
+                    });
+                });
+                // Применяем фильтры с указанием что это тренды
+                json.results = applyFilters(json.results, true);
             }
-        ];
+            json.title = Lampa.Lang.translate('surs_title_trend_week');
+            callback(json);
+        }, callback);
+    }
+];
 
         var CustomData = [];
 
@@ -1266,13 +1283,14 @@ var SourceTMDBnew = function (parent) {
 
         // Функция для перемешивания массива
         function shuffleArray(array) {
-            for (var i = array.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var temp = array[i];
-                array[i] = array[j];
-                array[j] = temp;
-            }
-        }
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
 
         var partsData = [
             function (callback) {
@@ -3544,6 +3562,26 @@ function addSettingMenu() {
                 }
             }
         });
+		
+		Lampa.SettingsApi.addParam({
+    component: 'surs',
+    param: {
+        name: 'surs_shuffle_trending',
+        type: 'select',
+        values: {
+            '1': Lampa.Lang.translate('surs_enabled'),
+            '0': Lampa.Lang.translate('surs_disabled')
+        },
+        default: '0'
+    },
+    field: {
+        name: Lampa.Lang.translate('surs_shuffle_trending'),
+        description: Lampa.Lang.translate('surs_shuffle_trending_description')
+    },
+    onChange: function(value) {
+        setStoredSetting('shuffle_trending', value === '1');
+    }
+});
 
         function showCirillicMenu(previousController) {
             try {
@@ -3931,6 +3969,26 @@ function addMainButton() {
 
 // Добавление переводов
 Lampa.Lang.add({
+	surs_shuffle_trending_description: {
+        ru: "Включите, чтобы карточки в разделе 'Тренды недели' показывались в случайном порядке",
+        en: "Enable to show cards in 'Trending this week' section in random order",
+        uk: "Увімкніть, щоб картки в розділі 'Тренди тижня' показувалися у випадковому порядку"
+    },
+    surs_enabled: {
+        ru: "Включено",
+        en: "Enabled",
+        uk: "Увімкнено"
+    },
+    surs_disabled: {
+        ru: "Выключено",
+        en: "Disabled",
+        uk: "Вимкнено"
+    },
+	surs_shuffle_trending: {
+        ru: "Перемешивать тренды недели",
+        en: "Shuffle weekly trends",
+        uk: "Перемішувати тренди тижня"
+    },
     surs_vote_count_desc: {
         ru: "Много голосов",
         en: "Most Votes",
