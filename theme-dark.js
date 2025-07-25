@@ -26,10 +26,20 @@
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/pubtorr.js'], function () { });
 
 	//Онлайн
-	Lampa.Utils.putScriptAsync(['https://lam.maxvol.pro/onlinemax.js'], function () { });
+	Lampa.Utils.putScriptAsync(['http://bwa.to/384750856'], function () { });
 
 	//HDRezka
-	//Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/hdrezka.js'], function () { });
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/hdrezka.js'], function () { });
+
+	//NUMParser
+	Lampa.Utils.putScriptAsync(['https://num.jac-red.ru/plugin/nmprs.js'], function () { });
+
+	//DMCA
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/dmca.js'], function () { });
+
+	//Trick
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/tricks.js'], function () { });
+
 
 })();
 
