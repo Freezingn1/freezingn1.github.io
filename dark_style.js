@@ -352,7 +352,7 @@
 			
 			.card__title {
 				text-align: center;
-				font-size: 1.1em;
+				font-size: 1.2em;
 				line-height: 1.1;
 			}
 			
