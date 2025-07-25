@@ -483,6 +483,9 @@
         if (object.title === 'Спорт') {
             use = old_interface;
         }
+		if (object.title === 'NUMParser') {
+            use = old_interface;
+        }
         return new use(object);
     };
 
