@@ -863,7 +863,7 @@ var SourceTMDB = function (parent) {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 12;
+        var partsLimit = 5;
 
         var partsData = [
             function (callback) {
@@ -1262,7 +1262,7 @@ var SourceTMDBnew = function (parent) {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 12;
+        var partsLimit = 5;
 
         // Функция для перемешивания массива
         function shuffleArray(array) {
@@ -1498,7 +1498,7 @@ var SourceTMDBkids = function (parent) {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 7;
+        var partsLimit = 5;
 
         // Опции сортировки
         var sortOptions = [
@@ -2199,7 +2199,7 @@ var SourceTMDBrus = function (parent) {
         var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var onComplete = arguments.length > 1 ? arguments[1] : undefined;
         var onError = arguments.length > 2 ? arguments[2] : undefined;
-        var partsLimit = 12;
+        var partsLimit = 5;
 
         // Опции сортировки
         var sortOptions = [
