@@ -926,16 +926,31 @@ var partsData = [
         var CustomData = [];
 
         var upcomingEpisodesRequest = function (callback) {
-            callback({
-                source: 'tmdb',
-                results: Lampa.TimeTable.lately().slice(0, 20),
-                title: Lampa.Lang.translate('surs_title_upcoming_episodes'),
-                nomore: true,
-                cardClass: function (_elem, _params) {
-                    return new Episode(_elem, _params);
-                }
-            });
-        };
+    var episodes = Lampa.TimeTable.lately().slice(0, 20);
+    
+    if (episodes.length >= 5) {  // Проверяем количество эпизодов
+        callback({
+            source: 'tmdb',
+            results: episodes,
+            title: Lampa.Lang.translate('surs_title_upcoming_episodes'),
+            nomore: true,
+            cardClass: function (_elem, _params) {
+                return new Episode(_elem, _params);
+            }
+        });
+    } else {
+        // Возвращаем пустую подборку, если эпизодов меньше 5
+        callback({
+            source: 'tmdb',
+            results: [],
+            title: Lampa.Lang.translate('surs_title_upcoming_episodes'),
+            nomore: true,
+            cardClass: function (_elem, _params) {
+                return new Episode(_elem, _params);
+            }
+        });
+    }
+};
 
 
 
@@ -961,6 +976,10 @@ var partsData = [
                 owner.get(apiUrl, params, function (json) {
                     if (json.results) {
                         json.results = applyFilters(json.results);
+						if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
                     }
 
                     json.title = Lampa.Lang.translate(sort.title) + ' (' + Lampa.Lang.translate(genre.title) + ') ' + Lampa.Lang.translate('surs_on') + ' ' + serviceName;
@@ -987,6 +1006,10 @@ var partsData = [
                 owner.get(apiUrl, params, function (json) {
                     if (json.results) {
                         json.results = applyFilters(json.results);
+						if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
                     }
 
                     json.title = Lampa.Lang.translate(sort.title) + ' ' + Lampa.Lang.translate('surs_on') + ' ' + serviceName;
@@ -1051,16 +1074,25 @@ var partsData = [
                 apiUrl = buildApiUrl(apiUrl);
 
                 owner.get(apiUrl, params, function (json) {
-                    if (json.results) {
-                        if (!options.russian && !options.ukrainian) {
-                            json.results = applyFilters(json.results);
-                        }
-                        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
-                                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
-                        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' (' + Lampa.Lang.translate(genre.title) + ')';
-                    }
-                    callback(json);
-                }, callback);
+    if (json.results) {
+        // Фильтруем, если не русский и не украинский контент
+        if (!options.russian && !options.ukrainian) {
+            json.results = applyFilters(json.results);
+        }
+
+        // Проверяем длину подборки ВНЕ зависимости от региона
+        if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
+
+        // Формируем заголовок
+        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
+                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
+        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' (' + Lampa.Lang.translate(genre.title) + ')';
+    }
+    callback(json);
+}, callback);
             };
         }
 
@@ -1092,19 +1124,30 @@ var partsData = [
                 apiUrl = buildApiUrl(apiUrl);
 
                 owner.get(apiUrl, params, function (json) {
-                    if (json.results) {
-                        if (!options.russian && !options.ukrainian) {
-                            json.results = applyFilters(json.results);
-                        }
-                        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
-                                         options.korean ? Lampa.Lang.translate('surs_korean') :
-                                         options.turkish ? Lampa.Lang.translate('surs_turkish') :
-                                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
-                        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' ' + Lampa.Lang.translate('surs_tv_shows') + ' (' + Lampa.Lang.translate(genre.title) + ')';
-                    }
-                    callback(json);
-                }, callback);
-            };
+    if (json.results) {
+        // Применяем фильтры только для не-локального контента
+        if (!options.russian && !options.ukrainian && !options.korean && !options.turkish) {
+            json.results = applyFilters(json.results);
+        }
+
+        // Проверяем количество карточек (минимум 5 для всех регионов)
+        if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Возвращаем пустую подборку
+            return;
+        }
+
+        // Формируем заголовок с учетом региона
+        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
+                         options.korean ? Lampa.Lang.translate('surs_korean') :
+                         options.turkish ? Lampa.Lang.translate('surs_turkish') :
+                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
+        
+        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' ' + 
+                     Lampa.Lang.translate('surs_tv_shows') + ' (' + 
+                     Lampa.Lang.translate(genre.title) + ')';
+    }
+    callback(json);
+}, callback);
         }
 
         var genres = getGenres();
@@ -1163,6 +1206,10 @@ var partsData = [
                 owner.get(apiUrl, params, function (json) {
                     if (json.results) {
                         json.results = filterCyrillic(json.results);
+						if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
                     }
 
                     json.title = Lampa.Lang.translate(contentType === 'movie' ? 'surs_top_movies' : 'surs_top_tv') + ' (' + Lampa.Lang.translate(genre.title) + ')';
@@ -1338,6 +1385,10 @@ var SourceTMDBnew = function (parent) {
                 owner.get(apiUrl, params, function (json) {
                     if (json.results) {
                         json.results = applyFilters(json.results);
+						if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
                     }
 
                     json.title = Lampa.Lang.translate(sort.title) + ' (' + Lampa.Lang.translate(genre.title) + ') ' + Lampa.Lang.translate('surs_on') + ' ' + serviceName;
@@ -1363,6 +1414,10 @@ var SourceTMDBnew = function (parent) {
                 owner.get(apiUrl, params, function (json) {
                     if (json.results) {
                         json.results = applyFilters(json.results);
+						if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
                     }
 
                     json.title = Lampa.Lang.translate(sort.title) + ' ' + Lampa.Lang.translate('surs_on') + ' ' + serviceName;
@@ -1399,16 +1454,27 @@ var SourceTMDBnew = function (parent) {
                 apiUrl = buildApiUrl(apiUrl);
 
                 owner.get(apiUrl, params, function (json) {
-                    if (json.results) {
-                        if (!options.russian && !options.ukrainian) {
-                            json.results = applyFilters(json.results);
-                        }
-                        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
-                                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
-                        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' (' + Lampa.Lang.translate(genre.title) + ')';
-                    }
-                    callback(json);
-                }, callback);
+    if (json.results) {
+        // Применяем фильтры только для не-русского и не-украинского контента
+        if (!options.russian && !options.ukrainian) {
+            json.results = applyFilters(json.results);
+        }
+
+        // Проверяем количество карточек (минимум 5 для всех регионов)
+        if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Возвращаем пустую подборку
+            return;
+        }
+
+        // Формируем заголовок с учетом региона
+        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
+                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
+        
+        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' (' + 
+                     Lampa.Lang.translate(genre.title) + ')';
+    }
+    callback(json);
+}, callback);
             };
         }
 
@@ -1439,18 +1505,30 @@ var SourceTMDBnew = function (parent) {
                 apiUrl = buildApiUrl(apiUrl);
 
                 owner.get(apiUrl, params, function (json) {
-                    if (json.results) {
-                        if (!options.russian && !options.ukrainian) {
-                            json.results = applyFilters(json.results);
-                        }
-                        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
-                                         options.korean ? Lampa.Lang.translate('surs_korean') :
-                                         options.turkish ? Lampa.Lang.translate('surs_turkish') :
-                                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
-                        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' ' + Lampa.Lang.translate('surs_tv_shows') + ' (' + Lampa.Lang.translate(genre.title) + ')';
-                    }
-                    callback(json);
-                }, callback);
+    if (json.results) {
+        // Применяем фильтры только для международного контента
+        if (!options.russian && !options.ukrainian && !options.korean && !options.turkish) {
+            json.results = applyFilters(json.results);
+        }
+
+        // Проверяем количество карточек (минимум 5 для всех)
+        if (json.results.length < 5) {
+            callback({ results: [], title: json.title });
+            return;
+        }
+
+        // Формируем заголовок с учетом региона
+        var titlePrefix = options.russian ? Lampa.Lang.translate('surs_russian') :
+                         options.korean ? Lampa.Lang.translate('surs_korean') :
+                         options.turkish ? Lampa.Lang.translate('surs_turkish') :
+                         options.ukrainian ? Lampa.Lang.translate('surs_ukrainian') : '';
+        
+        json.title = Lampa.Lang.translate(sort.title) + ' ' + titlePrefix + ' ' + 
+                     Lampa.Lang.translate('surs_tv_shows') + ' (' + 
+                     Lampa.Lang.translate(genre.title) + ')';
+    }
+    callback(json);
+}, callback);
             };
         }
 
@@ -1659,16 +1737,38 @@ var partsData = [
         
                 // Запрос для ближайших эпизодов
         var upcomingEpisodesRequest = function (callback) {
-            callback({
-                source: 'tmdb',
-                results: Lampa.TimeTable.lately().slice(0, 20),
-                title: Lampa.Lang.translate('title_upcoming_episodes'),
-                nomore: true,
-                cardClass: function (_elem, _params) {
-                    return new Episode(_elem, _params);
-                }
-            });
-        };
+    var episodes = Lampa.TimeTable.lately();
+    
+    // Берем до 20 эпизодов и проверяем количество
+    var results = episodes.slice(0, 20);
+    
+    if (results.length >= 5) {
+        // Если эпизодов достаточно (5+)
+        callback({
+            source: 'tmdb',
+            results: results,
+            title: Lampa.Lang.translate('title_upcoming_episodes'),
+            nomore: true,
+            cardClass: function (_elem, _params) {
+                return new Episode(_elem, _params);
+            }
+        });
+    } else {
+        // Если эпизодов меньше 5 - возвращаем пустую подборку
+        callback({
+            source: 'tmdb',
+            results: [],
+            title: Lampa.Lang.translate('title_upcoming_episodes'),
+            nomore: true,
+            cardClass: function (_elem, _params) {
+                return new Episode(_elem, _params);
+            }
+        });
+        
+        // Опционально: логирование для отладки
+        console.log('Скрыто "Ближайшие эпизоды": найдено только ' + results.length + ' эпизода(ов)');
+    }
+};
         
         
         /* стриминги. */
@@ -1688,6 +1788,10 @@ function getStreamingWithGenres(serviceName, serviceId) {
         owner.get(apiUrl, params, function (json) {
             if (json.results) {
                 json.results = applyFilters(json.results);
+				if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
             }
 
             json.title = Lampa.Lang.translate(sort.title + ' (' + genre.title + ') на ' + serviceName);
@@ -1710,6 +1814,10 @@ function getStreaming(serviceName, serviceId) {
         owner.get(apiUrl, params, function (json) {
             if (json.results) {
                 json.results = applyFilters(json.results);
+				if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
             }
 
             json.title = Lampa.Lang.translate(sort.title + ' на ' + serviceName);
@@ -1756,6 +1864,10 @@ function getMovies(genre, options) {
         owner.get(apiUrl, params, function (json) {
             if (!options.russian && json.results) {
                 json.results = applyFilters(json.results);
+				if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
             }
 
             var titlePrefix = options.russian ? ' - российские' : '';
@@ -1787,6 +1899,10 @@ options = options || {};
         owner.get(apiUrl, params, function (json) {
             if (!options.russian && json.results) {
                 json.results = applyFilters(json.results);
+				if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
             }
 
             var titlePrefix = options.russian ? ' - российские' : '';
@@ -1874,6 +1990,10 @@ function getBestContentByGenre(genre, contentType) {
         owner.get(apiUrl, params, function (json) {
             if (json.results) {
                 json.results = filterCyrillic(json.results);
+				if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
             }
 
             json.title = Lampa.Lang.translate(contentType === 'movie' 
@@ -2338,16 +2458,25 @@ var partsData = [];
         
                 // Запрос для ближайших эпизодов
         var upcomingEpisodesRequest = function (callback) {
-            callback({
-                source: 'tmdb',
-                results: Lampa.TimeTable.lately().slice(0, 20),
-                title: Lampa.Lang.translate('title_upcoming_episodes'),
-                nomore: true,
-                cardClass: function (_elem, _params) {
-                    return new Episode(_elem, _params);
-                }
-            });
-        };
+    // Получаем эпизоды и проверяем количество
+    var episodes = Lampa.TimeTable.lately();
+    var showResults = episodes.length >= 5; // Показывать только если есть 5+ эпизодов
+    
+    callback({
+        source: 'tmdb',
+        results: showResults ? episodes.slice(0, 20) : [], // Возвращаем либо 20 эпизодов, либо пустой массив
+        title: Lampa.Lang.translate('title_upcoming_episodes'),
+        nomore: true,
+        cardClass: function (_elem, _params) {
+            return new Episode(_elem, _params);
+        }
+    });
+    
+    // Для отладки (можно удалить в продакшене)
+    if (!showResults) {
+        console.log('Блок "Ближайшие эпизоды" скрыт - найдено только', episodes.length, 'эпизодов');
+    }
+};
         
         
  /* стриминги. */
@@ -2367,6 +2496,10 @@ function getStreamingWithGenres(serviceName, serviceId) {
         owner.get(apiUrl, params, function (json) {
             if (json.results) {
                 json.results = applyFilters(json.results);
+				if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
             }
 
             json.title = Lampa.Lang.translate(sort.title + ' (' + genre.title + ') на ' + serviceName);
@@ -2388,6 +2521,10 @@ function getStreaming(serviceName, serviceId) {
         owner.get(apiUrl, params, function (json) {
             if (json.results) {
                 json.results = applyFilters(json.results);
+				if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Пустая подборка
+            return;
+        }
             }
 
             json.title = Lampa.Lang.translate(sort.title + ' на ' + serviceName);
@@ -2425,11 +2562,20 @@ apiUrl += '&with_original_language=ru&region=RU';
             apiUrl += sort.extraParams;
         }
           apiUrl = buildApiUrl(apiUrl);
-        owner.get(apiUrl, params, function (json) {
-            var titlePrefix = ' - российские';
-            json.title = Lampa.Lang.translate(sort.title + titlePrefix + ' (' + genre.title + ')');
-            callback(json);
-        }, callback);
+owner.get(apiUrl, params, function (json) {
+    if (json.results) {
+        // Проверяем количество карточек (минимум 5)
+        if (json.results.length < 5) {
+            callback({ results: [], title: json.title }); // Возвращаем пустую подборку
+            return;
+        }
+
+        // Формируем заголовок
+        var titlePrefix = ' - российские';
+        json.title = Lampa.Lang.translate(sort.title + titlePrefix + ' (' + genre.title + ')');
+    }
+    callback(json);
+}, callback);
     };
 }
 
@@ -2448,9 +2594,17 @@ function getTVShows(genre) {
         apiUrl = buildApiUrl(apiUrl);
 
         owner.get(apiUrl, params, function (json) {
-            json.title = Lampa.Lang.translate(sort.title + ' - российские сериалы (' + genre.title + ')');
-            callback(json);
-        }, callback);
+    if (json.results && json.results.length >= 5) {  // Проверяем наличие и количество карточек
+        json.title = Lampa.Lang.translate(sort.title + ' - российские сериалы (' + genre.title + ')');
+        callback(json);
+    } else {
+        // Возвращаем пустую подборку, если карточек меньше 5 или results отсутствует
+        callback({ 
+            results: [], 
+            title: Lampa.Lang.translate(sort.title + ' - российские сериалы (' + genre.title + ')') 
+        });
+    }
+}, callback);
     };
 }
 
@@ -2471,12 +2625,25 @@ function getBestContentByGenre(genre, contentType) {
         apiUrl = applyWithoutKeywords(apiUrl); 
 
         owner.get(apiUrl, params, function (json) {
-            json.title = Lampa.Lang.translate(contentType === 'movie' 
+    if (json.results && json.results.length >= 5) {  // Основная проверка
+        json.title = Lampa.Lang.translate(
+            contentType === 'movie' 
                 ? 'Топ российские фильмы (' + genre.title + ')'
-                : 'Топ российские сериалы (' + genre.title + ')');
-            
-            callback(json);
-        }, callback);
+                : 'Топ российские сериалы (' + genre.title + ')'
+        );
+        callback(json);
+    } else {
+        // Возвращаем пустую подборку с заголовком
+        callback({
+            results: [],
+            title: Lampa.Lang.translate(
+                contentType === 'movie'
+                    ? 'Топ российские фильмы (' + genre.title + ')'
+                    : 'Топ российские сериалы (' + genre.title + ')'
+            )
+        });
+    }
+}, callback);
     };
 }
 
