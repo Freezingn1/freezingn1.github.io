@@ -15699,7 +15699,7 @@
     }
   };
   Lampa.Manifest.plugins = manifest;
-  var button = "<div class=\"full-start__button selector view--reyohoho_mod\" data-subtitle=\"HDRezka" + mod_version + "\">\n    <svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:svgjs=\"http://svgjs.com/svgjs\" version=\"1.1\" width=\"512\" height=\"512\" x=\"0\" y=\"0\" viewBox=\"0 0 244 260\" style=\"enable-background:new 0 0 512 512\" xml:space=\"preserve\" class=\"\">\n    <g xmlns=\"http://www.w3.org/2000/svg\">\n        <path d=\"M242,88v170H10V88h41l-38,38h37.1l38-38h38.4l-38,38h38.4l38-38h38.3l-38,38H204L242,88L242,88z M228.9,2l8,37.7l0,0 L191.2,10L228.9,2z M160.6,56l-45.8-29.7l38-8.1l45.8,29.7L160.6,56z M84.5,72.1L38.8,42.4l38-8.1l45.8,29.7L84.5,72.1z M10,88 L2,50.2L47.8,80L10,88z\" fill=\"currentColor\"/>\n    </g></svg>\n\n    <span>#{reyohoho_mod_title}</span>\n    </div>";
+  var button = "<div class=\"full-start__button selector view--online lampac--button\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon icon-tabler icons-tabler-outline icon-tabler-prescription\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M6 19v-16h4.5a4.5 4.5 0 1 1 0 9h-4.5\" /><path d=\"M19 21l-9 -9\" /><path d=\"M13 21l6 -6\" /></svg>\n\n        <span>HDRezka</span>\n    </div>";
   Lampa.Listener.follow('full', function (e) {
     if (e.type == 'complite') {
       var btn = $(Lampa.Lang.translate(button));
