@@ -38,7 +38,7 @@
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/tricks.js'], function () { });
 
 	//Bwa
-	Lampa.Utils.putScriptAsync(['http://bwa.to/384750856'], function () { });
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/bwa.js'], function () { });
 
 
 })();
