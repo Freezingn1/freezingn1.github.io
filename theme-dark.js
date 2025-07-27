@@ -31,9 +31,6 @@
 	//HDRezka
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/hdrezka.js'], function () { });
 
-	//NUMParser
-	Lampa.Utils.putScriptAsync(['https://num.jac-red.ru/plugin/nmprs.js'], function () { });
-
 	//DMCA
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/dmca.js'], function () { });
 
