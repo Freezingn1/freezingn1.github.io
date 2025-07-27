@@ -25,8 +25,8 @@
 	//Каталог парсеров
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/pubtorr.js'], function () { });
 
-	//Онлайн
-	Lampa.Utils.putScriptAsync(['http://bwa.to/384750856'], function () { });
+	//Онлайн Bwa
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/bwa.js'], function () { });
 
 	//HDRezka
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/hdrezka.js'], function () { });
@@ -36,9 +36,6 @@
 
 	//Trick
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/tricks.js'], function () { });
-
-	//Bwa
-	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/bwa.js'], function () { });
 
 
 })();
