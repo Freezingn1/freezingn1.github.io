@@ -469,7 +469,7 @@
 			.full-start-new__details > span:nth-of-type(7) {
 				display: block;
 				order: 2;
-				opacity: 30%;		
+				opacity: 40%;		
 			}
 			}
 
