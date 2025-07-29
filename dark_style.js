@@ -463,6 +463,15 @@
                     justify-content: center !important;
                 }
             }
+			
+			
+			@media screen and (max-width: 480px) {
+			.full-start-new__details > span:nth-of-type(7) {
+				display: block;
+				order: 2;
+				opacity: 30%;		
+			}
+			}
 
             @media screen and (max-width: 480px) {
                 .full-descr__tags {
