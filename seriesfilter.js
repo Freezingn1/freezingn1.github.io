@@ -6,6 +6,11 @@ function extractEpisodeNumber(text) {
 
 // Функция создания фильтра серий
 function addEpisodesFilterToMenu() {
+    // Проверяем, не добавлен ли уже наш фильтр
+    if (document.querySelector('.selectbox-item__title')?.textContent.includes('Диапазон серий')) {
+        return;
+    }
+
     // Находим все серии
     const episodeElements = Array.from(document.querySelectorAll('.online.selector'));
     const episodes = episodeElements.map(el => {
@@ -68,9 +73,6 @@ function addEpisodesFilterToMenu() {
         
         if (!selectboxContent || !selectboxHead || !selectboxBody) return;
 
-        // Меняем заголовок
-        selectboxHead.querySelector('.selectbox__title').textContent = 'Диапазон серий';
-
         // Очищаем тело меню
         selectboxBody.querySelector('.scroll__body').innerHTML = '';
 
@@ -87,10 +89,7 @@ function addEpisodesFilterToMenu() {
         allItem.addEventListener('click', () => {
             episodeElements.forEach(el => el.style.display = '');
             episodeFilterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
-            // Возвращаем обычное меню
             selectboxHead.querySelector('.selectbox__title').textContent = 'Фильтр';
-            // Здесь нужно восстановить оригинальное меню
-            // Для полной реализации нужно сохранить оригинальное содержимое
         });
         scrollBody.appendChild(allItem);
 
@@ -114,25 +113,31 @@ function addEpisodesFilterToMenu() {
                     el.style.display = (num >= range.start && num <= range.end) ? '' : 'none';
                 });
                 episodeFilterItem.querySelector('.selectbox-item__subtitle').textContent = `${range.start}-${range.end}`;
-                // Возвращаем обычное меню
                 selectboxHead.querySelector('.selectbox__title').textContent = 'Фильтр';
-                // Здесь нужно восстановить оригинальное меню
             });
             scrollBody.appendChild(rangeItem);
         });
-
-        // Кнопка "Назад"
-        const backItem = document.createElement('div');
-        backItem.className = 'selectbox-item selector';
-        backItem.innerHTML = '<div class="selectbox-item__title">Назад</div>';
-        backItem.addEventListener('click', () => {
-            // Возвращаем обычное меню
-            selectboxHead.querySelector('.selectbox__title').textContent = 'Фильтр';
-            // Здесь нужно восстановить оригинальное меню
-        });
-        scrollBody.appendChild(backItem);
     });
 }
 
-// Запускаем добавление фильтра
-addEpisodesFilterToMenu();
+// Функция для наблюдения за изменениями DOM
+function observeDOM() {
+    const observer = new MutationObserver(function(mutations) {
+        // Проверяем, появилось ли нужное меню
+        const filterMenu = document.querySelector('.selectbox__content .scroll__body');
+        if (filterMenu) {
+            addEpisodesFilterToMenu();
+            // Можно отключить observer после нахождения элемента
+            // observer.disconnect();
+        }
+    });
+
+    // Начинаем наблюдение за изменениями в body и его потомках
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+// Запускаем наблюдение при загрузке страницы
+document.addEventListener('DOMContentLoaded', observeDOM);
