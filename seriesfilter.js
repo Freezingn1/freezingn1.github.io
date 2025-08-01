@@ -1,143 +1,155 @@
-(function() {
-    // Конфигурация
-    const CONFIG = {
-        checkInterval: 1000, // Проверять наличие элементов каждую секунду
-        maxChecks: 10,       // Максимальное количество проверок
-        rangeSize: 25        // Серий в одном диапазоне
-    };
-
-    // Основная функция
-    function initSeriesFilter() {
-        let checkCount = 0;
+class SeriesFilter {
+    constructor() {
+        this.observer = null;
+        this.attempts = 0;
+        this.maxAttempts = 15;
+        this.checkDelay = 500;
         
-        const intervalId = setInterval(() => {
-            // Проверяем, загрузились ли серии и меню
-            const hasEpisodes = document.querySelectorAll('.online.selector').length > 0;
-            const hasFilterMenu = document.querySelector('.selectbox__content .scroll__body');
-            
-            if (hasEpisodes && hasFilterMenu) {
-                clearInterval(intervalId);
-                setupSeriesFilter();
-            } else if (checkCount >= CONFIG.maxChecks) {
-                clearInterval(intervalId);
-                console.log('SeriesFilter: Не удалось инициализировать');
-            }
-            checkCount++;
-        }, CONFIG.checkInterval);
+        this.init();
     }
 
-    function setupSeriesFilter() {
-        // Извлечение номеров серий
-        const extractEpisodeNum = (text) => {
-            const match = text.match(/Серия\s(\d+)/i);
-            return match ? parseInt(match[1]) : 0;
-        };
+    init() {
+        if (this.isSeriesPage()) {
+            this.startObservation();
+        } else {
+            document.addEventListener('lampa-page-changed', () => {
+                if (this.isSeriesPage()) this.startObservation();
+            });
+        }
+    }
 
-        // Получение элементов
-        const episodeElements = Array.from(document.querySelectorAll('.online.selector'));
-        const episodes = episodeElements.map(el => {
-            const title = el.querySelector('.online__title')?.textContent || '';
-            return {
+    isSeriesPage() {
+        return document.querySelector('.full-start-new__details')?.textContent.includes('Серии:');
+    }
+
+    startObservation() {
+        this.observer = new MutationObserver(() => {
+            this.trySetupFilter();
+        });
+        
+        this.observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        this.trySetupFilter();
+    }
+
+    trySetupFilter() {
+        if (this.attempts++ > this.maxAttempts) {
+            this.observer?.disconnect();
+            return;
+        }
+
+        if (this.checkElements()) {
+            this.setupFilter();
+            this.observer?.disconnect();
+        } else {
+            setTimeout(() => this.trySetupFilter(), this.checkDelay);
+        }
+    }
+
+    checkElements() {
+        return document.querySelectorAll('.online.selector').length > 0 && 
+               document.querySelector('.selectbox__content .scroll__body');
+    }
+
+    setupFilter() {
+        const extractNum = (text) => parseInt(text.match(/Серия\s(\d+)/i)?.[1]) || 0;
+        
+        const episodes = Array.from(document.querySelectorAll('.online.selector'))
+            .map(el => ({
                 element: el,
-                number: extractEpisodeNum(title)
-            };
-        }).filter(ep => ep.number > 0);
+                number: extractNum(el.querySelector('.online__title')?.textContent || '')
+            }))
+            .filter(ep => ep.number > 0)
+            .sort((a, b) => a.number - b.number);
 
         if (episodes.length === 0) return;
 
-        // Сортировка и определение диапазонов
-        episodes.sort((a, b) => a.number - b.number);
         const totalEpisodes = episodes[episodes.length - 1].number;
+        const rangeSize = totalEpisodes > 100 ? 50 : 25;
         const ranges = [];
-        
-        for (let i = 1; i <= totalEpisodes; i += CONFIG.rangeSize) {
+
+        for (let i = 1; i <= totalEpisodes; i += rangeSize) {
             ranges.push({
                 start: i,
-                end: Math.min(i + CONFIG.rangeSize - 1, totalEpisodes)
+                end: Math.min(i + rangeSize - 1, totalEpisodes)
             });
         }
 
-        // Создание элемента фильтра
         const filterMenu = document.querySelector('.selectbox__content .scroll__body');
         const seasonItem = [...filterMenu.querySelectorAll('.selectbox-item')]
-            .find(item => item.querySelector('.selectbox-item__title')?.textContent.includes('Сезон'));
+            .find(item => item.textContent.includes('Сезон'));
 
-        const episodeFilterItem = document.createElement('div');
-        episodeFilterItem.className = 'selectbox-item selector';
-        episodeFilterItem.innerHTML = `
+        const filterItem = document.createElement('div');
+        filterItem.className = 'selectbox-item selector';
+        filterItem.innerHTML = `
             <div class="selectbox-item__title">Диапазон серий</div>
             <div class="selectbox-item__subtitle">Все серии</div>
         `;
 
-        if (seasonItem) {
-            seasonItem.after(episodeFilterItem);
-        } else {
-            filterMenu.prepend(episodeFilterItem);
-        }
+        seasonItem ? seasonItem.after(filterItem) : filterMenu.prepend(filterItem);
 
-        // Обработчик клика
-        episodeFilterItem.addEventListener('click', () => {
-            const selectboxContent = document.querySelector('.selectbox__content');
-            const selectboxHead = selectboxContent.querySelector('.selectbox__head');
-            const scrollBody = selectboxContent.querySelector('.scroll__body');
+        filterItem.addEventListener('click', () => {
+            const selectbox = document.querySelector('.selectbox__content');
+            const header = selectbox.querySelector('.selectbox__head');
+            const body = selectbox.querySelector('.scroll__body');
+            const original = body.innerHTML;
             
-            // Сохраняем оригинальное состояние
-            const originalContent = scrollBody.innerHTML;
-            const originalTitle = selectboxHead.textContent;
-            
-            // Обновляем интерфейс
-            selectboxHead.querySelector('.selectbox__title').textContent = 'Диапазон серий';
-            scrollBody.innerHTML = '';
+            header.querySelector('.selectbox__title').textContent = 'Диапазон серий';
+            body.innerHTML = '';
 
-            // Добавляем варианты
-            const addMenuItem = (title, subtitle, action) => {
+            const addOption = (title, count, action) => {
                 const item = document.createElement('div');
                 item.className = 'selectbox-item selector';
                 item.innerHTML = `
                     <div class="selectbox-item__title">${title}</div>
-                    <div class="selectbox-item__subtitle">${subtitle}</div>
+                    <div class="selectbox-item__subtitle">${count} серий</div>
                 `;
                 item.addEventListener('click', action);
-                scrollBody.appendChild(item);
+                body.appendChild(item);
             };
 
-            // "Все серии"
-            addMenuItem('Все серии', `${episodes.length} серий`, () => {
-                episodeElements.forEach(el => el.style.display = '');
-                episodeFilterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
-                selectboxHead.querySelector('.selectbox__title').textContent = originalTitle;
-                scrollBody.innerHTML = originalContent;
-                setupSeriesFilter(); // Реинициализация
+            addOption('Все серии', episodes.length, () => {
+                episodes.forEach(ep => ep.element.style.display = '');
+                filterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
+                header.querySelector('.selectbox__title').textContent = 'Фильтр';
+                body.innerHTML = original;
+                new SeriesFilter(); // Реинициализация
             });
 
-            // Диапазоны
             ranges.forEach(range => {
-                const count = episodes.filter(ep => ep.number >= range.start && ep.number <= range.end).length;
+                const count = episodes.filter(ep => 
+                    ep.number >= range.start && ep.number <= range.end
+                ).length;
+                
                 if (count > 0) {
-                    addMenuItem(
-                        `${range.start}-${range.end}`,
-                        `${count} серий`,
-                        () => {
-                            episodeElements.forEach(el => {
-                                const num = extractEpisodeNum(el.querySelector('.online__title')?.textContent || '');
-                                el.style.display = (num >= range.start && num <= range.end) ? '' : 'none';
-                            });
-                            episodeFilterItem.querySelector('.selectbox-item__subtitle').textContent = `${range.start}-${range.end}`;
-                            selectboxHead.querySelector('.selectbox__title').textContent = originalTitle;
-                            scrollBody.innerHTML = originalContent;
-                            setupSeriesFilter();
-                        }
-                    );
+                    addOption(`${range.start}-${range.end}`, count, () => {
+                        episodes.forEach(ep => {
+                            ep.element.style.display = 
+                                ep.number >= range.start && ep.number <= range.end ? '' : 'none';
+                        });
+                        filterItem.querySelector('.selectbox-item__subtitle').textContent = `${range.start}-${range.end}`;
+                        header.querySelector('.selectbox__title').textContent = 'Фильтр';
+                        body.innerHTML = original;
+                        new SeriesFilter();
+                    });
                 }
             });
         });
     }
+}
 
-    // Запускаем при полной загрузке страницы
-    if (document.readyState === 'complete') {
-        initSeriesFilter();
-    } else {
-        window.addEventListener('load', initSeriesFilter);
-        document.addEventListener('DOMContentLoaded', initSeriesFilter);
-    }
-})();
+// Запуск при полной загрузке и при AJAX-навигации
+if (document.readyState === 'complete') {
+    new SeriesFilter();
+} else {
+    window.addEventListener('load', () => new SeriesFilter());
+    document.addEventListener('DOMContentLoaded', () => new SeriesFilter());
+}
+
+// Для Lampa AJAX навигации
+document.addEventListener('lampa-page-changed', () => {
+    setTimeout(() => new SeriesFilter(), 500);
+});
