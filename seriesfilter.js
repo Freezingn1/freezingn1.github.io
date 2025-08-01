@@ -1,25 +1,41 @@
 (function() {
-    // 1. Ждём полной загрузки Lampa
-    if (!window.lampa) {
-        console.error('Lampa не найдена');
-        return;
-    }
-
-    // 2. Конфигурация
+    // 1. Конфигурация
     const config = {
-        checkDelay: 500,     // Задержка проверки элементов
-        maxAttempts: 20,     // Максимум попыток
-        rangeSize: 25        // Серий в диапазоне
+        checkDelay: 500,
+        maxAttempts: 20,
+        rangeSize: 25
     };
 
-    // 3. Основная функция
+    // 2. Функция инициализации при активации HDRezka
+    function initOnHDRezka() {
+        let attempts = 0;
+
+        const checkHDRezka = () => {
+            attempts++;
+            
+            // Ищем кнопку HDRezka в меню
+            const hdRezkaItem = [...document.querySelectorAll('.selectbox-item__title')]
+                .find(item => item.textContent.trim() === 'HDRezka');
+            
+            if (hdRezkaItem) {
+                // Нашли HDRezka - запускаем наш плагин
+                initPlugin();
+            } 
+            else if (attempts < config.maxAttempts) {
+                setTimeout(checkHDRezka, config.checkDelay);
+            }
+        };
+
+        checkHDRezka();
+    }
+
+    // 3. Основная функция плагина
     function initPlugin() {
         let attempts = 0;
 
-        const check = () => {
+        const checkElements = () => {
             attempts++;
             
-            // Ищем необходимые элементы
             const hasEpisodes = document.querySelectorAll('.online.selector').length > 0;
             const hasFilterMenu = document.querySelector('.selectbox__content .scroll__body');
             
@@ -27,26 +43,20 @@
                 setupFilter();
             } 
             else if (attempts < config.maxAttempts) {
-                setTimeout(check, config.checkDelay);
-            }
-            else {
-                console.log('SeriesFilter: Элементы не найдены');
+                setTimeout(checkElements, config.checkDelay);
             }
         };
 
-        // Первая проверка
-        setTimeout(check, 1000);
+        checkElements();
     }
 
-    // 4. Настройка фильтра
+    // 4. Настройка фильтра (аналогично предыдущему варианту)
     function setupFilter() {
-        // Функция парсинга номера
         const getEpisodeNum = (text) => {
             const match = text.match(/Серия\s(\d+)/i);
             return match ? parseInt(match[1]) : 0;
         };
 
-        // Получаем все серии
         const episodes = Array.from(document.querySelectorAll('.online.selector'))
             .map(el => {
                 const title = el.querySelector('.online__title')?.textContent || '';
@@ -59,7 +69,6 @@
 
         if (!episodes.length) return;
 
-        // Сортируем и создаём диапазоны
         episodes.sort((a, b) => a.number - b.number);
         const lastEpisode = episodes[episodes.length - 1].number;
         const ranges = [];
@@ -71,7 +80,6 @@
             });
         }
 
-        // Создаём элемент в меню
         const menu = document.querySelector('.selectbox__content .scroll__body');
         const seasonItem = [...menu.querySelectorAll('.selectbox-item')]
             .find(item => item.textContent.includes('Сезон'));
@@ -85,23 +93,19 @@
 
         (seasonItem ? seasonItem : menu.lastElementChild).after(filterItem);
 
-        // Обработчик клика
         filterItem.addEventListener('click', () => {
             const selectbox = document.querySelector('.selectbox__content');
             const header = selectbox.querySelector('.selectbox__head .selectbox__title');
             const body = selectbox.querySelector('.scroll__body');
             
-            // Сохраняем оригинальное состояние
             const original = {
                 title: header.textContent,
                 content: body.innerHTML
             };
 
-            // Обновляем интерфейс
             header.textContent = 'Выберите диапазон';
             body.innerHTML = '';
 
-            // Функция добавления пункта
             const addItem = (title, subtitle, action) => {
                 const item = document.createElement('div');
                 item.className = 'selectbox-item selector';
@@ -113,14 +117,12 @@
                 body.appendChild(item);
             };
 
-            // "Все серии"
             addItem('Все серии', `${episodes.length} серий`, () => {
                 episodes.forEach(ep => ep.element.style.display = '');
                 filterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
                 resetMenu();
             });
 
-            // Добавляем диапазоны
             ranges.forEach(range => {
                 const count = episodes.filter(ep => 
                     ep.number >= range.start && ep.number <= range.end
@@ -139,26 +141,24 @@
                 }
             });
 
-            // Функция восстановления меню
             function resetMenu() {
                 header.textContent = original.title;
                 body.innerHTML = original.content;
-                // Реинициализируем плагин
                 setTimeout(setupFilter, 100);
             }
         });
     }
 
-    // 5. Запуск
-    document.addEventListener('DOMContentLoaded', initPlugin);
-    window.addEventListener('load', initPlugin);
+    // 5. Запускаем мониторинг появления HDRezka
+    document.addEventListener('DOMContentLoaded', initOnHDRezka);
+    window.addEventListener('load', initOnHDRezka);
     
-    // Для динамических страниц Lampa
+    // Для динамической подгрузки в Lampa
     if (window.lampa && lampa.router) {
-        const original = lampa.router.render;
+        const originalRender = lampa.router.render;
         lampa.router.render = function() {
-            original.apply(this, arguments);
-            setTimeout(initPlugin, 1000);
+            originalRender.apply(this, arguments);
+            setTimeout(initOnHDRezka, 1000);
         };
     }
 })();
