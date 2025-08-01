@@ -385,16 +385,7 @@
                 flex-direction: column;
                 align-items: center;
                 bottom: auto;
-            }
-			
-			.scroll--horizontal .scroll__content {
-				padding: 0 1.5em;
-			}
-			
-			.scroll--mask .scroll__content {
-				padding: 1em 0;
-			}
-			
+            }						
             
             /* Стиль для элемента selectbox в фокусе */
             .selectbox-item.focus {
