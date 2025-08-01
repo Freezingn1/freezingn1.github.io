@@ -387,6 +387,10 @@
                 bottom: auto;
             }
 			
+			.scroll--horizontal .scroll__content {
+				padding: 0 1.5em;
+			}
+			
 			.scroll--mask .scroll__content {
 				padding: 1em 0;
 			}
