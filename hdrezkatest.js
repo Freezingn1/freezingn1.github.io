@@ -16015,20 +16015,30 @@
         checkDelay: 300
     };
 
+    // Проверка, добавлен ли уже наш фильтр
+    function isFilterAlreadyAdded() {
+        const items = document.querySelectorAll('.selectbox-item__title');
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].textContent.trim() === 'Диапазон серий') {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Функция для добавления фильтра в меню
     function addSeriesFilter() {
+        // Проверяем, не добавлен ли уже наш фильтр
+        if (isFilterAlreadyAdded()) return true;
+
         const menu = document.querySelector('.selectbox__content .scroll__body');
         if (!menu) return false;
-
-        // Проверяем, не добавлен ли уже наш фильтр
-        if (menu.querySelector('.selectbox-item__title:contains("Диапазон серий")')) {
-            return true;
-        }
 
         const episodes = Array.from(document.querySelectorAll('.online.selector'))
             .map(el => {
                 const title = el.querySelector('.online__title')?.textContent || '';
-                const num = parseInt(title.match(/Серия\s(\d+)/i)?.[1]) || 0;
+                const numMatch = title.match(/Серия\s(\d+)/i);
+                const num = numMatch ? parseInt(numMatch[1]) : 0;
                 return { element: el, number: num };
             })
             .filter(ep => ep.number > 0)
@@ -16055,16 +16065,29 @@
         `;
 
         // Вставляем после пункта "Сезон" или в начало
-        const seasonItem = [...menu.querySelectorAll('.selectbox-item')]
-            .find(item => item.textContent.includes('Сезон'));
+        const menuItems = menu.querySelectorAll('.selectbox-item');
+        let inserted = false;
         
-        (seasonItem || menu.firstChild)?.after(filterItem);
+        for (let i = 0; i < menuItems.length; i++) {
+            if (menuItems[i].querySelector('.selectbox-item__title')?.textContent.includes('Сезон')) {
+                menuItems[i].after(filterItem);
+                inserted = true;
+                break;
+            }
+        }
+        
+        if (!inserted) {
+            menu.prepend(filterItem);
+        }
 
         // Обработчик клика
         filterItem.addEventListener('click', function() {
             const selectbox = document.querySelector('.selectbox__content');
+            if (!selectbox) return;
+            
             const header = selectbox.querySelector('.selectbox__head .selectbox__title');
             const body = selectbox.querySelector('.scroll__body');
+            if (!header || !body) return;
             
             header.textContent = 'Диапазон серий';
             body.innerHTML = '';
@@ -16085,8 +16108,7 @@
             addItem('Все серии', `${episodes.length} серий`, () => {
                 episodes.forEach(ep => ep.element.style.display = '');
                 filterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
-                header.textContent = 'Фильтр';
-                addSeriesFilter(); // Пересоздаем меню
+                resetMenu();
             });
 
             // Диапазоны
@@ -16103,18 +16125,23 @@
                         });
                         filterItem.querySelector('.selectbox-item__subtitle').textContent = 
                             `${range.start}-${range.end}`;
-                        header.textContent = 'Фильтр';
-                        addSeriesFilter(); // Пересоздаем меню
+                        resetMenu();
                     });
                 }
             });
+
+            function resetMenu() {
+                header.textContent = 'Фильтр';
+                body.innerHTML = '';
+                addSeriesFilter(); // Восстанавливаем оригинальное меню
+            }
         });
 
         return true;
     }
 
     // Отслеживаем открытие меню фильтров
-    let observer = new MutationObserver(mutations => {
+    const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
             if (mutation.target.classList?.contains('selectbox__content') && 
                 getComputedStyle(mutation.target).display !== 'none') {
@@ -16138,12 +16165,12 @@
         attributeFilter: ['class', 'style']
     });
 
-    // Инициализация при загрузке
+    // Первоначальная инициализация
     setTimeout(() => {
         if (document.querySelector('.selectbox__content[style*="display: block"]')) {
             addSeriesFilter();
         }
-    }, 2000);
+    }, 1000);
 })();
 // ====================== End of Series Filter Plugin ======================
 
