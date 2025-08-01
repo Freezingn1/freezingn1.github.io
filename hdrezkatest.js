@@ -16006,200 +16006,146 @@
   });
 
 
-  // ====================== Series Filter Plugin ======================
-  // Выносим функцию логгирования в самое начало
-  function seriesFilterDebugLog(message) {
-    console.log('[SeriesFilter] ' + message);
-  }
-
-  function initSeriesFilter() {
+// ====================== Series Filter Plugin ======================
+(function() {
+    // Конфигурация
     const config = {
-      checkInterval: 1500,  // Ещё больше увеличенный интервал проверки
-      maxAttempts: 60,      // Максимальное количество попыток
-      rangeSize: 25
+        rangeSize: 25,
+        maxAttempts: 30,
+        checkDelay: 300
     };
 
-    let checkAttempts = 0;
-    let isInitialized = false;
+    // Функция для добавления фильтра в меню
+    function addSeriesFilter() {
+        const menu = document.querySelector('.selectbox__content .scroll__body');
+        if (!menu) return false;
 
-    const checkElements = () => {
-      if (isInitialized) return;
-      
-      checkAttempts++;
-      seriesFilterDebugLog(`Попытка ${checkAttempts} из ${config.maxAttempts}`);
-      
-      const episodes = document.querySelectorAll('.online.selector');
-      const filterMenu = document.querySelector('.selectbox__content .scroll__body');
-      
-      if (episodes.length > 0 && filterMenu) {
-        seriesFilterDebugLog('Элементы найдены, инициализация...');
-        isInitialized = true;
-        setupSeriesFilter(episodes, filterMenu);
-      } 
-      else if (checkAttempts < config.maxAttempts) {
-        setTimeout(checkElements, config.checkInterval);
-      }
-      else {
-        seriesFilterDebugLog('Элементы не найдены после всех попыток');
-      }
-    };
-
-    function setupSeriesFilter(episodeElements, menuContainer) {
-      seriesFilterDebugLog('Настройка фильтра серий...');
-      
-      const getEpisodeNum = (el) => {
-        const title = el.querySelector('.online__title')?.textContent || '';
-        const match = title.match(/Серия\s(\d+)/i);
-        return match ? parseInt(match[1]) : 0;
-      };
-
-      const episodes = Array.from(episodeElements)
-        .map(el => ({ element: el, number: getEpisodeNum(el) }))
-        .filter(ep => ep.number > 0)
-        .sort((a, b) => a.number - b.number);
-
-      if (episodes.length === 0) {
-        seriesFilterDebugLog('Не найдены серии с номерами');
-        return;
-      }
-
-      const lastEpisode = episodes[episodes.length - 1].number;
-      seriesFilterDebugLog(`Всего серий: ${lastEpisode}`);
-      
-      const ranges = [];
-      for (let i = 1; i <= lastEpisode; i += config.rangeSize) {
-        ranges.push({
-          start: i,
-          end: Math.min(i + config.rangeSize - 1, lastEpisode)
-        });
-      }
-
-      const seasonItem = [...menuContainer.querySelectorAll('.selectbox-item')]
-        .find(item => item.textContent.includes('Сезон'));
-
-      const filterItem = document.createElement('div');
-      filterItem.className = 'selectbox-item selector';
-      filterItem.innerHTML = `
-        <div class="selectbox-item__title">Диапазон серий</div>
-        <div class="selectbox-item__subtitle">Все серии</div>
-      `;
-
-      const referenceNode = seasonItem || menuContainer.lastElementChild;
-      if (referenceNode) {
-        referenceNode.after(filterItem);
-        seriesFilterDebugLog('Фильтр добавлен в меню');
-      }
-      else {
-        seriesFilterDebugLog('Не удалось найти место для вставки фильтра');
-        return;
-      }
-
-      filterItem.addEventListener('click', () => {
-        seriesFilterDebugLog('Открытие подменю фильтра');
-        const selectbox = document.querySelector('.selectbox__content');
-        if (!selectbox) {
-          seriesFilterDebugLog('Не найден selectbox__content');
-          return;
+        // Проверяем, не добавлен ли уже наш фильтр
+        if (menu.querySelector('.selectbox-item__title:contains("Диапазон серий")')) {
+            return true;
         }
 
-        const header = selectbox.querySelector('.selectbox__head .selectbox__title');
-        const body = selectbox.querySelector('.scroll__body');
+        const episodes = Array.from(document.querySelectorAll('.online.selector'))
+            .map(el => {
+                const title = el.querySelector('.online__title')?.textContent || '';
+                const num = parseInt(title.match(/Серия\s(\d+)/i)?.[1]) || 0;
+                return { element: el, number: num };
+            })
+            .filter(ep => ep.number > 0)
+            .sort((a, b) => a.number - b.number);
+
+        if (episodes.length === 0) return false;
+
+        // Создаем диапазоны
+        const lastNum = episodes[episodes.length-1].number;
+        const ranges = [];
+        for (let i = 1; i <= lastNum; i += config.rangeSize) {
+            ranges.push({
+                start: i,
+                end: Math.min(i + config.rangeSize - 1, lastNum)
+            });
+        }
+
+        // Создаем элемент меню
+        const filterItem = document.createElement('div');
+        filterItem.className = 'selectbox-item selector';
+        filterItem.innerHTML = `
+            <div class="selectbox-item__title">Диапазон серий</div>
+            <div class="selectbox-item__subtitle">Все серии</div>
+        `;
+
+        // Вставляем после пункта "Сезон" или в начало
+        const seasonItem = [...menu.querySelectorAll('.selectbox-item')]
+            .find(item => item.textContent.includes('Сезон'));
         
-        if (!header || !body) {
-          seriesFilterDebugLog('Не найдены элементы меню');
-          return;
-        }
+        (seasonItem || menu.firstChild)?.after(filterItem);
 
-        const originalState = {
-          title: header.textContent,
-          content: body.innerHTML
-        };
+        // Обработчик клика
+        filterItem.addEventListener('click', function() {
+            const selectbox = document.querySelector('.selectbox__content');
+            const header = selectbox.querySelector('.selectbox__head .selectbox__title');
+            const body = selectbox.querySelector('.scroll__body');
+            
+            header.textContent = 'Диапазон серий';
+            body.innerHTML = '';
 
-        header.textContent = 'Диапазон серий';
-        body.innerHTML = '';
+            // Функция добавления пункта
+            const addItem = (title, subtitle, action) => {
+                const item = document.createElement('div');
+                item.className = 'selectbox-item selector';
+                item.innerHTML = `
+                    <div class="selectbox-item__title">${title}</div>
+                    <div class="selectbox-item__subtitle">${subtitle}</div>
+                `;
+                item.addEventListener('click', action);
+                body.appendChild(item);
+            };
 
-        const addMenuItem = (title, subtitle, onClick) => {
-          const item = document.createElement('div');
-          item.className = 'selectbox-item selector';
-          item.innerHTML = `
-            <div class="selectbox-item__title">${title}</div>
-            <div class="selectbox-item__subtitle">${subtitle}</div>
-          `;
-          item.addEventListener('click', onClick);
-          body.appendChild(item);
-          return item;
-        };
+            // "Все серии"
+            addItem('Все серии', `${episodes.length} серий`, () => {
+                episodes.forEach(ep => ep.element.style.display = '');
+                filterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
+                header.textContent = 'Фильтр';
+                addSeriesFilter(); // Пересоздаем меню
+            });
 
-        addMenuItem('Все серии', `${episodes.length} серий`, () => {
-          seriesFilterDebugLog('Выбраны все серии');
-          episodes.forEach(ep => ep.element.style.display = '');
-          filterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
-          restoreMenu();
+            // Диапазоны
+            ranges.forEach(range => {
+                const count = episodes.filter(ep => 
+                    ep.number >= range.start && ep.number <= range.end
+                ).length;
+                
+                if (count > 0) {
+                    addItem(`${range.start}-${range.end}`, `${count} серий`, () => {
+                        episodes.forEach(ep => {
+                            ep.element.style.display = 
+                                (ep.number >= range.start && ep.number <= range.end) ? '' : 'none';
+                        });
+                        filterItem.querySelector('.selectbox-item__subtitle').textContent = 
+                            `${range.start}-${range.end}`;
+                        header.textContent = 'Фильтр';
+                        addSeriesFilter(); // Пересоздаем меню
+                    });
+                }
+            });
         });
 
-        ranges.forEach(range => {
-          const count = episodes.filter(ep => 
-            ep.number >= range.start && ep.number <= range.end
-          ).length;
-          
-          if (count > 0) {
-            addMenuItem(
-              `${range.start}-${range.end}`,
-              `${count} серий`,
-              () => {
-                seriesFilterDebugLog(`Выбран диапазон ${range.start}-${range.end}`);
-                episodes.forEach(ep => {
-                  ep.element.style.display = 
-                    (ep.number >= range.start && ep.number <= range.end) 
-                    ? '' 
-                    : 'none';
-                });
-                filterItem.querySelector('.selectbox-item__subtitle').textContent = 
-                  `${range.start}-${range.end}`;
-                restoreMenu();
-              }
-            );
-          }
+        return true;
+    }
+
+    // Отслеживаем открытие меню фильтров
+    let observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.target.classList?.contains('selectbox__content') && 
+                getComputedStyle(mutation.target).display !== 'none') {
+                // Меню открыто - пытаемся добавить фильтр
+                let attempts = 0;
+                const tryAdd = () => {
+                    if (addSeriesFilter() || attempts >= config.maxAttempts) return;
+                    attempts++;
+                    setTimeout(tryAdd, config.checkDelay);
+                };
+                tryAdd();
+            }
         });
+    });
 
-        function restoreMenu() {
-          seriesFilterDebugLog('Восстановление меню');
-          header.textContent = originalState.title;
-          body.innerHTML = originalState.content;
-          setTimeout(() => {
-            seriesFilterDebugLog('Повторная инициализация фильтра');
-            setupSeriesFilter(
-              document.querySelectorAll('.online.selector'),
-              document.querySelector('.selectbox__content .scroll__body')
-            );
-          }, 1000);  // Увеличенная задержка для повторной инициализации
+    // Начинаем наблюдение
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+
+    // Инициализация при загрузке
+    setTimeout(() => {
+        if (document.querySelector('.selectbox__content[style*="display: block"]')) {
+            addSeriesFilter();
         }
-      });
-    }
-
-    // Основная инициализация с увеличенными задержками
-    seriesFilterDebugLog('Запуск инициализации фильтра серий');
-    setTimeout(checkElements, 10000);  // Максимальная начальная задержка
-    
-    // Для динамических страниц
-    if (window.lampa && lampa.router) {
-      seriesFilterDebugLog('Настройка перехвата роутера');
-      const originalRender = lampa.router.render;
-      lampa.router.render = function() {
-        originalRender.apply(this, arguments);
-        seriesFilterDebugLog('Обнаружена смена страницы, сброс инициализации');
-        isInitialized = false;
-        setTimeout(checkElements, 5000);  // Увеличенная задержка после смены страницы
-      };
-    }
-  }
-
-  // Запуск с максимальной задержкой
-  setTimeout(() => {
-    seriesFilterDebugLog('Основной запуск фильтра серий');
-    initSeriesFilter();
-  }, 12000);  // Максимальная задержка для гарантированной работы
-  // ====================== End of Series Filter Plugin ======================
+    }, 2000);
+})();
+// ====================== End of Series Filter Plugin ======================
 
 
 })();
