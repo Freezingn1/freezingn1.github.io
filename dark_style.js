@@ -386,6 +386,11 @@
                 align-items: center;
                 bottom: auto;
             }
+			
+			.scroll--mask .scroll__content {
+				padding: 1em 0;
+			}
+			
             
             /* Стиль для элемента selectbox в фокусе */
             .selectbox-item.focus {
