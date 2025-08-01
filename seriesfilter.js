@@ -1,85 +1,79 @@
-class SeriesFilter {
-    constructor() {
-        this.observer = null;
-        this.attempts = 0;
-        this.maxAttempts = 15;
-        this.checkDelay = 500;
-        
-        this.init();
+(function() {
+    // 1. Ждём полной загрузки Lampa
+    if (!window.lampa) {
+        console.error('Lampa не найдена');
+        return;
     }
 
-    init() {
-        if (this.isSeriesPage()) {
-            this.startObservation();
-        } else {
-            document.addEventListener('lampa-page-changed', () => {
-                if (this.isSeriesPage()) this.startObservation();
-            });
-        }
+    // 2. Конфигурация
+    const config = {
+        checkDelay: 500,     // Задержка проверки элементов
+        maxAttempts: 20,     // Максимум попыток
+        rangeSize: 25        // Серий в диапазоне
+    };
+
+    // 3. Основная функция
+    function initPlugin() {
+        let attempts = 0;
+
+        const check = () => {
+            attempts++;
+            
+            // Ищем необходимые элементы
+            const hasEpisodes = document.querySelectorAll('.online.selector').length > 0;
+            const hasFilterMenu = document.querySelector('.selectbox__content .scroll__body');
+            
+            if (hasEpisodes && hasFilterMenu) {
+                setupFilter();
+            } 
+            else if (attempts < config.maxAttempts) {
+                setTimeout(check, config.checkDelay);
+            }
+            else {
+                console.log('SeriesFilter: Элементы не найдены');
+            }
+        };
+
+        // Первая проверка
+        setTimeout(check, 1000);
     }
 
-    isSeriesPage() {
-        return document.querySelector('.full-start-new__details')?.textContent.includes('Серии:');
-    }
+    // 4. Настройка фильтра
+    function setupFilter() {
+        // Функция парсинга номера
+        const getEpisodeNum = (text) => {
+            const match = text.match(/Серия\s(\d+)/i);
+            return match ? parseInt(match[1]) : 0;
+        };
 
-    startObservation() {
-        this.observer = new MutationObserver(() => {
-            this.trySetupFilter();
-        });
-        
-        this.observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-        
-        this.trySetupFilter();
-    }
-
-    trySetupFilter() {
-        if (this.attempts++ > this.maxAttempts) {
-            this.observer?.disconnect();
-            return;
-        }
-
-        if (this.checkElements()) {
-            this.setupFilter();
-            this.observer?.disconnect();
-        } else {
-            setTimeout(() => this.trySetupFilter(), this.checkDelay);
-        }
-    }
-
-    checkElements() {
-        return document.querySelectorAll('.online.selector').length > 0 && 
-               document.querySelector('.selectbox__content .scroll__body');
-    }
-
-    setupFilter() {
-        const extractNum = (text) => parseInt(text.match(/Серия\s(\d+)/i)?.[1]) || 0;
-        
+        // Получаем все серии
         const episodes = Array.from(document.querySelectorAll('.online.selector'))
-            .map(el => ({
-                element: el,
-                number: extractNum(el.querySelector('.online__title')?.textContent || '')
-            }))
-            .filter(ep => ep.number > 0)
-            .sort((a, b) => a.number - b.number);
+            .map(el => {
+                const title = el.querySelector('.online__title')?.textContent || '';
+                return {
+                    element: el,
+                    number: getEpisodeNum(title)
+                };
+            })
+            .filter(ep => ep.number > 0);
 
-        if (episodes.length === 0) return;
+        if (!episodes.length) return;
 
-        const totalEpisodes = episodes[episodes.length - 1].number;
-        const rangeSize = totalEpisodes > 100 ? 50 : 25;
+        // Сортируем и создаём диапазоны
+        episodes.sort((a, b) => a.number - b.number);
+        const lastEpisode = episodes[episodes.length - 1].number;
         const ranges = [];
-
-        for (let i = 1; i <= totalEpisodes; i += rangeSize) {
+        
+        for (let i = 1; i <= lastEpisode; i += config.rangeSize) {
             ranges.push({
                 start: i,
-                end: Math.min(i + rangeSize - 1, totalEpisodes)
+                end: Math.min(i + config.rangeSize - 1, lastEpisode)
             });
         }
 
-        const filterMenu = document.querySelector('.selectbox__content .scroll__body');
-        const seasonItem = [...filterMenu.querySelectorAll('.selectbox-item')]
+        // Создаём элемент в меню
+        const menu = document.querySelector('.selectbox__content .scroll__body');
+        const seasonItem = [...menu.querySelectorAll('.selectbox-item')]
             .find(item => item.textContent.includes('Сезон'));
 
         const filterItem = document.createElement('div');
@@ -89,67 +83,82 @@ class SeriesFilter {
             <div class="selectbox-item__subtitle">Все серии</div>
         `;
 
-        seasonItem ? seasonItem.after(filterItem) : filterMenu.prepend(filterItem);
+        (seasonItem ? seasonItem : menu.lastElementChild).after(filterItem);
 
+        // Обработчик клика
         filterItem.addEventListener('click', () => {
             const selectbox = document.querySelector('.selectbox__content');
-            const header = selectbox.querySelector('.selectbox__head');
+            const header = selectbox.querySelector('.selectbox__head .selectbox__title');
             const body = selectbox.querySelector('.scroll__body');
-            const original = body.innerHTML;
             
-            header.querySelector('.selectbox__title').textContent = 'Диапазон серий';
+            // Сохраняем оригинальное состояние
+            const original = {
+                title: header.textContent,
+                content: body.innerHTML
+            };
+
+            // Обновляем интерфейс
+            header.textContent = 'Выберите диапазон';
             body.innerHTML = '';
 
-            const addOption = (title, count, action) => {
+            // Функция добавления пункта
+            const addItem = (title, subtitle, action) => {
                 const item = document.createElement('div');
                 item.className = 'selectbox-item selector';
                 item.innerHTML = `
                     <div class="selectbox-item__title">${title}</div>
-                    <div class="selectbox-item__subtitle">${count} серий</div>
+                    <div class="selectbox-item__subtitle">${subtitle}</div>
                 `;
                 item.addEventListener('click', action);
                 body.appendChild(item);
             };
 
-            addOption('Все серии', episodes.length, () => {
+            // "Все серии"
+            addItem('Все серии', `${episodes.length} серий`, () => {
                 episodes.forEach(ep => ep.element.style.display = '');
                 filterItem.querySelector('.selectbox-item__subtitle').textContent = 'Все серии';
-                header.querySelector('.selectbox__title').textContent = 'Фильтр';
-                body.innerHTML = original;
-                new SeriesFilter(); // Реинициализация
+                resetMenu();
             });
 
+            // Добавляем диапазоны
             ranges.forEach(range => {
                 const count = episodes.filter(ep => 
                     ep.number >= range.start && ep.number <= range.end
                 ).length;
                 
-                if (count > 0) {
-                    addOption(`${range.start}-${range.end}`, count, () => {
+                if (count) {
+                    addItem(`${range.start}-${range.end}`, `${count} серий`, () => {
                         episodes.forEach(ep => {
                             ep.element.style.display = 
-                                ep.number >= range.start && ep.number <= range.end ? '' : 'none';
+                                (ep.number >= range.start && ep.number <= range.end) ? '' : 'none';
                         });
-                        filterItem.querySelector('.selectbox-item__subtitle').textContent = `${range.start}-${range.end}`;
-                        header.querySelector('.selectbox__title').textContent = 'Фильтр';
-                        body.innerHTML = original;
-                        new SeriesFilter();
+                        filterItem.querySelector('.selectbox-item__subtitle').textContent = 
+                            `${range.start}-${range.end}`;
+                        resetMenu();
                     });
                 }
             });
+
+            // Функция восстановления меню
+            function resetMenu() {
+                header.textContent = original.title;
+                body.innerHTML = original.content;
+                // Реинициализируем плагин
+                setTimeout(setupFilter, 100);
+            }
         });
     }
-}
 
-// Запуск при полной загрузке и при AJAX-навигации
-if (document.readyState === 'complete') {
-    new SeriesFilter();
-} else {
-    window.addEventListener('load', () => new SeriesFilter());
-    document.addEventListener('DOMContentLoaded', () => new SeriesFilter());
-}
-
-// Для Lampa AJAX навигации
-document.addEventListener('lampa-page-changed', () => {
-    setTimeout(() => new SeriesFilter(), 500);
-});
+    // 5. Запуск
+    document.addEventListener('DOMContentLoaded', initPlugin);
+    window.addEventListener('load', initPlugin);
+    
+    // Для динамических страниц Lampa
+    if (window.lampa && lampa.router) {
+        const original = lampa.router.render;
+        lampa.router.render = function() {
+            original.apply(this, arguments);
+            setTimeout(initPlugin, 1000);
+        };
+    }
+})();
