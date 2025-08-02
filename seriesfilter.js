@@ -1,182 +1,159 @@
-(function () {
+(function() {
     'use strict';
 
-    function extractEpisodeNumber(text) {
-        const match = text.match(/Серия\s(\d+)/i);
-        return match ? parseInt(match[1]) : 0;
-    }
+    // Ждем полной загрузки приложения
+    function init() {
+        // Защита от дублирования
+        if (window.lampac_series_filter_plugin) return;
+        window.lampac_series_filter_plugin = true;
 
-    function createEpisodeRanges(episodes) {
-        if (episodes.length === 0) return [];
-
-        episodes.sort((a, b) => a.number - b.number);
-        const totalEpisodes = episodes[episodes.length - 1].number;
-        const rangeSize = totalEpisodes > 100 ? 50 : 25;
-
-        const ranges = [];
-        for (let i = 1; i <= totalEpisodes; i += rangeSize) {
-            ranges.push({
-                start: i,
-                end: Math.min(i + rangeSize - 1, totalEpisodes)
-            });
-        }
-        return ranges;
-    }
-
-    function showEpisodeRangeMenu($mainFilterItem, episodes, ranges) {
-        const $selectbox = $('body > .selectbox');
-        const $content = $selectbox.find('.selectbox__content');
-        const $head = $content.find('.selectbox__head');
-        const $body = $content.find('.selectbox__body');
-        const $scrollBody = $body.find('.scroll__body');
-
-        // Сохраняем оригинальное меню
-        const originalMenu = $scrollBody.html();
-        const originalTitle = $head.find('.selectbox__title').text();
-
-        // Очищаем и создаем новое меню
-        $scrollBody.empty();
-        $head.find('.selectbox__title').text('Диапазон серий');
-
-        // Добавляем пункт "Все серии"
-        const $allItem = Lampa.Template.get('selectbox_item', {
-            title: 'Все серии',
-            subtitle: episodes.length + ' серий'
-        });
-
-        $allItem.on('hover:enter', function () {
-            episodes.forEach(ep => ep.element.style.display = '');
-            $mainFilterItem.find('.selectbox-item__subtitle').text('Все серии');
-            restoreOriginalMenu();
-        });
-
-        $scrollBody.append($allItem);
-
-        // Добавляем диапазоны
-        ranges.forEach(range => {
-            const count = episodes.filter(ep => 
-                ep.number >= range.start && ep.number <= range.end
-            ).length;
+        // Основная функция добавления фильтра
+        function addSeriesFilter() {
+            // Проверяем активное окно
+            const active = Lampa.Activity.active();
+            if (!active || !active.component) return;
             
-            if (count === 0) return;
+            const componentName = active.component.toLowerCase();
+            if (componentName !== 'online' && componentName !== 'lampac' && componentName.indexOf('bwa') !== 0) return;
 
-            const $rangeItem = Lampa.Template.get('selectbox_item', {
-                title: range.start + '-' + range.end,
-                subtitle: count + ' серий'
+            // Ищем меню фильтров
+            const $filterMenu = $('.selectbox__content .scroll__body');
+            if (!$filterMenu.length) return;
+
+            // Проверяем заголовок (должен быть "Фильтр")
+            const $filterTitle = $('.selectbox__title');
+            if (!$filterTitle.length || $filterTitle.text() !== Lampa.Lang.translate('title_filter')) return;
+
+            // Ищем все серии на странице
+            const episodes = [];
+            $('.online.selector').each(function() {
+                const $el = $(this);
+                const title = $el.find('.online__title').text() || '';
+                const epNum = extractEpisodeNumber(title);
+                if (epNum > 0) {
+                    episodes.push({
+                        element: $el,
+                        number: epNum,
+                        title: title.trim()
+                    });
+                }
             });
 
-            $rangeItem.on('hover:enter', function () {
-                episodes.forEach(ep => {
-                    ep.element.style.display = (ep.number >= range.start && ep.number <= range.end) ? '' : 'none';
+            if (episodes.length === 0) return;
+
+            // Создаем элемент меню
+            const $filterItem = Lampa.Template.get('selectbox_item', {
+                title: 'Диапазон серий',
+                subtitle: 'Все серии'
+            });
+
+            // Добавляем обработчик
+            $filterItem.on('hover:enter', function() {
+                showSeriesRangeMenu($filterItem, episodes);
+            });
+
+            // Вставляем в меню (после первого элемента или в начало)
+            const $firstItem = $filterMenu.find('.selectbox-item').first();
+            if ($firstItem.length) {
+                $firstItem.after($filterItem);
+            } else {
+                $filterMenu.prepend($filterItem);
+            }
+
+            // Обновляем навигацию
+            Lampa.Controller.collectionSet($filterMenu);
+        }
+
+        // Функция извлечения номера серии
+        function extractEpisodeNumber(text) {
+            const match = text.match(/Серия\s(\d+)/i);
+            return match ? parseInt(match[1]) : 0;
+        }
+
+        // Показ меню диапазонов
+        function showSeriesRangeMenu($mainItem, episodes) {
+            const $selectbox = $('body > .selectbox');
+            const $content = $selectbox.find('.selectbox__content');
+            const $head = $content.find('.selectbox__head');
+            const $body = $content.find('.selectbox__body');
+            const $scrollBody = $body.find('.scroll__body');
+
+            // Сохраняем оригинальное меню
+            const originalMenu = $scrollBody.html();
+            const originalTitle = $head.find('.selectbox__title').text();
+
+            // Очищаем и создаем новое меню
+            $scrollBody.empty();
+            $head.find('.selectbox__title').text('Диапазон серий');
+
+            // Сортируем серии
+            episodes.sort((a, b) => a.number - b.number);
+            const totalEpisodes = episodes[episodes.length - 1].number;
+            const rangeSize = totalEpisodes > 100 ? 50 : 25;
+
+            // Добавляем "Все серии"
+            const $allItem = Lampa.Template.get('selectbox_item', {
+                title: 'Все серии',
+                subtitle: episodes.length + ' серий'
+            });
+
+            $allItem.on('hover:enter', function() {
+                episodes.forEach(ep => ep.element.show());
+                $mainItem.find('.selectbox-item__subtitle').text('Все серии');
+                restoreMenu();
+            });
+
+            $scrollBody.append($allItem);
+
+            // Добавляем диапазоны
+            for (let i = 1; i <= totalEpisodes; i += rangeSize) {
+                const end = Math.min(i + rangeSize - 1, totalEpisodes);
+                const count = episodes.filter(ep => ep.number >= i && ep.number <= end).length;
+                
+                if (count === 0) continue;
+
+                const $rangeItem = Lampa.Template.get('selectbox_item', {
+                    title: i + '-' + end,
+                    subtitle: count + ' серий'
                 });
-                $mainFilterItem.find('.selectbox-item__subtitle').text(range.start + '-' + range.end);
-                restoreOriginalMenu();
-            });
 
-            $scrollBody.append($rangeItem);
-        });
+                $rangeItem.on('hover:enter', function() {
+                    episodes.forEach(ep => {
+                        ep.element.toggle(ep.number >= i && ep.number <= end);
+                    });
+                    $mainItem.find('.selectbox-item__subtitle').text(i + '-' + end);
+                    restoreMenu();
+                });
 
-        function restoreOriginalMenu() {
-            $scrollBody.html(originalMenu);
-            $head.find('.selectbox__title').text(originalTitle);
+                $scrollBody.append($rangeItem);
+            }
+
+            function restoreMenu() {
+                $scrollBody.html(originalMenu);
+                $head.find('.selectbox__title').text(originalTitle);
+                Lampa.Controller.collectionSet($scrollBody);
+                Lampa.Controller.collectionFocus($scrollBody.find('.selectbox-item').first());
+            }
+
             Lampa.Controller.collectionSet($scrollBody);
             Lampa.Controller.collectionFocus($scrollBody.find('.selectbox-item').first());
         }
 
-        Lampa.Controller.collectionSet($scrollBody);
-        Lampa.Controller.collectionFocus($scrollBody.find('.selectbox-item').first());
-    }
-
-    function addEpisodeFilter() {
-        const episodeElements = Array.from(document.querySelectorAll('.online.selector'));
-        const episodes = episodeElements.map(el => {
-            const title = el.querySelector('.online__title')?.textContent || '';
-            return {
-                element: el,
-                number: extractEpisodeNumber(title),
-                title: title.trim()
-            };
-        }).filter(ep => ep.number > 0);
-
-        if (episodes.length === 0) return null;
-
-        const ranges = createEpisodeRanges(episodes);
-        if (ranges.length === 0) return null;
-
-        const $selectBoxItem = Lampa.Template.get('selectbox_item', {
-            title: 'Диапазон серий',
-            subtitle: 'Все серии'
-        });
-
-        $selectBoxItem.on('hover:enter', function () {
-            showEpisodeRangeMenu($selectBoxItem, episodes, ranges);
-        });
-
-        return $selectBoxItem;
-    }
-
-    function start() {
-        if (window.lampac_series_filter_plugin) return;
-        window.lampac_series_filter_plugin = true;
-
-        Lampa.Controller.listener.follow('toggle', function (event) {
-            if (event.name !== 'select') return;
-
-            const active = Lampa.Activity.active();
-            const componentName = active.component.toLowerCase();
-
-            // Проверяем, что находимся в нужном компоненте
-            if (componentName !== 'online' && componentName !== 'lampac' && componentName.indexOf('bwa') !== 0) {
-                return;
+        // Отслеживаем открытие меню
+        Lampa.Controller.listener.follow('toggle', function(e) {
+            if (e.name === 'select') {
+                // Даем время на отрисовку меню
+                setTimeout(addSeriesFilter, 100);
             }
-
-            // Проверяем, что открыто меню фильтра
-            const $filterTitle = $('.selectbox__title');
-            if ($filterTitle.length !== 1 || $filterTitle.text() !== Lampa.Lang.translate('title_filter')) {
-                return;
-            }
-
-            // Проверяем наличие кнопки фильтра (как в lampac-src-filter.js)
-            const $filterBtn = $('.simple-button--filter.filter--sort');
-            if ($filterBtn.length !== 1 || $filterBtn.hasClass('hide')) {
-                return;
-            }
-
-            // Создаем и добавляем наш фильтр
-            const $episodeFilter = addEpisodeFilter();
-            if (!$episodeFilter) return;
-
-            // Вставляем наш фильтр в меню
-            const $selectOptions = $('.selectbox-item');
-            if ($selectOptions.length > 0) {
-                // Пытаемся вставить после пункта "Сезон", если он есть
-                const $seasonItem = $selectOptions.filter((index, item) => {
-                    return $(item).find('.selectbox-item__title').text().includes('Сезон');
-                });
-                
-                if ($seasonItem.length > 0) {
-                    $seasonItem.after($episodeFilter);
-                } else {
-                    $selectOptions.first().after($episodeFilter);
-                }
-            } else {
-                $('body > .selectbox').find('.scroll__body').prepend($episodeFilter);
-            }
-
-            // Обновляем коллекцию для навигации
-            Lampa.Controller.collectionSet($('body > .selectbox').find('.scroll__body'));
-            Lampa.Controller.collectionFocus($('.selectbox-item').first());
         });
     }
 
-    // Запускаем плагин после готовности приложения
+    // Запускаем после готовности приложения
     if (window.appready) {
-        start();
+        init();
     } else {
-        Lampa.Listener.follow('app', function (event) {
-            if (event.type === 'ready') {
-                start();
-            }
+        Lampa.Listener.follow('app', function(e) {
+            if (e.type === 'ready') init();
         });
     }
 })();
