@@ -907,19 +907,23 @@ var partsData = [
         baseUrl = applyAgeRestriction(baseUrl);
 
         owner.get(baseUrl, params, function (json) {
-            if (json.results) {
-                json.results = json.results.filter(function (result) {
-                    var forbiddenCountries = ['KR', 'CN', 'JP'];
-                    return !result.origin_country || !result.origin_country.some(function (country) {
-                        return forbiddenCountries.includes(country);
-                    });
-                });
-                // Применяем фильтры с указанием что это тренды
-                json.results = applyFilters(json.results, true);
+    if (json.results) {
+        json.results = json.results.filter(function (result) {
+            var forbiddenCountries = ['KR', 'CN', 'JP'];
+            // Проверяем, есть ли вообще информация о стране
+            if (!result.origin_country || !Array.isArray(result.origin_country)) {
+                return true; // или false, в зависимости от желаемого поведения
             }
-            json.title = Lampa.Lang.translate('surs_title_trend_week');
-            callback(json);
-        }, callback);
+            // Проверяем, что ни одна из стран не входит в запрещённый список
+            return !result.origin_country.some(function (country) {
+                return forbiddenCountries.includes(country);
+            });
+        });
+        json.results = applyFilters(json.results, true);
+    }
+    json.title = Lampa.Lang.translate('surs_title_trend_week');
+    callback(json);
+}, callback);
     }
 ];
 
