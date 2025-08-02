@@ -1,7 +1,11 @@
 (function() {
     'use strict';
     
-    // 1. Ждем полной загрузки Lampa
+    // Защита от повторной инициализации
+    if (window.seriesFilterInstalled) return;
+    window.seriesFilterInstalled = true;
+    
+    // Ожидаем загрузки Lampa
     function waitForLampa() {
         if (window.Lampa && window.Lampa.Template) {
             initPlugin();
@@ -10,19 +14,39 @@
         }
     }
     
-    // 2. Основная функция плагина
     function initPlugin() {
-        // Защита от повторной инициализации
-        if (window.seriesFilterInstalled) return;
-        window.seriesFilterInstalled = true;
+        // Переменная для хранения текущего элемента фильтра
+        let currentFilterItem = null;
         
-        // Функция для добавления фильтра в меню
-        function injectSeriesFilter() {
-            // Находим контейнер меню
-            const $menu = $('body > .selectbox .scroll__body');
-            if (!$menu.length) return;
+        // Функция проверки контекста
+        function isCorrectContext() {
+            // Проверяем что это главное меню фильтра
+            const $filterTitle = $('.selectbox__title');
+            if ($filterTitle.length !== 1 || $filterTitle.text() !== Lampa.Lang.translate('title_filter')) {
+                return false;
+            }
             
-            // Ищем все серии на странице
+            // Проверяем что это раздел с сериями
+            const active = Lampa.Activity.active();
+            const componentName = active.component.toLowerCase();
+            return (componentName === 'online' || componentName === 'lampac' || componentName.indexOf('bwa') === 0);
+        }
+        
+        // Основная функция добавления фильтра
+        function addSeriesFilter() {
+            // Проверяем контекст
+            if (!isCorrectContext()) {
+                if (currentFilterItem) {
+                    currentFilterItem.remove();
+                    currentFilterItem = null;
+                }
+                return;
+            }
+            
+            // Если фильтр уже добавлен - выходим
+            if (currentFilterItem && $('body').find(currentFilterItem).length) return;
+            
+            // Находим серии
             const episodes = [];
             $('.online.selector').each(function() {
                 const $el = $(this);
@@ -39,22 +63,29 @@
             if (episodes.length === 0) return;
             
             // Создаем элемент меню
-            const $filterItem = Lampa.Template.get('selectbox_item', {
+            currentFilterItem = Lampa.Template.get('selectbox_item', {
                 title: 'Диапазон серий',
                 subtitle: 'Все серии'
             });
             
             // Обработчик клика
-            $filterItem.on('hover:enter', function() {
-                createRangeMenu(episodes, $filterItem);
+            currentFilterItem.on('hover:enter', function() {
+                if (!isCorrectContext()) return;
+                createRangeMenu(episodes, currentFilterItem);
             });
             
-            // Вставляем в меню
-            $menu.prepend($filterItem);
-            Lampa.Controller.collectionSet($menu);
+            // Вставляем в меню после первого элемента
+            const $firstItem = $('.selectbox-item').first();
+            if ($firstItem.length) {
+                $firstItem.after(currentFilterItem);
+            } else {
+                $('body > .selectbox .scroll__body').prepend(currentFilterItem);
+            }
+            
+            Lampa.Controller.collectionSet($('body > .selectbox .scroll__body'));
         }
         
-        // Создаем меню диапазонов
+        // Создание меню диапазонов
         function createRangeMenu(episodes, $parentItem) {
             const $selectbox = $('body > .selectbox');
             const $content = $selectbox.find('.selectbox__content');
@@ -120,14 +151,32 @@
             Lampa.Controller.collectionFocus($scroll.find('.selectbox-item').first());
         }
         
-        // Постоянно проверяем наличие меню
-        setInterval(() => {
+        // Отслеживаем открытие меню
+        Lampa.Controller.listener.follow('toggle', function(e) {
+            if (e.name === 'select') {
+                setTimeout(addSeriesFilter, 300);
+            }
+        });
+        
+        // Также проверяем периодически на случай если событие не сработало
+        const checkInterval = setInterval(() => {
             if ($('body > .selectbox').is(':visible')) {
-                injectSeriesFilter();
+                addSeriesFilter();
             }
         }, 1000);
+        
+        // Очистка при закрытии приложения
+        Lampa.Listener.follow('app', function(e) {
+            if (e.type === 'close') {
+                clearInterval(checkInterval);
+                if (currentFilterItem) {
+                    currentFilterItem.remove();
+                    currentFilterItem = null;
+                }
+            }
+        });
     }
     
-    // Запускаем ожидание Lampa
+    // Запускаем
     waitForLampa();
 })();
