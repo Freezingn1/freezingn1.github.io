@@ -69,7 +69,7 @@
             uk: 'Розділювач',
             zh: '分隔符'
         },
-		split2: {
+        split2: {
             ru: 'Разделитель NEW',
             en: 'Divider2',
             uk: 'Розділювач2',
@@ -99,18 +99,18 @@
             uk: 'Плагін для налаштування шапки',
             zh: '用于配置上限的插件'
         },
-		NOTICE: {
-			ru: 'Уведомления ByLampa',
-			en: 'Уведомления ByLampa',
+        NOTICE: {
+            ru: 'Уведомления ByLampa',
+            en: 'Уведомления ByLampa',
             uk: 'Уведомления ByLampa',
             zh: 'Уведомления ByLampa'
-		},
-		proto: {
-			ru: 'Защита https',
-			en: 'Защита https',
+        },
+        proto: {
+            ru: 'Защита https',
+            en: 'Защита https',
             uk: 'Защита https',
             zh: 'Защита https'
-		}
+        }
     });
 
     function startPlugin() {
@@ -135,17 +135,23 @@
             'head_filter_show_reload': {name: Lampa.Lang.translate('reload'), element: '.m-reload-screen', default: false},
             'head_filter_show_blackfriday': {name: Lampa.Lang.translate('blackfriday'), element: '.black-friday__button', default: false}, 
             'head_filter_show_split': {name: Lampa.Lang.translate('split'), element: '.head__split', default: false}, 
-			'head_filter_show_split2': {name: Lampa.Lang.translate('split2'), element: '.head__markers', default: false}, 
+            'head_filter_show_split2': {name: Lampa.Lang.translate('split2'), element: '.head__markers', default: false}, 
             'head_filter_show_time': {name: Lampa.Lang.translate('time'), element: '.head__time', default: false}, 
-			'head_filter_show_notice2': {name: Lampa.Lang.translate('NOTICE'), element: '.notice-screen', default: true}, 
-			'head_filter_show_proto2': {name: Lampa.Lang.translate('proto'), element: '.proto', default: true}, 
+            'head_filter_show_notice2': {name: Lampa.Lang.translate('NOTICE'), element: '.notice-screen', default: true}, 
+            'head_filter_show_proto2': {name: Lampa.Lang.translate('proto'), element: '.proto', default: true, delay: 500}, // Добавлена задержка 500мс
         };
 
-        function showHideElement(element, show) {
-            if (show == true) {
+        function showHideElement(element, show, delay) {
+            if (show) {
                 $(element).show();
             } else {
-                $(element).hide();
+                if (delay) {
+                    setTimeout(function() {
+                        $(element).hide();
+                    }, delay);
+                } else {
+                    $(element).hide();
+                }
             }
         }
 
@@ -154,12 +160,12 @@
                 setTimeout(function() {
                     Object.keys(head).forEach(function(key) {
                         var show_element = Lampa.Storage.get(key, head[key].default); 
-                        showHideElement(head[key].element, show_element);     
+                        showHideElement(head[key].element, show_element, head[key].delay);     
                     });          
                 }, 500);
             } else if (event.name in head) {
                 var show_element = Lampa.Storage.get(event.name, head[event.name].default); 
-                showHideElement(head[event.name].element, show_element);     
+                showHideElement(head[event.name].element, show_element, head[event.name].delay);     
             }
         });
 
@@ -206,7 +212,6 @@
                 }        
             });
         });
-        
     }
 
     if (window.appready) {
