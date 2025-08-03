@@ -70,7 +70,7 @@
             zh: '分隔符'
         },
 		split2: {
-            ru: 'Разделитель2',
+            ru: 'Разделитель NEW',
             en: 'Divider2',
             uk: 'Розділювач2',
             zh: '分隔符2'
@@ -98,7 +98,10 @@
             en: 'Plugin for customizing the header',
             uk: 'Плагін для налаштування шапки',
             zh: '用于配置上限的插件'
-        }
+        },
+		NOTICE: {
+			ru: 'Уведомления ByLampa',
+		}
     });
 
     function startPlugin() {
