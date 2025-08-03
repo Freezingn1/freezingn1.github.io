@@ -101,6 +101,9 @@
         },
 		NOTICE: {
 			ru: 'Уведомления ByLampa',
+		},
+		proto: {
+			ru: 'Защита https',
 		}
     });
 
@@ -129,6 +132,7 @@
 			'head_filter_show_split2': {name: Lampa.Lang.translate('split2'), element: '.head__markers', default: false}, 
             'head_filter_show_time': {name: Lampa.Lang.translate('time'), element: '.head__time', default: false}, 
 			'head_filter_show_notice2': {name: Lampa.Lang.translate('NOTICE'), element: '.notice-screen', default: true}, 
+			'head_filter_show_proto2': {name: Lampa.Lang.translate('proto'), element: '.proto', default: true}, 
         };
 
         function showHideElement(element, show) {
