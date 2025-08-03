@@ -101,9 +101,15 @@
         },
 		NOTICE: {
 			ru: 'Уведомления ByLampa',
+			en: 'Уведомления ByLampa',
+            uk: 'Уведомления ByLampa',
+            zh: 'Уведомления ByLampa'
 		},
 		proto: {
 			ru: 'Защита https',
+			en: 'Защита https',
+            uk: 'Защита https',
+            zh: 'Защита https'
 		}
     });
 
