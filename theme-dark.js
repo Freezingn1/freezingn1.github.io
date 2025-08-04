@@ -34,6 +34,18 @@
 	//Trick
 	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/tricks.js'], function () { });
 
+	//Источник в фильтр
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/lampac-src-filter.js'], function () { });
+
+	//NUM
+	Lampa.Utils.putScriptAsync(['https://num.jac-red.ru/plugin/nmprs.js'], function () { });
+
+	//BWA
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/bwa.js'], function () { });
+
+	//ADS
+	Lampa.Utils.putScriptAsync(['https://freezingn1.github.io/ads.js'], function () { });
+
 
 })();
 
