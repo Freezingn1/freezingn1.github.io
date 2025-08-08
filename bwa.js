@@ -789,7 +789,10 @@ else if (element.url) {
 		      elem.img = Defined.localhost + elem.img.substring(1);
 		    if (elem.img.indexOf('/proxyimg') !== -1)
 		      elem.img = account(elem.img);
-		  elem.img = 'http://wild-mode-68f9.edikgarr.workers.dev' + encodeURIComponent(elem.img);
+		  
+		  if (!elem.img.startsWith('https://wild-mode-68f9.edikgarr.workers.dev/')) {
+			elem.img = 'https://wild-mode-68f9.edikgarr.workers.dev/' + elem.img;
+    }
 		  }
 
 		  Lampa.Utils.imgLoad(image, elem.img);
