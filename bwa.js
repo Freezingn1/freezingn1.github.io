@@ -1727,26 +1727,14 @@ else if (element.url) {
     });
   });
 
-  // Получаем контейнер всех кнопок (например, .full-start__buttons)
   var buttonsContainer = e.render.closest('.full-start__buttons') || e.render.parent();
+  var buttons = buttonsContainer.children();
   
-  // Находим кнопку "Торрент" (обычно .view--torrent)
-  var torrentButton = buttonsContainer.find('.view--torrent');
-  
-  // Находим кнопку "HDRezka" (если есть, например, по классу .view--hdrezka)
-  var hdrezkaButton = buttonsContainer.find('.view--hdrezka');
-  
-  if (torrentButton.length && hdrezkaButton.length) {
-    // Если есть и "Торрент", и "HDRezka", вставляем между ними
-    torrentButton.after(btn);
-  } 
-  else if (torrentButton.length) {
-    // Если есть только "Торрент", вставляем после него
-    torrentButton.after(btn);
-  } 
-  else {
-    // Если нет "Торрента", вставляем первой
-    buttonsContainer.prepend(btn);
+  // Вставляем на второе место
+  if (buttons.length >= 1) {
+    btn.insertAfter(buttons.eq(0));
+  } else {
+    buttonsContainer.append(btn);
   }
 }
     Lampa.Listener.follow('full', function(e) {
