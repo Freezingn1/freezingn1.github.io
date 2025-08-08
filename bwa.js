@@ -789,13 +789,8 @@ else if (element.url) {
 		      elem.img = Defined.localhost + elem.img.substring(1);
 		    if (elem.img.indexOf('/proxyimg') !== -1)
 		      elem.img = account(elem.img);
-
-		// Добавляем проксирование через свой прокси:
-		elem.img = 'http://wild-mode-68f9.edikgarr.workers.dev' + encodeURIComponent(elem.img);
-		}
-
-		image.attr('src', elem.img);
-		}
+		  elem.img = 'http://wild-mode-68f9.edikgarr.workers.dev' + encodeURIComponent(elem.img);
+		  }
 
 		  Lampa.Utils.imgLoad(image, elem.img);
 		}
