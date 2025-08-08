@@ -787,11 +787,9 @@ else if (element.url) {
 		  if (elem.img !== undefined) {
 		    if (elem.img.charAt(0) === '/')
 		      elem.img = Defined.localhost + elem.img.substring(1);
-		    if (elem.img.indexOf('/proxyimg') !== -1) {
-    // Получаем конечный путь, который /proxyimg бы открыл
-    let originalCoverUrl = extractCoverUrlFromProxy(elem.img); // нужна функция парсинга
-    elem.img = 'https://wild-mode-68f9.edikgarr.workers.dev/' + originalCoverUrl;
-
+		    if (elem.img.indexOf('/proxyimg') !== -1)
+		      elem.img = account(elem.img);
+		  }
 
 		  Lampa.Utils.imgLoad(image, elem.img);
 		}
