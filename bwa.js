@@ -1704,7 +1704,6 @@ else if (element.url) {
 
     function addButton(e) {
   if (e.render.find('.lampac--button').length) return;
-  
   var btn = $(Lampa.Lang.translate(button));
   
   btn.on('hover:enter', function() {
@@ -1727,14 +1726,24 @@ else if (element.url) {
     });
   });
 
-  var buttonsContainer = e.render.closest('.full-start__buttons') || e.render.parent();
-  var buttons = buttonsContainer.children();
+  // Находим контейнер с кнопками
+  var buttonsContainer = e.render.closest('.buttons--container');
   
-  // Вставляем на второе место
-  if (buttons.length >= 1) {
-    btn.insertAfter(buttons.eq(0));
+  if (buttonsContainer.length) {
+    // Находим все кнопки внутри контейнера
+    var buttons = buttonsContainer.children();
+    
+    // Если есть хотя бы одна кнопка (торрент)
+    if (buttons.length > 0) {
+      // Вставляем нашу кнопку после первой кнопки (торрента)
+      $(buttons[0]).after(btn);
+    } else {
+      // Если нет других кнопок, просто добавляем
+      buttonsContainer.append(btn);
+    }
   } else {
-    buttonsContainer.append(btn);
+    // Если не нашли контейнер, используем старый метод
+    e.render.after(btn);
   }
 }
     Lampa.Listener.follow('full', function(e) {
