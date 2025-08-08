@@ -781,31 +781,18 @@ else if (element.url) {
         elem.info = info.join('<span class="online-prestige-split">●</span>');
         var item = Lampa.Template.get('lampac_prestige_folder', elem);
 		if (elem.img) {
-  var image = $('<img style="height: 7em; width: 7em; border-radius: 0.3em;"/>');
-  item.find('.online-prestige__folder').empty().append(image);
+		  var image = $('<img style="height: 7em; width: 7em; border-radius: 0.3em;"/>');
+		  item.find('.online-prestige__folder').empty().append(image);
 
-  if (elem.img !== undefined) {
-    if (elem.img.charAt(0) === '/')
-      elem.img = Defined.localhost + elem.img.substring(1);
-    if (elem.img.indexOf('/proxyimg') !== -1)
-      elem.img = account(elem.img);
+		  if (elem.img !== undefined) {
+		    if (elem.img.charAt(0) === '/')
+		      elem.img = Defined.localhost + elem.img.substring(1);
+		    if (elem.img.indexOf('/proxyimg') !== -1)
+		      elem.img = account(elem.img);
+		  }
 
-    // Обработка проксирования
-    if (elem.img && !elem.img.includes('/proxyimg:')) {
-      if (!elem.img.startsWith('https://wild-mode-68f9.edikgarr.workers.dev/')) {
-        elem.img = 'https://wild-mode-68f9.edikgarr.workers.dev/' + elem.img;
-      }
-    } else {
-      // Если ссылка содержит /proxyimg:, заменяем на плейсхолдер
-      elem.img = './img/img_broken.svg';
-    }
-  }
-
-  image.attr('src', elem.img);
-}
-
-
-
+		  Lampa.Utils.imgLoad(image, elem.img);
+		}
         item.on('hover:enter', function() {
           _this6.reset();
           _this6.request(elem.url);
