@@ -1703,63 +1703,30 @@ else if (element.url) {
     resetTemplates();
 
     function addButton(e) {
-  if (e.render.find('.lampac--button').length) return;
-  
-  var btn = $(Lampa.Lang.translate(button));
-  
-  btn.on('hover:enter', function() {
-    resetTemplates();
-    Lampa.Component.add('bwarch', component);
-    
-    var id = Lampa.Utils.hash(e.movie.number_of_seasons ? e.movie.original_name : e.movie.original_title);
-    var all = Lampa.Storage.get('clarification_search','{}');
-    
-    Lampa.Activity.push({
-      url: '',
-      title: Lampa.Lang.translate('title_online'),
-      component: 'bwarch',
-      search: all[id] ? all[id] : e.movie.title,
-      search_one: e.movie.title,
-      search_two: e.movie.original_title,
-      movie: e.movie,
-      page: 1,
-      clarification: all[id] ? true : false
-    });
-  });
-
-  // Находим контейнер кнопок
-  var buttonsContainer = e.render.closest('.buttons--container');
-  
-  if (!buttonsContainer.length) {
-    buttonsContainer = e.render.parent();
-  }
-
-  // Находим индекс кнопки торрента
-  var torrentIndex = -1;
-  buttonsContainer.children().each(function(index) {
-    if ($(this).hasClass('view--torrent')) {
-      torrentIndex = index;
-      return false; // прерываем цикл
+      if (e.render.find('.lampac--button').length) return;
+      var btn = $(Lampa.Lang.translate(button));
+	  // //console.log(btn.clone().removeClass('focus').prop('outerHTML'))
+      btn.on('hover:enter', function() {
+        resetTemplates();
+        Lampa.Component.add('bwarch', component);
+		
+		var id = Lampa.Utils.hash(e.movie.number_of_seasons ? e.movie.original_name : e.movie.original_title);
+		var all = Lampa.Storage.get('clarification_search','{}');
+		
+        Lampa.Activity.push({
+          url: '',
+          title: Lampa.Lang.translate('title_online'),
+          component: 'bwarch',
+          search: all[id] ? all[id] : e.movie.title,
+          search_one: e.movie.title,
+          search_two: e.movie.original_title,
+          movie: e.movie,
+          page: 1,
+		  clarification: all[id] ? true : false
+        });
+      });
+      e.render.after(btn);
     }
-  });
-
-  // Если нашли кнопку торрента, вставляем после нее
-  if (torrentIndex >= 0) {
-    buttonsContainer.children().eq(torrentIndex).after(btn);
-  } 
-  // Иначе ищем первую видимую кнопку
-  else {
-    var firstVisible = buttonsContainer.children(':not(.hide)').first();
-    if (firstVisible.length) {
-      firstVisible.after(btn);
-    } else {
-      buttonsContainer.prepend(btn);
-    }
-  }
-
-  // Добавляем класс для стилизации, если нужно
-  btn.addClass('view--online');
-}
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
         addButton({
