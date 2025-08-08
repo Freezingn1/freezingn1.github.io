@@ -58,35 +58,21 @@
   }
   
   function account(url) {
-  url = url + '';
-  
-  // Проксируем изображения через Cloudflare Worker
-  if (url.match(/\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i) && !url.includes('workers.dev')) {
-    const cleanUrl = url.split('?')[0];
-    return 'https://wild-mode-68f9.edikgarr.workers.dev/' + encodeURIComponent(cleanUrl);
+    url = url + '';
+    if (url.indexOf('account_email=') == -1) {
+      var email = Lampa.Storage.get('account_email');
+      if (email) url = Lampa.Utils.addUrlComponent(url, 'account_email=' + encodeURIComponent(email));
+    }
+    if (url.indexOf('uid=') == -1) {
+      var uid = Lampa.Storage.get('lampac_unic_id', '');
+      if (uid) url = Lampa.Utils.addUrlComponent(url, 'uid=' + encodeURIComponent(uid));
+    }
+    if (url.indexOf('token=') == -1) {
+      var token = '384750856';
+      if (token != '') url = Lampa.Utils.addUrlComponent(url, 'token=384750856');
+    }
+    return url;
   }
-  
-  // Для запросов к rc.bwa.to добавляем frontend=cloudflare
-  if (url.includes('rc.bwa.to') && url.indexOf('frontend=') === -1) {
-    url = Lampa.Utils.addUrlComponent(url, 'frontend=cloudflare');
-  }
-  
-  // Остальные параметры (email, uid, token)
-  if (url.indexOf('account_email=') == -1) {
-    var email = Lampa.Storage.get('account_email');
-    if (email) url = Lampa.Utils.addUrlComponent(url, 'account_email=' + encodeURIComponent(email));
-  }
-  if (url.indexOf('uid=') == -1) {
-    var uid = Lampa.Storage.get('lampac_unic_id', '');
-    if (uid) url = Lampa.Utils.addUrlComponent(url, 'uid=' + encodeURIComponent(uid));
-  }
-  if (url.indexOf('token=') == -1) {
-    var token = '384750856';
-    if (token != '') url = Lampa.Utils.addUrlComponent(url, 'token=384750856');
-  }
-  
-  return url;
-}
   
   var Network = Lampa.Reguest;
 
@@ -799,11 +785,11 @@ else if (element.url) {
 		  item.find('.online-prestige__folder').empty().append(image);
 
 		  if (elem.img !== undefined) {
-  if (elem.img.charAt(0) === '/')
-    elem.img = Defined.localhost + elem.img.substring(1);
-  if (elem.img.indexOf('/proxyimg') !== -1)
-    elem.img = account(elem.img);  // Теперь будет проксироваться через Worker
-}
+		    if (elem.img.charAt(0) === '/')
+		      elem.img = Defined.localhost + elem.img.substring(1);
+		    if (elem.img.indexOf('/proxyimg') !== -1)
+		      elem.img = account(elem.img);
+		  }
 
 		  Lampa.Utils.imgLoad(image, elem.img);
 		}
