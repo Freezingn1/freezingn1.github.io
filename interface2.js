@@ -30,6 +30,15 @@
         if (isDestroyed || !html) return;
 
         const logoSetting = Lampa.Storage.get('logo_start') || 'logo_on';
+        const hideInfoSetting = Lampa.Storage.get('hide_info') === 'true';
+        
+        if (hideInfoSetting) {
+            html.find('.new-interface-info__head').hide();
+            html.find('.new-interface-info__details').hide();
+        } else {
+            html.find('.new-interface-info__head').show();
+            html.find('.new-interface-info__details').show();
+        }
         
         if (logoSetting === 'logo_on') {
             const type = data.name ? 'tv' : 'movie';
@@ -483,7 +492,7 @@
         if (object.title === 'Спорт') {
             use = old_interface;
         }
-		if (object.title === 'NUMParser') {
+        if (object.title === 'NUMParser') {
             use = old_interface;
         }
         return new use(object);
@@ -533,6 +542,24 @@
         field: {
             name: "Ориентация карточек",
             description: "Выберите между широкими и вертикальными карточками"
+        }
+    });
+
+    // Настройка скрытия информации
+    Lampa.SettingsApi.addParam({
+        component: "styleinter",
+        param: {
+            name: "hide_info",
+            type: "select",
+            values: { 
+                "true": "Скрыть информацию", 
+                "false": "Показать информацию", 
+            },
+            default: "false"
+        },
+        field: {
+            name: "Отображение информации",
+            description: "Скрыть или показать дополнительную информацию"
         }
     });
 
@@ -777,6 +804,16 @@
     .new-interface.vertical-cards .card__age {
         font-size: 0.7em;
     }
+    
+    /* Стили для скрытия информации */
+    .hide-info .new-interface-info__head,
+    .hide-info .new-interface-info__details {
+        display: none !important;
+    }
+    
+    .hide-info .new-interface-info__body {
+        padding-top: 2.1em !important;
+    }
     </style>
 `);
       $('body').append(Lampa.Template.get('new_interface_style', {}, true));
@@ -792,11 +829,24 @@
             }
             if(Lampa.Activity.restart) Lampa.Activity.restart();
         }
+        else if(e.name === 'hide_info') {
+            const hideInfo = Lampa.Storage.get('hide_info') === 'true';
+            if(hideInfo) {
+                $('.new-interface').addClass('hide-info');
+            } else {
+                $('.new-interface').removeClass('hide-info');
+            }
+        }
     });
 
     // Инициализация обработки вертикальных карточек при старте
     if(Lampa.Storage.get('card_orientation') === 'vertical') {
         handleVerticalCards();
+    }
+    
+    // Инициализация скрытия информации при старте
+    if(Lampa.Storage.get('hide_info') === 'true') {
+        $('.new-interface').addClass('hide-info');
     }
     }
 
