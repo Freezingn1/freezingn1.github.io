@@ -1703,30 +1703,41 @@ else if (element.url) {
     resetTemplates();
 
     function addButton(e) {
-      if (e.render.find('.lampac--button').length) return;
-      var btn = $(Lampa.Lang.translate(button));
-	  // //console.log(btn.clone().removeClass('focus').prop('outerHTML'))
-      btn.on('hover:enter', function() {
-        resetTemplates();
-        Lampa.Component.add('bwarch', component);
-		
-		var id = Lampa.Utils.hash(e.movie.number_of_seasons ? e.movie.original_name : e.movie.original_title);
-		var all = Lampa.Storage.get('clarification_search','{}');
-		
-        Lampa.Activity.push({
-          url: '',
-          title: Lampa.Lang.translate('title_online'),
-          component: 'bwarch',
-          search: all[id] ? all[id] : e.movie.title,
-          search_one: e.movie.title,
-          search_two: e.movie.original_title,
-          movie: e.movie,
-          page: 1,
-		  clarification: all[id] ? true : false
-        });
-      });
-      e.render.after(btn);
-    }
+  if (e.render.find('.lampac--button').length) return;
+  var btn = $(Lampa.Lang.translate(button));
+  
+  btn.on('hover:enter', function() {
+    resetTemplates();
+    Lampa.Component.add('bwarch', component);
+    
+    var id = Lampa.Utils.hash(e.movie.number_of_seasons ? e.movie.original_name : e.movie.original_title);
+    var all = Lampa.Storage.get('clarification_search','{}');
+    
+    Lampa.Activity.push({
+      url: '',
+      title: Lampa.Lang.translate('title_online'),
+      component: 'bwarch',
+      search: all[id] ? all[id] : e.movie.title,
+      search_one: e.movie.title,
+      search_two: e.movie.original_title,
+      movie: e.movie,
+      page: 1,
+      clarification: all[id] ? true : false
+    });
+  });
+
+  // Вставляем кнопку на вторую позицию
+  var buttonsContainer = e.render.parent();
+  var torrentButton = buttonsContainer.find('.view--torrent');
+  
+  if (torrentButton.length) {
+    // Если есть кнопка "Торрент", вставляем после неё
+    torrentButton.after(btn);
+  } else {
+    // Если нет кнопки "Торрент", вставляем первой
+    buttonsContainer.prepend(btn);
+  }
+}
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
         addButton({
