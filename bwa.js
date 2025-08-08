@@ -1704,6 +1704,7 @@ else if (element.url) {
 
     function addButton(e) {
   if (e.render.find('.lampac--button').length) return;
+  
   var btn = $(Lampa.Lang.translate(button));
   
   btn.on('hover:enter', function() {
@@ -1726,25 +1727,38 @@ else if (element.url) {
     });
   });
 
-  // Находим контейнер с кнопками
+  // Находим контейнер кнопок
   var buttonsContainer = e.render.closest('.buttons--container');
   
-  if (buttonsContainer.length) {
-    // Находим все кнопки внутри контейнера
-    var buttons = buttonsContainer.children();
-    
-    // Если есть хотя бы одна кнопка (торрент)
-    if (buttons.length > 0) {
-      // Вставляем нашу кнопку после первой кнопки (торрента)
-      $(buttons[0]).after(btn);
-    } else {
-      // Если нет других кнопок, просто добавляем
-      buttonsContainer.append(btn);
-    }
-  } else {
-    // Если не нашли контейнер, используем старый метод
-    e.render.after(btn);
+  if (!buttonsContainer.length) {
+    buttonsContainer = e.render.parent();
   }
+
+  // Находим индекс кнопки торрента
+  var torrentIndex = -1;
+  buttonsContainer.children().each(function(index) {
+    if ($(this).hasClass('view--torrent')) {
+      torrentIndex = index;
+      return false; // прерываем цикл
+    }
+  });
+
+  // Если нашли кнопку торрента, вставляем после нее
+  if (torrentIndex >= 0) {
+    buttonsContainer.children().eq(torrentIndex).after(btn);
+  } 
+  // Иначе ищем первую видимую кнопку
+  else {
+    var firstVisible = buttonsContainer.children(':not(.hide)').first();
+    if (firstVisible.length) {
+      firstVisible.after(btn);
+    } else {
+      buttonsContainer.prepend(btn);
+    }
+  }
+
+  // Добавляем класс для стилизации, если нужно
+  btn.addClass('view--online');
 }
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
