@@ -1704,6 +1704,7 @@ else if (element.url) {
 
     function addButton(e) {
   if (e.render.find('.lampac--button').length) return;
+  
   var btn = $(Lampa.Lang.translate(button));
   
   btn.on('hover:enter', function() {
@@ -1726,15 +1727,25 @@ else if (element.url) {
     });
   });
 
-  // Вставляем кнопку на вторую позицию
-  var buttonsContainer = e.render.parent();
+  // Получаем контейнер всех кнопок (например, .full-start__buttons)
+  var buttonsContainer = e.render.closest('.full-start__buttons') || e.render.parent();
+  
+  // Находим кнопку "Торрент" (обычно .view--torrent)
   var torrentButton = buttonsContainer.find('.view--torrent');
   
-  if (torrentButton.length) {
-    // Если есть кнопка "Торрент", вставляем после неё
+  // Находим кнопку "HDRezka" (если есть, например, по классу .view--hdrezka)
+  var hdrezkaButton = buttonsContainer.find('.view--hdrezka');
+  
+  if (torrentButton.length && hdrezkaButton.length) {
+    // Если есть и "Торрент", и "HDRezka", вставляем между ними
     torrentButton.after(btn);
-  } else {
-    // Если нет кнопки "Торрент", вставляем первой
+  } 
+  else if (torrentButton.length) {
+    // Если есть только "Торрент", вставляем после него
+    torrentButton.after(btn);
+  } 
+  else {
+    // Если нет "Торрента", вставляем первой
     buttonsContainer.prepend(btn);
   }
 }
