@@ -60,25 +60,24 @@
   function account(url) {
   url = url + '';
   
-  // Проксируем изображения через Cloudflare Worker
-  if (url.match(/\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i)) {
-    // Если URL уже проксированный, не дублируем
-    if (!url.includes('workers.dev')) {
-      url = 'https://wild-mode-68f9.edikgarr.workers.dev/' + encodeURIComponent(url);
-    }
+  // Проксируем изображения через Cloudflare Worker, но не если уже проксировано
+  if (url.match(/\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i) && !url.includes('workers.dev')) {
+    // Убираем уже имеющиеся параметры (account_email, uid, token)
+    const cleanUrl = url.split('?')[0];
+    return 'https://wild-mode-68f9.edikgarr.workers.dev/' + encodeURIComponent(cleanUrl);
   }
   
-  // Остальные параметры (email, uid, token)
+  // Для НЕ-изображений добавляем параметры как раньше
   if (url.indexOf('account_email=') == -1) {
-    var email = Lampa.Storage.get('account_email');
+    const email = Lampa.Storage.get('account_email');
     if (email) url = Lampa.Utils.addUrlComponent(url, 'account_email=' + encodeURIComponent(email));
   }
   if (url.indexOf('uid=') == -1) {
-    var uid = Lampa.Storage.get('lampac_unic_id', '');
+    const uid = Lampa.Storage.get('lampac_unic_id', '');
     if (uid) url = Lampa.Utils.addUrlComponent(url, 'uid=' + encodeURIComponent(uid));
   }
   if (url.indexOf('token=') == -1) {
-    var token = '384750856';
+    const token = '384750856';
     if (token != '') url = Lampa.Utils.addUrlComponent(url, 'token=384750856');
   }
   
