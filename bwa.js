@@ -790,19 +790,20 @@ else if (element.url) {
     if (elem.img.indexOf('/proxyimg') !== -1)
       elem.img = account(elem.img);
 
-    // Вот сюда вставляем фильтрацию по proxyimg:
+    // Обработка проксирования
     if (elem.img && !elem.img.includes('/proxyimg:')) {
       if (!elem.img.startsWith('https://wild-mode-68f9.edikgarr.workers.dev/')) {
         elem.img = 'https://wild-mode-68f9.edikgarr.workers.dev/' + elem.img;
       }
     } else {
-      // Для ссылок с proxyimg можно оставить как есть (без проксирования)
-      // или сделать свою логику, если нужно
+      // Если ссылка содержит /proxyimg:, заменяем на плейсхолдер
+      elem.img = './img/img_broken.svg';
     }
   }
 
   image.attr('src', elem.img);
 }
+
 
 
         item.on('hover:enter', function() {
