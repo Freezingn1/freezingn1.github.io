@@ -1703,34 +1703,30 @@ else if (element.url) {
     resetTemplates();
 
     function addButton(e) {
-  if (e.render.find('.lampac--button').length) return;
-  var btn = $(Lampa.Lang.translate(button));
-  btn.on('hover:enter', function() {
-    resetTemplates();
-    Lampa.Component.add('bwarch', component);
-    
-    var id = Lampa.Utils.hash(e.movie.number_of_seasons ? e.movie.original_name : e.movie.original_title);
-    var all = Lampa.Storage.get('clarification_search','{}');
-    
-    Lampa.Activity.push({
-      url: '',
-      title: Lampa.Lang.translate('title_online'),
-      component: 'bwarch',
-      search: all[id] ? all[id] : e.movie.title,
-      search_one: e.movie.title,
-      search_two: e.movie.original_title,
-      movie: e.movie,
-      page: 1,
-      clarification: all[id] ? true : false
-    });
-  });
-  
-  // Заменяем эту строку:
-  // e.render.after(btn);
-  
-  // На эту (вставляем после кнопки "Торрент"):
-  btn.insertAfter(e.render.closest('.full-start__buttons').find('.view--torrent'));
-}
+      if (e.render.find('.lampac--button').length) return;
+      var btn = $(Lampa.Lang.translate(button));
+	  // //console.log(btn.clone().removeClass('focus').prop('outerHTML'))
+      btn.on('hover:enter', function() {
+        resetTemplates();
+        Lampa.Component.add('bwarch', component);
+		
+		var id = Lampa.Utils.hash(e.movie.number_of_seasons ? e.movie.original_name : e.movie.original_title);
+		var all = Lampa.Storage.get('clarification_search','{}');
+		
+        Lampa.Activity.push({
+          url: '',
+          title: Lampa.Lang.translate('title_online'),
+          component: 'bwarch',
+          search: all[id] ? all[id] : e.movie.title,
+          search_one: e.movie.title,
+          search_two: e.movie.original_title,
+          movie: e.movie,
+          page: 1,
+		  clarification: all[id] ? true : false
+        });
+      });
+      e.render.after(btn);
+    }
     Lampa.Listener.follow('full', function(e) {
       if (e.type == 'complite') {
         addButton({
