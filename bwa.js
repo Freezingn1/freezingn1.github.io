@@ -791,7 +791,7 @@ else if (element.url) {
     // Получаем конечный путь, который /proxyimg бы открыл
     let originalCoverUrl = extractCoverUrlFromProxy(elem.img); // нужна функция парсинга
     elem.img = 'https://wild-mode-68f9.edikgarr.workers.dev/' + originalCoverUrl;
-}
+
 
 		  Lampa.Utils.imgLoad(image, elem.img);
 		}
