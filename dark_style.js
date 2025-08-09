@@ -472,6 +472,12 @@
 				opacity: 40%;		
 			}
 			}
+			
+			@media screen and (max-width: 480px) {
+			.card.card--wide + .card-more .card-more__box {
+				padding-bottom: 150%;
+			}
+			}
 
             @media screen and (max-width: 480px) {
                 .full-descr__tags {
